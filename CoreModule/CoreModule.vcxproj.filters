@@ -1,0 +1,171 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="99. Defines">
+      <UniqueIdentifier>{d522eb74-4172-4493-8ac6-05ee4c2d184a}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="00. System">
+      <UniqueIdentifier>{a602af0f-5875-4151-a494-39d26ae2ead7}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="00. System\Object">
+      <UniqueIdentifier>{55f59658-7ae7-475a-928e-6d799c8e5aa6}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="00. System\Component">
+      <UniqueIdentifier>{208d0136-a296-4d85-b782-aa1f25a81a45}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="00. System\GameObject">
+      <UniqueIdentifier>{4e1e4876-c6ee-4179-98d8-c57d02d6df3e}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="00. System\Behaviour">
+      <UniqueIdentifier>{2daa7158-c989-419d-ad98-a753cb497e19}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="00. System\Transform">
+      <UniqueIdentifier>{9ca9bba8-c91f-40d8-997f-5bd916c68546}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="00. System\Scene">
+      <UniqueIdentifier>{30565907-2d0e-4e62-95f2-c4729964c25b}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="00. System\ScriptBehaviour">
+      <UniqueIdentifier>{404a4f85-c92f-49e1-8aa6-21b01abcee5e}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="00. System\Graphic">
+      <UniqueIdentifier>{06c7d8f3-3188-430f-be73-c778309d77e6}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="00. System\Core">
+      <UniqueIdentifier>{94e1adf7-9672-4ab5-a1d5-da4cd6b1a3bb}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="00. System\ScriptBehaviour\Manager">
+      <UniqueIdentifier>{8e1f4fec-5af5-4db1-8892-6e7471a7c9eb}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="00. System\Time">
+      <UniqueIdentifier>{d3e1eb60-60fb-4b4b-9bd1-dba2690e08d1}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="00. System\Physics">
+      <UniqueIdentifier>{7756fcbd-656d-46de-bf4f-71ee019e10e7}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="00. System\Physics\Rigidbody">
+      <UniqueIdentifier>{14dd718d-89bd-40c7-80d9-397b5c7a9d26}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="00. System\Physics\Manager">
+      <UniqueIdentifier>{f1d9fe2e-8338-4d68-89e4-1487229cf421}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="00. System\Input">
+      <UniqueIdentifier>{6ae0a518-ceb9-44ea-b5fd-6527907f4d16}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="include\core_defines.h">
+      <Filter>99. Defines</Filter>
+    </ClInclude>
+    <ClInclude Include="include\core_typedef.h">
+      <Filter>99. Defines</Filter>
+    </ClInclude>
+    <ClInclude Include="include\core_macro.h">
+      <Filter>99. Defines</Filter>
+    </ClInclude>
+    <ClInclude Include="include\GameObject.h">
+      <Filter>00. System\GameObject</Filter>
+    </ClInclude>
+    <ClInclude Include="include\Object.h">
+      <Filter>00. System\Object</Filter>
+    </ClInclude>
+    <ClInclude Include="include\Component.h">
+      <Filter>00. System\Component</Filter>
+    </ClInclude>
+    <ClInclude Include="include\ComponentFactory.h">
+      <Filter>00. System\Component</Filter>
+    </ClInclude>
+    <ClInclude Include="include\ComponentRegistrar.h">
+      <Filter>00. System\Component</Filter>
+    </ClInclude>
+    <ClInclude Include="include\core_function.h">
+      <Filter>99. Defines</Filter>
+    </ClInclude>
+    <ClInclude Include="include\Behaviour.h">
+      <Filter>00. System\Behaviour</Filter>
+    </ClInclude>
+    <ClInclude Include="include\Transform.h">
+      <Filter>00. System\Transform</Filter>
+    </ClInclude>
+    <ClInclude Include="include\Scene.h">
+      <Filter>00. System\Scene</Filter>
+    </ClInclude>
+    <ClInclude Include="include\ScriptBehaviour.h">
+      <Filter>00. System\ScriptBehaviour</Filter>
+    </ClInclude>
+    <ClInclude Include="include\D3D11Manager.h">
+      <Filter>00. System\Graphic</Filter>
+    </ClInclude>
+    <ClInclude Include="include\core_math.h">
+      <Filter>99. Defines</Filter>
+    </ClInclude>
+    <ClInclude Include="include\Core.h">
+      <Filter>00. System\Core</Filter>
+    </ClInclude>
+    <ClInclude Include="include\ScriptBehaviourManager.h">
+      <Filter>00. System\ScriptBehaviour\Manager</Filter>
+    </ClInclude>
+    <ClInclude Include="include\Engine.h" />
+    <ClInclude Include="include\Test.h" />
+    <ClInclude Include="include\Rigidbody.h">
+      <Filter>00. System\Physics\Rigidbody</Filter>
+    </ClInclude>
+    <ClInclude Include="include\PhysicsManager.h">
+      <Filter>00. System\Physics\Manager</Filter>
+    </ClInclude>
+    <ClInclude Include="include\TimeManager.h">
+      <Filter>00. System\Time</Filter>
+    </ClInclude>
+    <ClInclude Include="include\InputManager.h">
+      <Filter>00. System\Input</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="src\GameObject.cpp">
+      <Filter>00. System\GameObject</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Object.cpp">
+      <Filter>00. System\Object</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Component.cpp">
+      <Filter>00. System\Component</Filter>
+    </ClCompile>
+    <ClCompile Include="src\ComponentFactory.cpp">
+      <Filter>00. System\Component</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Behaviour.cpp">
+      <Filter>00. System\Behaviour</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Transform.cpp">
+      <Filter>00. System\Transform</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Scene.cpp">
+      <Filter>00. System\Scene</Filter>
+    </ClCompile>
+    <ClCompile Include="src\ScriptBehaviour.cpp">
+      <Filter>00. System\ScriptBehaviour</Filter>
+    </ClCompile>
+    <ClCompile Include="src\D3D11Manager.cpp">
+      <Filter>00. System\Graphic</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Core.cpp">
+      <Filter>00. System\Core</Filter>
+    </ClCompile>
+    <ClCompile Include="src\ScriptBehaviourManager.cpp">
+      <Filter>00. System\ScriptBehaviour\Manager</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Test.cpp" />
+    <ClCompile Include="src\Rigidbody.cpp">
+      <Filter>00. System\Physics\Rigidbody</Filter>
+    </ClCompile>
+    <ClCompile Include="src\PhysicsManager.cpp">
+      <Filter>00. System\Physics\Manager</Filter>
+    </ClCompile>
+    <ClCompile Include="src\TimeManager.cpp">
+      <Filter>00. System\Time</Filter>
+    </ClCompile>
+    <ClCompile Include="src\InputManager.cpp">
+      <Filter>00. System\Input</Filter>
+    </ClCompile>
+  </ItemGroup>
+</Project>

@@ -1,0 +1,6 @@
+<Project>
+  <PropertyGroup>
+    <!-- 와일드카드 항목을 자동 확장하도록 설정 -->
+    <ReplaceWildcardsInProjectItems>true</ReplaceWildcardsInProjectItems>
+  </PropertyGroup>
+</Project>
