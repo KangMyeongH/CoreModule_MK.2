@@ -88,5 +88,4 @@ void engine::Core::Progress()
 	update();
 	lateUpdate();
 	destroy();
-
 }

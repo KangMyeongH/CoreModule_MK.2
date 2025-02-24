@@ -1,5 +1,7 @@
 #pragma once
 
+#define PI 3.14159265359f
+
 namespace engine
 {
 	template <typename T>
@@ -16,6 +18,16 @@ namespace engine
 		}
 
 		return value;
+	}
+
+	inline _float RadianToDegree(const _float radian)
+	{
+		return radian * (180.f / PI);
+	}
+
+	inline _float DegreeToRadian(const _float degree)
+	{
+		return degree * (PI / 180.f);
 	}
 
 	struct Vector3
@@ -188,7 +200,6 @@ namespace engine
 		//			   static method			//
 		//======================================//
 
-		// Look Vector
 		static Vector3 Forward()
 		{
 			return Vector3{ 0.f, 0.f, 1.f };
@@ -221,7 +232,12 @@ namespace engine
 
 		static Vector3 Zero()
 		{
-			return Vector3{ 0.0f, 0.0f, 0.0f };
+			return Vector3{ 0.f, 0.f, 0.f };
+		}
+
+		static Vector3 One()
+		{
+			return Vector3{ 1.f, 1.f, 1.f };
 		}
 
 		// 정규화 된 벡터를 반환
@@ -383,6 +399,15 @@ namespace engine
 			return *this;
 		}
 
+		Vector3 operator*(const Vector3& point) const
+		{
+			const _vector q = ToVector();
+			const _vector v = point.ToVector();
+			const _vector rotated = DirectX::XMVector3Rotate(v, q);
+
+			return Vector3::FromVector(rotated);
+		}
+
 		Quaternion operator-() const
 		{
 			const _vector neg = DirectX::XMVectorNegate(ToVector());
@@ -417,7 +442,28 @@ namespace engine
 		{
 			const _vector p = point.ToVector();
 			const _vector r = DirectX::XMVector3Rotate(p, ToVector());
+
 			return Vector3::FromVector(r);
+		}
+
+		Vector3 EulerAngles() const
+		{
+			const _vector q = ToVector();
+			const _matrix m = DirectX::XMMatrixRotationQuaternion(q);
+
+			_float4X4 mf;
+
+			XMStoreFloat4x4(&mf, m);
+
+			_float pitch = std::atan2(-mf._32, mf._33);
+			_float yaw = std::asin(mf._31);
+			_float roll = std::atan2(-mf._21, mf._11);
+
+			pitch = RadianToDegree(pitch);
+			yaw = RadianToDegree(yaw);
+			roll = RadianToDegree(roll);
+
+			return Vector3{ pitch, yaw, roll };
 		}
 
 		//======================================//
@@ -435,6 +481,128 @@ namespace engine
 		static Quaternion Identity()
 		{
 			return Quaternion{ 0.0f, 0.0f, 0.0f, 1.0f };
+		}
+
+		static _float Dot(const Quaternion& lhs, const Quaternion& rhs)
+		{
+			const _vector q1 = lhs.ToVector();
+			const _vector q2 = rhs.ToVector();
+			const _vector result = DirectX::XMVector4Dot(q1, q2);
+
+			return DirectX::XMVectorGetX(result);
+		}
+
+		static _float Angle(const Quaternion& lhs, const Quaternion& rhs)
+		{
+			_float dot = Dot(lhs, rhs);
+			
+			dot = Clamp(dot, -1.f, 1.f);
+
+			const _float rad = std::acos(dot) * 2.f;
+
+			return RadianToDegree(rad);
+		}
+
+		static Quaternion Inverse(const Quaternion& rotation)
+		{
+			const _vector q 		= rotation.ToVector();
+			const _vector result 	= DirectX::XMQuaternionInverse(q);
+
+			return FromVector(result);
+		}
+
+		static Quaternion AngleAxis(const _float degrees, const Vector3& axis)
+		{
+			const _float lenSq = axis.SqrMagnitude();
+			if (lenSq < 1e-6f)
+			{
+				return Identity();
+			}
+
+			const Vector3 normal = axis.Normalized();
+			const _float halfRad = DegreeToRadian(degrees) * 0.5f;
+			const _float sin = std::sinf(halfRad);
+			const _float cos = std::cosf(halfRad);
+			
+			return Quaternion{ normal.Value.x * sin, normal.Value.y * sin, normal.Value.z * sin, cos };
+		}
+
+		static Quaternion Euler(const _float xDegree, const _float yDegree, const _float zDegree)
+		{
+			const _float pitch = DegreeToRadian(xDegree);
+			const _float yaw = DegreeToRadian(yDegree);
+			const _float roll = DegreeToRadian(zDegree);
+
+			const _vector result = DirectX::XMQuaternionRotationRollPitchYaw(
+				pitch,
+				yaw,
+				roll
+			);
+
+			return FromVector(result);
+		}
+
+		static Quaternion Euler(const Vector3& euler)
+		{
+			return Euler(euler.Value.x, euler.Value.y, euler.Value.z);
+		}
+
+		static Quaternion FromToRotation(const Vector3& from, const Vector3& to)
+		{
+			const Vector3 fromNormal = from.Normalized();
+			const Vector3 toNormal = to.Normalized();
+
+			const _float dot = Vector3::Dot(fromNormal, toNormal);
+
+			if (dot > 0.999999f)
+			{
+				return Identity();
+			}
+
+			else if (dot < -0.999999f)
+			{
+				Vector3 ortho = Vector3::Cross(Vector3::Up(), fromNormal);
+
+				if (ortho.SqrMagnitude() < 1e-6f)
+				{
+					ortho = Vector3::Cross(Vector3::Forward(), fromNormal);
+				}
+
+				ortho = ortho.Normalized();
+
+				return AngleAxis(180.f, ortho);
+			}
+
+			else
+			{
+				const _float deg = RadianToDegree(std::acos(dot));
+				const Vector3 axis = Vector3::Cross(fromNormal, toNormal).Normalized();
+				return AngleAxis(deg, axis);
+			}
+		}
+
+		static Quaternion Slerp(const Quaternion& a, const Quaternion& b, _float t)
+		{
+			if (t < 0.f)
+			{
+				t = 0.f;
+			}
+
+			if (t > 1.f)
+			{
+				t = 1.f;
+			}
+
+			return SlerpUnclamped(a, b, t);
+		}
+
+		static Quaternion SlerpUnclamped(const Quaternion& a, const Quaternion& b, _float t)
+		{
+			const _vector qa = a.ToVector();
+			const _vector qb = b.ToVector();
+			const _vector result = DirectX::XMQuaternionSlerp(qa, qb, t);
+
+			return FromVector(result);
 		}
 
 		//======================================//
@@ -465,7 +633,6 @@ namespace engine
 
 	struct AnimationCurve
 	{
-#define PI 3.141592f
 
 		// Easing 함수는 시간 흐름에 따른 매개변수의 변화율을 지정합니다.
 		// 대부분의 실제 사물들은 일정한 속도로 이동하지 않고, 즉시 시작하거나 즉시 멈추지도 않습니다.

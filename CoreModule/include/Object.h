@@ -66,7 +66,6 @@ namespace engine
 		_int			GetInstanceID() const { return m_ID; }
 		_bool			IsDestroyed() const { return m_bDestroyed; }
 
-		
 		virtual void 	Destroy() = 0;
 
 		//======================================//

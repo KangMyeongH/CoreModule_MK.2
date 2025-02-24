@@ -23,7 +23,7 @@ namespace engine
 
 	typedef		float						_float;
 	typedef		double						_double;
-
+	
 	typedef		DirectX::XMFLOAT2			_float2;
 	typedef		DirectX::XMFLOAT3			_float3;
 	typedef		DirectX::XMFLOAT4			_float4;
