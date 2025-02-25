@@ -7,7 +7,10 @@ engine::D3D11Manager::D3D11Manager()
 	m_DeviceContext(nullptr),
 	m_SwapChain(nullptr),
 	m_BackBufferRTV(nullptr),
-	m_DepthStencilView(nullptr)
+	m_DepthStencilView(nullptr),
+	m_ResizeWidth(0),
+	m_ResizeHeight(0),
+	m_bSwapChainOccluded(false)
 {
 }
 

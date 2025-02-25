@@ -10,6 +10,7 @@ namespace engine
 engine::Transform::Transform(const Transform& rhs)
 	: Component(rhs),
 	m_Parent(rhs.m_Parent),
+	m_WorldMatrix(),
 	m_bDirty(true)
 {
 	m_Children.reserve(rhs.m_Children.size());
@@ -33,7 +34,6 @@ void engine::Transform::SetParent(const SharedPtr<Transform>& parent)
 
 		m_Parent = parent;
 
-		// TODO : 아래 주석 해제 해야함.
 		m_LocalPosition = m_WorldPosition;
 		m_LocalRotation = m_WorldRotation;
 		m_LocalScale = m_WorldScale;
@@ -74,7 +74,7 @@ engine::SharedPtr<engine::Transform> engine::Transform::create()
 {
 	return {
 		new Transform(nullptr),
-		[](const Transform* ptr) {delete ptr; }
+		[](const Transform* ptr) { delete ptr; }
 	};
 }
 
@@ -91,28 +91,29 @@ std::shared_ptr<engine::Component> engine::Transform::Clone() const
 
 void engine::Transform::updateMatrixIfNeeded() const
 {
-	// TODO : 하다 말았음 비정방형 스케일 + 회전을 섞어서 Shear가 발생.
+	// TODO : 하다 말았음 비정방형 스케일 + 회전을 섞어서 비틀림이 발생.
+
 	if (!m_bDirty)
 	{
 		return;
 	}
 
 	// 로컬 행렬 계산
-	_matrix matScale = DirectX::XMMatrixScalingFromVector(m_LocalScale.ToVector());
-	_matrix matRot = DirectX::XMMatrixRotationQuaternion(m_LocalRotation.ToVector());
-	_matrix matTrans = DirectX::XMMatrixTranslationFromVector(m_LocalPosition.ToVector());
+	const _matrix matScale 	= DirectX::XMMatrixScalingFromVector(m_LocalScale.ToVector());
+	const _matrix matRot 	= DirectX::XMMatrixRotationQuaternion(m_LocalRotation.ToVector());
+	const _matrix matTrans 	= DirectX::XMMatrixTranslationFromVector(m_LocalPosition.ToVector());
+	const _matrix matLocal 	= matScale * matRot * matTrans;
 
-	_matrix matLocal = matScale * matRot * matTrans;
-
-	if (auto parent = m_Parent.lock())
+	if (const auto parent = m_Parent.lock())
 	{
-		_matrix matParent = parent->GetWorldMatrix();
-		_matrix matWorld = XMMatrixMultiply(matLocal, matParent);
+		const _matrix matParent = parent->GetWorldMatrix();
+		const _matrix matWorld 	= XMMatrixMultiply(matLocal, matParent);
+
 		_vector wScale, wRot, wTrans;
 		XMMatrixDecompose(&wScale, &wRot, &wTrans, matWorld);
-
 		XMStoreFloat4x4(&m_WorldMatrix, matWorld);
-		m_WorldScale = Vector3::FromVector(wScale);
+
+		m_WorldScale 	= Vector3::FromVector(wScale);
 		m_WorldRotation = Quaternion::FromVector(wRot);
 		m_WorldPosition = Vector3::FromVector(wTrans);
 	}
@@ -122,7 +123,7 @@ void engine::Transform::updateMatrixIfNeeded() const
 		XMStoreFloat4x4(&m_WorldMatrix, matLocal);
 		m_WorldPosition = m_LocalPosition;
 		m_WorldRotation = m_LocalRotation;
-		m_WorldScale = m_LocalScale;
+		m_WorldScale 	= m_LocalScale;
 	}
 
 	m_bDirty = false;
