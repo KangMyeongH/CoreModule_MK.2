@@ -53,6 +53,7 @@
     <ClInclude Include="include\Engine.h" />
     <ClInclude Include="include\GameObject.h" />
     <ClInclude Include="include\InputManager.h" />
+    <ClInclude Include="include\json.hpp" />
     <ClInclude Include="include\Object.h" />
     <ClInclude Include="include\PhysicsManager.h" />
     <ClInclude Include="include\Rigidbody.h" />

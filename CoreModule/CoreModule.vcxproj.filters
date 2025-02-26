@@ -119,6 +119,7 @@
     <ClInclude Include="include\InputManager.h">
       <Filter>00. System\Input</Filter>
     </ClInclude>
+    <ClInclude Include="include\json.hpp" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\GameObject.cpp">

@@ -14,8 +14,13 @@ namespace engine
 		//				constructor				//
 		//======================================//
 
-	    explicit Transform(const SharedPtr<GameObject>& owner)
-			: Component(owner), m_WorldMatrix(), m_bDirty(true)
+		explicit Transform(const SharedPtr<GameObject>& owner)
+			: Component(owner),
+			m_WorldMatrix(),
+			m_LocalPosition(0.f, 0.f, 0.f),
+			m_LocalRotation(0.f, 0.f, 0.f, 1.f),
+			m_LocalScale(1.f, 1.f, 1.f),
+			m_bDirty(true)
 		{
 		}
 
@@ -119,11 +124,24 @@ namespace engine
 		SharedPtr<Transform> 	GetParent() const;
 		void 					SetParent(const SharedPtr<Transform>& parent);
 
-
-
 		//======================================//
 		//				  method				//
 		//======================================//
+
+		Vector3 Forward() const
+		{
+			updateMatrixIfNeeded();
+			return Vector3(m_WorldMatrix._31, m_WorldMatrix._32, m_WorldMatrix._33).Normalized();
+		}
+
+		void Translate(const Vector3& value)
+		{
+			if (value != Vector3::Zero())
+			{
+				const Vector3 position = m_LocalPosition + value;
+				SetLocalPosition(position);
+			}
+		}
 
 		void Destroy() override;
 		SharedPtr<Component> Clone() const override;
@@ -146,7 +164,7 @@ namespace engine
 		void to_json(nlohmann::ordered_json& j) override;
 		void from_json(const nlohmann::ordered_json& j) override;
 		friend void to_json(nlohmann::ordered_json& j, const SharedPtr<Transform>& t);
-		friend void from_json(const nlohmann::ordered_json& j, SharedPtr<Transform>& t);
+		friend void from_json(const nlohmann::ordered_json& j, const SharedPtr<Transform>& t);
 
 
 	private:

@@ -40,10 +40,22 @@ void engine::Transform::SetParent(const SharedPtr<Transform>& parent)
 
 		if (parent != nullptr)
 		{
-			// TODO : 계층 구조 기준으로 즉 부모의 Transform 정보 기준으로 LocalSpace 연산을 해줘야함
+			_matrix parentWorldMat = parent->GetWorldMatrix();
+			_matrix parentInverseMatrix = XMMatrixInverse(nullptr, parentWorldMat);
 
-			parent->addChild(std::dynamic_pointer_cast<Transform>(shared_from_this()));
+			_matrix localMat = XMMatrixMultiply(GetWorldMatrix(), parentInverseMatrix);
+
+			_vector localScale, localRot, localPosition;
+			XMMatrixDecompose(&localScale, &localRot, &localPosition, localMat);
+
+			m_LocalScale = localScale;
+			m_LocalRotation = localRot;
+			m_LocalPosition = localPosition;
+
+			parent->addChild(std::static_pointer_cast<Transform>(shared_from_this()));
 		}
+
+		setDirty();
 	}
 }
 
@@ -136,16 +148,23 @@ void engine::Transform::addChild(const SharedPtr<Transform>& child)
 
 void engine::Transform::to_json(nlohmann::ordered_json& j)
 {
-	j = nlohmann::ordered_json{};
+	j = nlohmann::ordered_json{
+		{"position", GetLocalPosition()},
+		{"rotation", GetLocalRotation()},
+		{"scale", GetLocalScale()}
+	};
 }
 
 void engine::Transform::from_json(const nlohmann::ordered_json& j)
 {
+	SetLocalPosition(j.at("position").get<Vector3>());
+	SetLocalRotation(j.at("rotation").get<Quaternion>());
+	SetLocalScale(j.at("scale").get<Vector3>());
 }
 
 void engine::to_json(nlohmann::ordered_json& j, const SharedPtr<Transform>& t)
 {
-	int parentID = -1;
+	_int parentID = -1;
 	if (auto parent = t->m_Parent.lock())
 	{
 		parentID = parent->GetInstanceID();
@@ -154,16 +173,24 @@ void engine::to_json(nlohmann::ordered_json& j, const SharedPtr<Transform>& t)
 	j = nlohmann::ordered_json{
 		{"parentID", parentID},
 		{"instanceID", t->GetInstanceID()},
-		// TODO : add position rotation sca1e
+		{"position", t->GetLocalPosition()},
+		{"rotation", t->GetLocalRotation()},
+		{"scale", t->GetLocalScale()}
 	};
 }
 
-void engine::from_json(const nlohmann::ordered_json& j, SharedPtr<Transform>& t)
+void engine::from_json(const nlohmann::ordered_json& j, const SharedPtr<Transform>& t)
 {
-	int parentID;
+	_int parentID;
 	j.at("parentID").get_to(parentID);
 	if (parentID != -1)
 	{
 		Transform::s_ChildTransformMap[parentID].push_back(t);
 	}
+
+	t->SetInstanceID(j.at("instanceID").get<_int>());
+	Transform::s_TransformMap[t->GetInstanceID()] = t;
+	t->SetLocalPosition(j.at("position").get<Vector3>());
+	t->SetLocalRotation(j.at("rotation").get<Quaternion>());
+	t->SetLocalScale(j.at("scale").get<Vector3>());
 }

@@ -36,6 +36,7 @@ namespace engine
 		void onCollision();
 		void update();
 		void lateUpdate();
+		void renderScene();
 		void destroy();
 
 	private:

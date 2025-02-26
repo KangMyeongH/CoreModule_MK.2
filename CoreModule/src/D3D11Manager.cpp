@@ -64,7 +64,7 @@ HRESULT engine::D3D11Manager::Initialize(HWND hwnd, _bool isWindowed, _uint winS
 		m_BackBufferRTV
 	};
 
-	m_DeviceContext->OMSetRenderTargets(1, RTVs, m_DepthStencilView);
+	m_DeviceContext->OMSetRenderTargets(0, RTVs, m_DepthStencilView);
 
 	D3D11_VIEWPORT		viewPortDesc;
 	ZeroMemory(&viewPortDesc, sizeof(D3D11_VIEWPORT));

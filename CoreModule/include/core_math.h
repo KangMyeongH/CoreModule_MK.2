@@ -40,6 +40,13 @@ namespace engine
 		Vector3() : Value(0, 0, 0) {}
 		Vector3(const _float x, const _float y, const _float z) : Value(x, y, z) {}
 		explicit Vector3(const _float3& v) : Value(v) {}
+		
+		Vector3& operator=(const Vector3& rhs) = default;
+		Vector3& operator=(const _vector& rhs)
+		{
+			XMStoreFloat3(&Value, rhs);
+			return *this;
+		}
 
 		//======================================//
 		//				operators				//
@@ -335,6 +342,17 @@ namespace engine
 		Quaternion() : Value(0.0f, 0.0f, 0.0f, 1.0f) {}
 		Quaternion(const _float x, const _float y, const _float z, const _float w) : Value(x, y, z ,w) {}
 		explicit Quaternion(const _float4& q) : Value(q) {}
+		Quaternion& operator=(const Quaternion& rhs) = default;
+		Quaternion& operator=(const _float4& rhs)
+		{
+			Value = rhs;
+			return *this;
+		}
+		Quaternion& operator=(const _vector& rhs)
+		{
+			XMStoreFloat4(&Value, rhs);
+			return *this;
+		}
 
 		//======================================//
 		//				operators				//
