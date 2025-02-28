@@ -6,9 +6,7 @@ engine::GameObject::GameObject(): Object("GameObject"), m_Transform(Transform::c
 {
 }
 
-engine::GameObject::~GameObject()
-{
-}
+engine::GameObject::~GameObject() = default;
 
 void engine::GameObject::SetActive(const bool active)
 {
@@ -29,7 +27,7 @@ void engine::GameObject::SetTag(const _string& tag)
 	m_Tag = tag;
 }
 
-engine::SharedPtr<engine::GameObject> engine::GameObject::create()
+engine::SharedPtr<engine::GameObject> engine::GameObject::Create()
 {
 	return {
 	new GameObject(),
@@ -110,11 +108,22 @@ void engine::to_json(nlohmann::ordered_json& j, const SharedPtr<GameObject>& obj
 
 void engine::from_json(const nlohmann::ordered_json& j, const SharedPtr<GameObject>& obj)
 {
-	obj->SetInstanceID(j.at("instanceID").get<int>());
+	obj->SetInstanceID(j.at("instanceID").get<_int>());
 	_string name;
 	j.at("name").get_to(name);
 	obj->SetName(name);
 	obj->SetTag(j.at("tag").get<_string>());
-	obj->SetActive(j.at("active").get<bool>());
+	obj->SetActive(j.at("active").get<_bool>());
 	j.at("transform").get_to(obj->m_Transform);
+
+	for (const auto& component_json : j.at("components"))
+	{
+		_string type = component_json.at("type").get<_string>();
+
+		SharedPtr<Component> component = ComponentFactory::GetInstance().CreateComponent(type);
+		component->from_json(component_json);
+		component->SetOwner(obj);
+		obj->m_Components[typeid(*component)].push_back(component);
+		
+	}
 }

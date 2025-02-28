@@ -109,14 +109,12 @@ namespace engine
 		void 							SetTag(const _string& tag);
 		_string 						GetTag() const { return m_Tag; }
 
+		static SharedPtr<GameObject> 	Create();
 		SharedPtr<GameObject> 			Clone() const;
 		void 							Destroy() override;
 
 		friend void 					to_json(nlohmann::ordered_json& j, const SharedPtr<GameObject>& obj);
 		friend void 					from_json(const nlohmann::ordered_json& j, const SharedPtr<GameObject>& obj);
-
-	private:
-		static SharedPtr<GameObject> 	create();
 
 	private:
 		Components						m_Components;

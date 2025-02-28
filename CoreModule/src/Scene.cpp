@@ -7,17 +7,16 @@
 
 IMPLEMENT_SINGLETON(engine::Scene)
 
-engine::Scene::Scene()
-{
-}
+engine::Scene::Scene() = default;
 
 engine::Scene::~Scene()
 {
+	Release();
 }
 
 engine::GameObjects* engine::Scene::GetGameObjects()
 {
-	return nullptr;
+	return &m_GameObjects;
 }
 
 bool engine::Scene::Initialize(const _wstring& path)
@@ -50,7 +49,7 @@ void engine::Scene::ChangeScene(const _wstring& sceneName)
 
 engine::SharedPtr<engine::GameObject> engine::Scene::CreateGameObject(const _string& name)
 {
-	SharedPtr<GameObject> newGameObject = GameObject::create();
+	SharedPtr<GameObject> newGameObject = GameObject::Create();
 	newGameObject->SetName(name);
 	m_GameObjects.push_back(newGameObject);
 	m_GameObjectsTagMap[newGameObject->GetTag()].insert(newGameObject);
@@ -104,6 +103,7 @@ engine::SharedPtr<engine::GameObject> engine::Scene::FindWithTag(const _string& 
 void engine::Scene::UpdateGameObjectTag(const SharedPtr<GameObject>& obj, const _string& newTag)
 {
 	_string oldTag = obj->GetTag();
+
 	if (oldTag == newTag)
 	{
 		return;
@@ -178,7 +178,40 @@ void engine::Scene::From_Json(const nlohmann::ordered_json& j)
 	m_SceneName = j.at("sceneName").get<_string>();
 	for (const auto& objJson : j.at("GameObjects"))
 	{
-		SharedPtr<GameObject> obj = GameObject::create();
+		SharedPtr<GameObject> obj = GameObject::Create();
 		objJson.get_to(obj);
 	}
+
+	setupTransformHierarchy();
+}
+
+void engine::Scene::setupTransformHierarchy() const
+{
+	std::unordered_map<_int, SharedPtr<Transform>> transformMap;
+
+	transformMap.reserve(m_GameObjects.size());
+
+	for (const auto& gameObject : m_GameObjects)
+	{
+		_int id = gameObject->GetTransform()->GetInstanceID();
+		transformMap[id] = gameObject->GetTransform();
+	}
+
+	for (const auto& gameObject : m_GameObjects)
+	{
+		const SharedPtr<Transform> transform = gameObject->GetTransform();
+
+		_int parentID = transform->GetParentID();
+
+		if (parentID != -1)
+		{
+			auto it = transformMap.find(parentID);
+			if (it != transformMap.end())
+			{
+				transform->SetParent(transformMap[parentID]);
+			}
+		}
+	}
+
+	transformMap.clear();
 }

@@ -15,12 +15,12 @@ namespace engine
 		//======================================//
 
 		explicit Transform(const SharedPtr<GameObject>& owner)
-			: Component(owner),
-			m_WorldMatrix(),
-			m_LocalPosition(0.f, 0.f, 0.f),
-			m_LocalRotation(0.f, 0.f, 0.f, 1.f),
-			m_LocalScale(1.f, 1.f, 1.f),
-			m_bDirty(true)
+			: Component(owner), m_ParentID(-1),
+			  m_WorldMatrix(),
+			  m_LocalPosition(0.f, 0.f, 0.f),
+			  m_LocalRotation(0.f, 0.f, 0.f, 1.f),
+			  m_LocalScale(1.f, 1.f, 1.f),
+			  m_bDirty(true)
 		{
 		}
 
@@ -124,6 +124,8 @@ namespace engine
 		SharedPtr<Transform> 	GetParent() const;
 		void 					SetParent(const SharedPtr<Transform>& parent);
 
+		_int					GetParentID() const;
+
 		//======================================//
 		//				  method				//
 		//======================================//
@@ -168,11 +170,9 @@ namespace engine
 
 
 	private:
-		static std::unordered_map<int, SharedPtr<Transform>> s_TransformMap;
-		static std::unordered_map<int, std::vector<SharedPtr<Transform>>> s_ChildTransformMap;
-
 		WeakPtr<Transform>					m_Parent;
 		std::vector<SharedPtr<Transform>> 	m_Children;
+		_int								m_ParentID;
 
 		mutable _float4X4	m_WorldMatrix;
 

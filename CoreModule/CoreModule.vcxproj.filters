@@ -52,6 +52,9 @@
     <Filter Include="00. System\Input">
       <UniqueIdentifier>{6ae0a518-ceb9-44ea-b5fd-6527907f4d16}</UniqueIdentifier>
     </Filter>
+    <Filter Include="00. System\SaveLoad">
+      <UniqueIdentifier>{44e0cac0-21d8-4722-9148-8cc63d92ed65}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="include\core_defines.h">

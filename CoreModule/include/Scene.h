@@ -38,6 +38,9 @@ namespace engine
         void 					Release();
         nlohmann::ordered_json 	To_Json() const;
         void 					From_Json(const nlohmann::ordered_json& j);
+        
+    private:
+        void 					setupTransformHierarchy() const;
 
     private:
         GameObjects 		m_GameObjects;

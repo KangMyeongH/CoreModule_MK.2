@@ -21,6 +21,22 @@ namespace engine
 		return result;
 	}
 
+	inline _string WStringToString(const _wstring& wstring)
+	{
+		int sizeNeeded = WideCharToMultiByte(CP_UTF8, 0, &wstring[0], static_cast<int>(wstring.size()), nullptr, 0, nullptr, nullptr);
+		std::string str(sizeNeeded, 0);
+		WideCharToMultiByte(CP_UTF8, 0, &wstring[0], static_cast<int>(wstring.size()), &str[0], sizeNeeded, nullptr, nullptr);
+		return str;
+	}
+
+	inline _wstring StringToWString(const _string& string)
+	{
+		int sizeNeeded = MultiByteToWideChar(CP_UTF8, 0, &string[0], static_cast<int>(string.size()), nullptr, 0);
+		std::wstring wstr(sizeNeeded, 0);
+		MultiByteToWideChar(CP_UTF8, 0, &string[0], static_cast<int>(string.size()), &wstr[0], sizeNeeded);
+		return wstr;
+	}
+
 	template<typename T>
 	void SafeDelete(T& pointer)
 	{

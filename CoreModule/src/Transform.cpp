@@ -1,16 +1,14 @@
 #include "Transform.h"
 #include "GameObject.h"
 
-namespace engine
-{
-	std::unordered_map<int, SharedPtr<Transform>> Transform::s_TransformMap;
-	std::unordered_map<int, std::vector<SharedPtr<Transform>>> Transform::s_ChildTransformMap;
-}
-
 engine::Transform::Transform(const Transform& rhs)
 	: Component(rhs),
 	m_Parent(rhs.m_Parent),
+	m_ParentID(rhs.m_ParentID),
 	m_WorldMatrix(),
+	m_LocalPosition(rhs.m_LocalPosition),
+	m_LocalRotation(rhs.m_LocalRotation),
+	m_LocalScale(rhs.m_LocalScale),
 	m_bDirty(true)
 {
 	m_Children.reserve(rhs.m_Children.size());
@@ -40,6 +38,8 @@ void engine::Transform::SetParent(const SharedPtr<Transform>& parent)
 
 		if (parent != nullptr)
 		{
+			m_ParentID = parent->GetInstanceID();
+
 			_matrix parentWorldMat = parent->GetWorldMatrix();
 			_matrix parentInverseMatrix = XMMatrixInverse(nullptr, parentWorldMat);
 
@@ -55,8 +55,18 @@ void engine::Transform::SetParent(const SharedPtr<Transform>& parent)
 			parent->addChild(std::static_pointer_cast<Transform>(shared_from_this()));
 		}
 
+		else
+		{
+			m_ParentID = -1;
+		}
+
 		setDirty();
 	}
+}
+
+engine::_int engine::Transform::GetParentID() const
+{
+	return m_ParentID;
 }
 
 void engine::Transform::detachChild(const SharedPtr<Transform>& child)
@@ -103,7 +113,7 @@ std::shared_ptr<engine::Component> engine::Transform::Clone() const
 
 void engine::Transform::updateMatrixIfNeeded() const
 {
-	// TODO : 하다 말았음 비정방형 스케일 + 회전을 섞어서 비틀림이 발생.
+	// TODO : 하다 말았음 비정방형 스케일 + 회전을 섞어서 비틀림이 발생. 해?결
 
 	if (!m_bDirty)
 	{
@@ -183,13 +193,8 @@ void engine::from_json(const nlohmann::ordered_json& j, const SharedPtr<Transfor
 {
 	_int parentID;
 	j.at("parentID").get_to(parentID);
-	if (parentID != -1)
-	{
-		Transform::s_ChildTransformMap[parentID].push_back(t);
-	}
-
+	t->m_ParentID = parentID;
 	t->SetInstanceID(j.at("instanceID").get<_int>());
-	Transform::s_TransformMap[t->GetInstanceID()] = t;
 	t->SetLocalPosition(j.at("position").get<Vector3>());
 	t->SetLocalRotation(j.at("rotation").get<Quaternion>());
 	t->SetLocalScale(j.at("scale").get<Vector3>());
