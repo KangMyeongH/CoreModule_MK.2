@@ -64,6 +64,11 @@ void engine::Transform::SetParent(const SharedPtr<Transform>& parent)
 	}
 }
 
+std::vector<engine::SharedPtr<engine::Transform>>* engine::Transform::GetChildren()
+{
+	return &m_Children;
+}
+
 engine::_int engine::Transform::GetParentID() const
 {
 	return m_ParentID;
@@ -161,7 +166,8 @@ void engine::Transform::to_json(nlohmann::ordered_json& j)
 	j = nlohmann::ordered_json{
 		{"position", GetLocalPosition()},
 		{"rotation", GetLocalRotation()},
-		{"scale", GetLocalScale()}
+		{"scale", GetLocalScale()},
+		{"euler", m_LocalEulerAngles}
 	};
 }
 

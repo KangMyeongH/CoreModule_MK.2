@@ -1,0 +1,126 @@
+#pragma once
+#include <typeindex>
+
+#include "Object.h"
+#include "ScriptBehaviourManager.h"
+#include "Transform.h"
+
+namespace engine
+{
+	class Component;
+
+	using Components = std::unordered_map<std::type_index, std::vector<SharedPtr<Component>>>;
+
+	class COREMODULE_API GameObject : public Object
+	{
+		friend class Scene;
+
+	protected:
+		//======================================//
+		//				constructor				//
+		//======================================//
+
+		GameObject();
+		~GameObject() override;
+
+		GameObject(const GameObject& rhs)
+			: Object(rhs),
+			m_bActiveSelf(rhs.m_bActiveSelf),
+			m_bStatic(rhs.m_bStatic)
+		{
+			m_Transform = std::dynamic_pointer_cast<Transform>(rhs.m_Transform->Clone());
+			m_Transform->SetOwner(nullptr);
+
+			for (const auto& pair : rhs.m_Components)
+			{
+				const auto& type = pair.first;
+				const auto& components = pair.second;
+				std::vector<std::shared_ptr<Component>> clonedComponents;
+				clonedComponents.reserve(components.size());
+
+				for (const auto& component : components)
+				{
+					auto clonedComponent = component->Clone();
+					clonedComponent->SetOwner(nullptr);
+					clonedComponents.push_back(std::move(clonedComponent));
+				}
+
+				m_Components.emplace(type, std::move(clonedComponents));
+			}
+		}
+
+	public:
+		//======================================//
+		//				  method				//
+		//======================================//
+
+		template <typename T, typename... Args>
+		SharedPtr<T> AddComponent(Args&&... args)
+		{
+			static_assert(std::is_base_of<Component, T>::value, "T must be derived from Component");
+
+			const _string typeName = StripMsvcClassName(typeid(T).name());
+
+			SharedPtr<Component> component = ComponentFactory::GetInstance().CreateComponent(typeName);
+
+			if (component)
+			{
+				component->SetOwner(std::dynamic_pointer_cast<GameObject>(shared_from_this()));
+				m_Components[typeid(T)].push_back(component);
+				component->registerComponent();
+			}
+
+			return std::dynamic_pointer_cast<T>(component);
+		}
+
+		template <typename T>
+		SharedPtr<T> GetComponent()
+		{
+			static_assert(std::is_base_of<Component, T>::value, "T must be derived from Component");
+
+			auto it = m_Components.find(typeid(T));
+			if (it != m_Components.end() && !it->second.empty())
+			{
+				return std::dynamic_pointer_cast<T>(it->second.front());
+			}
+
+			return nullptr;
+		}
+
+		void RemoveComponent(const SharedPtr<Component>& component)
+		{
+			for (auto it = m_Components.begin(); it != m_Components.end();)
+			{
+				if (!it->second.empty() && it->second.front() == component)
+				{
+					m_Components.erase(it);
+					return;
+				}
+
+				++it;
+			}
+		}
+
+		SharedPtr<Transform> 			GetTransform() const { return m_Transform; }
+
+		void 							SetActive(bool active);
+		_bool 							IsActive() const;
+
+		void 							SetTag(const _string& tag);
+		_string 						GetTag() const { return m_Tag; }
+
+		static SharedPtr<GameObject> 	Create();
+		SharedPtr<GameObject> 			Clone() const;
+		void 							Destroy() override;
+
+		friend void 					to_json(nlohmann::ordered_json& j, const SharedPtr<GameObject>& obj);
+		friend void 					from_json(const nlohmann::ordered_json& j, const SharedPtr<GameObject>& obj);
+
+	private:
+		Components						m_Components;
+		SharedPtr<Transform>			m_Transform;
+		_string							m_Tag;
+		_bool							m_bActiveSelf;
+		_bool							m_bStatic;
+	};
+}
