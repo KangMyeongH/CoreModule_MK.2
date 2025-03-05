@@ -7,10 +7,7 @@ engine::D3D11Manager::D3D11Manager()
 	m_DeviceContext(nullptr),
 	m_SwapChain(nullptr),
 	m_BackBufferRTV(nullptr),
-	m_DepthStencilView(nullptr),
-	m_ResizeWidth(0),
-	m_ResizeHeight(0),
-	m_bSwapChainOccluded(false)
+	m_DepthStencilView(nullptr)
 {
 }
 
@@ -80,67 +77,67 @@ HRESULT engine::D3D11Manager::Initialize(HWND hwnd, _bool isWindowed, _uint winS
 	return S_OK;
 }
 
-HRESULT engine::D3D11Manager::ClearBackBufferView(_float4 clearColor) const
-{
-	if (nullptr == m_DeviceContext)
-	{
-		return E_FAIL;
-	}
-
-	m_DeviceContext->ClearRenderTargetView(
-		m_BackBufferRTV,
-		reinterpret_cast<_float*>(&clearColor));
-
-	return S_OK;
-}
-
-HRESULT engine::D3D11Manager::ClearDepthStencilView() const
-{
-	if (nullptr == m_DeviceContext)
-	{
-		return E_FAIL;
-	}
-
-	m_DeviceContext->ClearDepthStencilView(
-		m_DepthStencilView,
-		D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL,
-		1.f,
-		0);
-
-	return S_OK;
-}
-
-HRESULT engine::D3D11Manager::Present() const
-{
-	if (nullptr == m_SwapChain)
-	{
-		return E_FAIL;
-	}
-
-	return m_SwapChain->Present(0, 0);
-}
-
-HRESULT engine::D3D11Manager::ResizeBuffer()
-{
-	SafeRelease(m_BackBufferRTV);
-	if (FAILED(m_SwapChain->ResizeBuffers(
-		0,
-		m_ResizeWidth, m_ResizeHeight,
-		DXGI_FORMAT_UNKNOWN,
-		0)))
-	{
-		return E_FAIL;
-	}
-
-	m_ResizeWidth = 0;
-	m_ResizeHeight = 0;
-
-	if (FAILED(readyBackBufferRenderTargetView()))
-	{
-		return E_FAIL;
-	}
-	return S_OK;
-}
+//HRESULT engine::D3D11Manager::ClearBackBufferView(_float4 clearColor) const
+//{
+//	if (nullptr == m_DeviceContext)
+//	{
+//		return E_FAIL;
+//	}
+//
+//	m_DeviceContext->ClearRenderTargetView(
+//		m_BackBufferRTV,
+//		reinterpret_cast<_float*>(&clearColor));
+//
+//	return S_OK;
+//}
+//
+//HRESULT engine::D3D11Manager::ClearDepthStencilView() const
+//{
+//	if (nullptr == m_DeviceContext)
+//	{
+//		return E_FAIL;
+//	}
+//
+//	m_DeviceContext->ClearDepthStencilView(
+//		m_DepthStencilView,
+//		D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL,
+//		1.f,
+//		0);
+//
+//	return S_OK;
+//}
+//
+//HRESULT engine::D3D11Manager::Present() const
+//{
+//	if (nullptr == m_SwapChain)
+//	{
+//		return E_FAIL;
+//	}
+//
+//	return m_SwapChain->Present(0, 0);
+//}
+//
+//HRESULT engine::D3D11Manager::ResizeBuffer()
+//{
+//	SafeRelease(m_BackBufferRTV);
+//	if (FAILED(m_SwapChain->ResizeBuffers(
+//		0,
+//		m_ResizeWidth, m_ResizeHeight,
+//		DXGI_FORMAT_UNKNOWN,
+//		0)))
+//	{
+//		return E_FAIL;
+//	}
+//
+//	m_ResizeWidth = 0;
+//	m_ResizeHeight = 0;
+//
+//	if (FAILED(readyBackBufferRenderTargetView()))
+//	{
+//		return E_FAIL;
+//	}
+//	return S_OK;
+//}
 
 void engine::D3D11Manager::Release()
 {

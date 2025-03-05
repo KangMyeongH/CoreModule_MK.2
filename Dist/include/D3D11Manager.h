@@ -27,6 +27,8 @@ namespace engine
 
         ID3D11RenderTargetView* GetMainRTV() const { return m_BackBufferRTV; }
 
+        ID3D11DepthStencilView* GetDepthStencilView() const { return m_DepthStencilView; }
+
         _bool       			IsSwapChainOccluded() const { return m_bSwapChainOccluded; }
         void        			SetSwapChainOccluded(const _bool occluded) { m_bSwapChainOccluded = occluded; }
 

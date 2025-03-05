@@ -6,7 +6,14 @@ engine::GameObject::GameObject(): Object("GameObject"), m_Transform(Transform::c
 {
 }
 
-engine::GameObject::~GameObject() = default;
+engine::GameObject::~GameObject()
+{
+	if (auto parent = m_Transform->GetParent())
+	{
+		const auto children = m_Transform->GetParent()->GetChildren();
+		children->erase(std::remove(children->begin(), children->end(), m_Transform), children->end());
+	}
+}
 
 void engine::GameObject::SetActive(const bool active)
 {

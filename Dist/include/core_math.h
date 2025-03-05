@@ -498,22 +498,54 @@ namespace engine
 
 		Vector3 EulerAngles() const
 		{
-			const _vector q = ToVector();
-			const _matrix m = DirectX::XMMatrixRotationQuaternion(q);
+			Vector3 angles;
 
-			_float4X4 mf;
+			// x축 회전 (pitch)
+			_float sinrCosp = 2.0f * (Value.w * Value.x + Value.y * Value.z);
+			_float cosrCosp = 1.0f - 2.0f * (Value.x * Value.x + Value.y * Value.y);
 
-			XMStoreFloat4x4(&mf, m);
+			angles.Value.x = atan2f(sinrCosp, cosrCosp);
 
-			_float pitch = std::atan2(-mf._32, mf._33);
-			_float yaw = std::asin(mf._31);
-			_float roll = std::atan2(-mf._21, mf._11);
+			// y축 회전 (yaw)
+			_float sinp = 2.0f * (Value.w * Value.y - Value.z * Value.x);
 
-			pitch = RadianToDegree(pitch);
-			yaw = RadianToDegree(yaw);
-			roll = RadianToDegree(roll);
+			if (fabs(sinp) >= 1.0f)
+			{
+				angles.Value.y = copysignf(DirectX::XM_PI / 2.0f, sinp); // 특이점: 90도 이상
+			}
 
-			return Vector3{ pitch, yaw, roll };
+			else
+			{
+				angles.Value.y = asinf(sinp);
+			}
+
+			// z축 회전 (roll)
+			_float sinyCosp = 2.0f * (Value.w * Value.z + Value.x * Value.y);
+			_float cosyCosp = 1.0f - 2.0f * (Value.y * Value.y + Value.z * Value.z);
+			angles.Value.z = atan2f(sinyCosp, cosyCosp);
+
+			// 결과를 라디안에서 도 단위로 변환
+			angles.Value.x = DirectX::XMConvertToDegrees(angles.Value.x);
+			angles.Value.y = DirectX::XMConvertToDegrees(angles.Value.y);
+			angles.Value.z = DirectX::XMConvertToDegrees(angles.Value.z);
+
+			return angles;
+			//const _vector q = ToVector();
+			//const _matrix m = DirectX::XMMatrixRotationQuaternion(q);
+
+			//_float4X4 mf;
+
+			//XMStoreFloat4x4(&mf, m);
+
+			//_float pitch = std::atan2(-mf._32, mf._33);
+			//_float yaw = std::asin(mf._31);
+			//_float roll = std::atan2(-mf._21, mf._11);
+
+			//pitch = RadianToDegree(pitch);
+			//yaw = RadianToDegree(yaw);
+			//roll = RadianToDegree(roll);
+
+			//return Vector3{ pitch, yaw, roll };
 		}
 
 		//======================================//
@@ -579,17 +611,17 @@ namespace engine
 
 		static Quaternion Euler(const _float xDegree, const _float yDegree, const _float zDegree)
 		{
-			const _float pitch = DegreeToRadian(xDegree);
-			const _float yaw = DegreeToRadian(yDegree);
-			const _float roll = DegreeToRadian(zDegree);
+			const _float pitch = DirectX::XMConvertToRadians(xDegree);
+			const _float yaw = DirectX::XMConvertToRadians(yDegree);
+			const _float roll = DirectX::XMConvertToRadians(zDegree);
 
-			const _vector result = DirectX::XMQuaternionRotationRollPitchYaw(
-				pitch,
-				yaw,
-				roll
-			);
+			_vector qPitch 	= DirectX::XMQuaternionRotationAxis(DirectX::XMVectorSet(1.0f, 0.0f, 0.0f, 0.0f), pitch);
+			_vector qYaw 	= DirectX::XMQuaternionRotationAxis(DirectX::XMVectorSet(0.0f, 1.0f, 0.0f, 0.0f), yaw);
+			_vector qRoll 	= DirectX::XMQuaternionRotationAxis(DirectX::XMVectorSet(0.0f, 0.0f, 1.0f, 0.0f), roll);
 
-			return FromVector(result);
+			_vector q = DirectX::XMQuaternionMultiply(qYaw, DirectX::XMQuaternionMultiply(qPitch, qRoll));
+
+			return FromVector(q);
 		}
 
 		static Quaternion Euler(const Vector3& euler)
@@ -874,21 +906,31 @@ namespace engine
 		}
 	};
 
-	inline Vector3 DecomposeEulerWithHistory(Quaternion q, Vector3 oldEuler)
+	inline Vector3 DecomposeEulerWithHistory(const Quaternion current, const Quaternion last, Vector3 euler)
 	{
-		Vector3 rawEuler = q.EulerAngles();
+		const Quaternion deltaRotation = current * Quaternion::Inverse(last);
 
-		Vector3 newEuler;
-		for (int i = 0; i < 3; ++i)
-		{
-			float diff = rawEuler[i] - oldEuler[i];
+		Vector3 deltaEuler = deltaRotation.EulerAngles();
 
-			while (diff < -180.0f) diff += 360.0f;
-			while (diff > 180.0f) diff -= 360.0f;
+		deltaEuler.Value.x = (deltaEuler.Value.x > 180) ? deltaEuler.Value.x - 360 : deltaEuler.Value.x;
+		deltaEuler.Value.y = (deltaEuler.Value.y > 180) ? deltaEuler.Value.y - 360 : deltaEuler.Value.y;
+		deltaEuler.Value.z = (deltaEuler.Value.z > 180) ? deltaEuler.Value.z - 360 : deltaEuler.Value.z;
 
-			newEuler[i] = oldEuler[i] + diff;
-		}
+		return euler += deltaEuler;
 
-		return newEuler;
+		//Vector3 rawEuler = q.EulerAngles();
+
+		//Vector3 newEuler;
+		//for (int i = 0; i < 3; ++i)
+		//{
+		//	float diff = rawEuler[i] - oldEuler[i];
+
+		//	while (diff < -180.0f) diff += 360.0f;
+		//	while (diff > 180.0f) diff -= 360.0f;
+
+		//	newEuler[i] = oldEuler[i] + diff;
+		//}
+
+		//return newEuler;
 	}
 }

@@ -159,13 +159,13 @@ namespace engine
 
 		Vector3 GetLocalEuler() const
 		{
-			return DecomposeEulerWithHistory(m_LocalRotation, m_LocalEulerAngles);
+			return m_LocalEulerAngles;
 		}
 
 		void SetLocalEuler(const Vector3 euler)
 		{
+			SetLocalRotation(Quaternion::Euler(euler));
 			m_LocalEulerAngles = euler;
-			SetLocalRotation(Quaternion::Euler(m_LocalEulerAngles));
 		}
 
 		_int					GetParentID() const;

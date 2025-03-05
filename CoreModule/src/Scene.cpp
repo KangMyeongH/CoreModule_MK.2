@@ -53,7 +53,6 @@ engine::SharedPtr<engine::GameObject> engine::Scene::CreateGameObject(const _str
 	newGameObject->SetName(name);
 	m_GameObjects.push_back(newGameObject);
 	m_GameObjectsTagMap[newGameObject->GetTag()].insert(newGameObject);
-	newGameObject->m_Transform = Transform::create();
 	newGameObject->m_Transform->SetOwner(newGameObject);
 
 	return newGameObject;
