@@ -34,7 +34,8 @@ namespace engine
         HRESULT	Initialize(HWND hwnd, _bool isWindowed, _uint winSizeX, _uint winSizeY);
 
         HRESULT CreateTexture(const _wstring& path, ID3D11ShaderResourceView** srv);
-
+        HRESULT CreateVertexShader(const _wstring& path);
+        HRESULT CreatePixelShader(const _wstring& path);
 
     	void 					Release();
 

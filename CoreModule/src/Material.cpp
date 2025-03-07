@@ -4,8 +4,8 @@
 
 engine::Material::Material(const SharedPtr<Renderer>& owner)
 	: Object("Material"),
-	m_Owner(owner),
-	m_DiffuseTexture(nullptr)
+	  m_Owner(owner),
+	  m_DiffuseTexture(nullptr), m_DiffuseColor(), m_AmbientColor()
 {
 }
 
@@ -17,14 +17,21 @@ engine::Material::~Material()
 
 engine::Material::Material(const Material& rhs)
 	: Object(rhs),
-	m_DiffuseTexture(nullptr)
+	  m_DiffuseTexture(nullptr), m_DiffuseColor(), m_AmbientColor()
 {
-
 }
 
 void engine::Material::SetDiffuseTexture(const _wstring& path)
 {
-	D3D11Manager::GetInstance().CreateTexture(path, &m_DiffuseTexture);
+	SafeRelease(m_DiffuseTexture);
+
+	if (FAILED(D3D11Manager::GetInstance().CreateTexture(path, &m_DiffuseTexture)))
+	{
+		m_DiffuseTexture = nullptr;
+		return;
+	}
+
+	m_DiffuseTexture->AddRef();
 }
 
 engine::SharedPtr<engine::Material> engine::Material::Create(const SharedPtr<Renderer>& renderer)
@@ -37,5 +44,8 @@ engine::SharedPtr<engine::Material> engine::Material::Create(const SharedPtr<Ren
 
 void engine::Material::Destroy()
 {
-	
+	if (auto owner = m_Owner.lock())
+	{
+		
+	}
 }

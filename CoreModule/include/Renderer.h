@@ -3,11 +3,14 @@
 
 namespace engine
 {
+    class Material;
+
     class Renderer: public Component
     {
+    protected:
 
 
-    private:
-
+    protected:
+        SharedPtr<Material> m_Material;
     };
 }

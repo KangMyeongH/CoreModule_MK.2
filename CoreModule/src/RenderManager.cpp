@@ -5,7 +5,7 @@
 
 IMPLEMENT_SINGLETON(engine::RenderManager)
 
-engine::RenderManager::RenderManager()
+engine::RenderManager::RenderManager(): m_VSConstantBuffer()
 {
 }
 
