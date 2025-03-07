@@ -27,7 +27,7 @@ void engine::Transform::SetParent(const SharedPtr<Transform>& parent)
 	{
 		if (oldParent != nullptr)
 		{
-			oldParent->detachChild(std::dynamic_pointer_cast<Transform>(shared_from_this()));
+			oldParent->detachChild(std::static_pointer_cast<Transform>(shared_from_this()));
 		}
 
 		m_Parent = parent;

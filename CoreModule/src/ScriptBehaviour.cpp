@@ -28,5 +28,5 @@ void engine::ScriptBehaviour::Destroy()
 
 void engine::ScriptBehaviour::registerComponent()
 {
-	ScriptBehaviourManager::GetInstance().AddScriptBehaviour(std::dynamic_pointer_cast<ScriptBehaviour>(shared_from_this()));
+	ScriptBehaviourManager::GetInstance().AddScriptBehaviour(std::static_pointer_cast<ScriptBehaviour>(shared_from_this()));
 }

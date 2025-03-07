@@ -21,14 +21,18 @@
   <ItemGroup>
     <!-- src 폴더의 모든 CPP 파일을 포함 -->
     <ClCompile Include="src\Behaviour.cpp" />
+    <ClCompile Include="src\Camera.cpp" />
     <ClCompile Include="src\Component.cpp" />
     <ClCompile Include="src\ComponentFactory.cpp" />
     <ClCompile Include="src\Core.cpp" />
     <ClCompile Include="src\D3D11Manager.cpp" />
     <ClCompile Include="src\GameObject.cpp" />
     <ClCompile Include="src\InputManager.cpp" />
+    <ClCompile Include="src\Material.cpp" />
     <ClCompile Include="src\Object.cpp" />
     <ClCompile Include="src\PhysicsManager.cpp" />
+    <ClCompile Include="src\Renderer.cpp" />
+    <ClCompile Include="src\RenderManager.cpp" />
     <ClCompile Include="src\Rigidbody.cpp" />
     <ClCompile Include="src\Scene.cpp" />
     <ClCompile Include="src\ScriptBehaviour.cpp" />
@@ -40,6 +44,7 @@
   <ItemGroup>
     <!-- include 폴더의 모든 헤더 파일을 포함 -->
     <ClInclude Include="include\Behaviour.h" />
+    <ClInclude Include="include\Camera.h" />
     <ClInclude Include="include\Component.h" />
     <ClInclude Include="include\ComponentFactory.h" />
     <ClInclude Include="include\ComponentRegistrar.h" />
@@ -48,14 +53,18 @@
     <ClInclude Include="include\core_function.h" />
     <ClInclude Include="include\core_macro.h" />
     <ClInclude Include="include\core_math.h" />
+    <ClInclude Include="include\core_struct.h" />
     <ClInclude Include="include\core_typedef.h" />
     <ClInclude Include="include\D3D11Manager.h" />
     <ClInclude Include="include\Engine.h" />
     <ClInclude Include="include\GameObject.h" />
     <ClInclude Include="include\InputManager.h" />
     <ClInclude Include="include\json.hpp" />
+    <ClInclude Include="include\Material.h" />
     <ClInclude Include="include\Object.h" />
     <ClInclude Include="include\PhysicsManager.h" />
+    <ClInclude Include="include\Renderer.h" />
+    <ClInclude Include="include\RenderManager.h" />
     <ClInclude Include="include\Rigidbody.h" />
     <ClInclude Include="include\Scene.h" />
     <ClInclude Include="include\ScriptBehaviour.h" />
@@ -166,13 +175,14 @@
       <ConformanceMode>true</ConformanceMode>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
-      <AdditionalIncludeDirectories>src;include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>src;include;$(SolutionDir)\ThirdParty\DirectXTK\include\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <EnableUAC>false</EnableUAC>
-      <AdditionalDependencies>D3D11.lib;D3DCompiler.lib;dxguid.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>D3D11.lib;D3DCompiler.lib;dxguid.lib;DirectXTKd.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>$(SolutionDir)ThirdParty\DirectXTK\lib\;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Link>
     <PreBuildEvent>
       <Command>if exist "$(ProjectDir)*.h" (
@@ -198,7 +208,7 @@ xcopy /Y "$(SolutionDir)bin\Debug\*.lib" "$(SolutionDir)Dist\bin\"</Command>
       <ConformanceMode>true</ConformanceMode>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
-      <AdditionalIncludeDirectories>src;include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>src;include;$(SolutionDir)\ThirdParty\DirectXTK\include\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -206,7 +216,8 @@ xcopy /Y "$(SolutionDir)bin\Debug\*.lib" "$(SolutionDir)Dist\bin\"</Command>
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <EnableUAC>false</EnableUAC>
-      <AdditionalDependencies>D3D11.lib;D3DCompiler.lib;dxguid.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>D3D11.lib;D3DCompiler.lib;dxguid.lib;DirectXTK.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>$(SolutionDir)ThirdParty\DirectXTK\lib\;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Link>
     <PreBuildEvent>
       <Command>if exist "$(ProjectDir)*.h" (

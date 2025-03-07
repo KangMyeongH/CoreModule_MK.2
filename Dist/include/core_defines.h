@@ -7,6 +7,11 @@
 #include <DirectXMath.h>
 #include <dxgidebug.h>
 
+#include "VertexTypes.h"
+#include "DDSTextureLoader.h"
+#include "WICTextureLoader.h"
+//#include "d3dx11effect.h"
+
 #include <vector>
 #include <list>
 #include <map>
@@ -21,6 +26,7 @@
 #include "core_function.h"
 #include "core_macro.h"
 #include "core_math.h"
+#include "core_struct.h"
 
 #pragma warning(disable : 4251)
 

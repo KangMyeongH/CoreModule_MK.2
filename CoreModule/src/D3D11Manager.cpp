@@ -77,6 +77,61 @@ HRESULT engine::D3D11Manager::Initialize(HWND hwnd, _bool isWindowed, _uint winS
 	return S_OK;
 }
 
+HRESULT engine::D3D11Manager::CreateTexture(const _wstring& path, ID3D11ShaderResourceView** srv)
+{
+	if (!srv)
+	{
+		return E_POINTER;
+	}
+
+	if (!path.empty())
+	{
+		return E_FAIL;
+	}
+
+	ID3D11ShaderResourceView* pSRV = nullptr;
+
+	if (m_TextureMap.find(path) != m_TextureMap.end())
+	{
+		pSRV = m_TextureMap[path];
+		*srv = pSRV;
+
+		return S_OK;
+	}
+
+	const _wchar* textureFilePath = path.c_str();
+	_wstring ext = path.substr(path.find_last_of(L"."));
+	std::transform(ext.begin(), ext.end(), ext.begin(), ::towlower);
+
+	HRESULT hr;
+
+	if (ext == L".dds")
+	{
+		hr = DirectX::CreateDDSTextureFromFile(m_Device, textureFilePath, nullptr, &pSRV);
+	}
+
+	else if (ext == L".tga")
+	{
+		hr = E_FAIL;
+	}
+
+	else
+	{
+		hr = DirectX::CreateWICTextureFromFile(m_Device, textureFilePath, nullptr, &pSRV);
+	}
+
+	if (FAILED(hr))
+	{
+		return hr;
+	}
+
+	*srv = pSRV;
+
+	m_TextureMap.emplace(path, pSRV);
+
+	return S_OK;
+}
+
 //HRESULT engine::D3D11Manager::ClearBackBufferView(_float4 clearColor) const
 //{
 //	if (nullptr == m_DeviceContext)

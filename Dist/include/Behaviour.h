@@ -12,9 +12,7 @@ namespace engine
 
 	    Behaviour(const Behaviour& rhs)
 			: Component(rhs), m_bEnabled(rhs.m_bEnabled)
-		{
-
-		}
+		{}
 
     public:
 		virtual void 	SetEnable(const bool enabled) { m_bEnabled = enabled; }

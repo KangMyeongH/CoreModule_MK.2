@@ -57,8 +57,8 @@ void engine::Core::lateUpdate()
 
 void engine::Core::renderScene()
 {
-	m_D3D11Manager->ClearBackBufferView(_float4(0.f, 0.f, 1.f, 1.f));
-	m_D3D11Manager->ClearDepthStencilView();
+	//m_D3D11Manager->ClearBackBufferView(_float4(0.f, 0.f, 1.f, 1.f));
+	//m_D3D11Manager->ClearDepthStencilView();
 }
 
 void engine::Core::destroy()

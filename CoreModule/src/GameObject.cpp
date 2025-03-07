@@ -2,7 +2,7 @@
 
 #include "Scene.h"
 
-engine::GameObject::GameObject(): Object("GameObject"), m_Transform(Transform::create()), m_bActiveSelf(true), m_bStatic(false)
+engine::GameObject::GameObject() : Object("GameObject"), m_Transform(Transform::create()), m_bActiveSelf(true), m_bStatic(false)
 {
 }
 
@@ -30,7 +30,7 @@ bool engine::GameObject::IsActive() const
 
 void engine::GameObject::SetTag(const _string& tag)
 {
-	Scene::GetInstance().UpdateGameObjectTag(std::dynamic_pointer_cast<GameObject>(shared_from_this()), tag);
+	Scene::GetInstance().UpdateGameObjectTag(std::static_pointer_cast<GameObject>(shared_from_this()), tag);
 	m_Tag = tag;
 }
 

@@ -2,14 +2,13 @@
 #include "Object.h"
 #include "ComponentRegistrar.h"
 #include "ComponentFactory.h"
-#include "core_macro.h"
 
 namespace engine
 {
     class GameObject;
     class Transform;
 
-    class COREMODULE_API Component: public Object
+    class COREMODULE_API Component : public Object
     {
         friend class GameObject;
         friend class ComponentRegister;
@@ -58,7 +57,7 @@ namespace engine
     public:
     	WeakPtr<GameObject> 				GetGameObject() const { return m_Owner; }
         void        						SetOwner(const SharedPtr<GameObject>& owner) { m_Owner = owner; }
-        Transform& 							GetTransform() const;
+		SharedPtr<Transform> 				GetTransform() const;
 
         virtual SharedPtr<Component> 		Clone() const = 0;
 

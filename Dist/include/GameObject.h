@@ -28,7 +28,7 @@ namespace engine
 			m_bActiveSelf(rhs.m_bActiveSelf),
 			m_bStatic(rhs.m_bStatic)
 		{
-			m_Transform = std::dynamic_pointer_cast<Transform>(rhs.m_Transform->Clone());
+			m_Transform = std::static_pointer_cast<Transform>(rhs.m_Transform->Clone());
 			m_Transform->SetOwner(nullptr);
 
 			for (const auto& pair : rhs.m_Components)
@@ -65,12 +65,12 @@ namespace engine
 
 			if (component)
 			{
-				component->SetOwner(std::dynamic_pointer_cast<GameObject>(shared_from_this()));
+				component->SetOwner(std::static_pointer_cast<GameObject>(shared_from_this()));
 				m_Components[typeid(T)].push_back(component);
 				component->registerComponent();
 			}
 
-			return std::dynamic_pointer_cast<T>(component);
+			return std::static_pointer_cast<T>(component);
 		}
 
 		template <typename T>
@@ -81,7 +81,7 @@ namespace engine
 			auto it = m_Components.find(typeid(T));
 			if (it != m_Components.end() && !it->second.empty())
 			{
-				return std::dynamic_pointer_cast<T>(it->second.front());
+				return std::static_pointer_cast<T>(it->second.front());
 			}
 
 			return nullptr;
@@ -112,6 +112,10 @@ namespace engine
 		static SharedPtr<GameObject> 	Create();
 		SharedPtr<GameObject> 			Clone() const;
 		void 							Destroy() override;
+
+		//======================================//
+		//				 serialize				//
+		//======================================//
 
 		friend void 					to_json(nlohmann::ordered_json& j, const SharedPtr<GameObject>& obj);
 		friend void 					from_json(const nlohmann::ordered_json& j, const SharedPtr<GameObject>& obj);

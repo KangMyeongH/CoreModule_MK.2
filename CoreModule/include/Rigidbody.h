@@ -43,6 +43,11 @@ namespace engine
         void AddForce(const Vector3& force);
 
         void Destroy() override;
+
+        //======================================//
+        //				 serialize				//
+        //======================================//
+
         void to_json(nlohmann::ordered_json& j) override;
         void from_json(const nlohmann::ordered_json& j) override;
 

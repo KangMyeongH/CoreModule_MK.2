@@ -55,6 +55,15 @@
     <Filter Include="00. System\SaveLoad">
       <UniqueIdentifier>{44e0cac0-21d8-4722-9148-8cc63d92ed65}</UniqueIdentifier>
     </Filter>
+    <Filter Include="00. System\Camera">
+      <UniqueIdentifier>{127f4e67-3cf9-4652-86e2-d23a83bdbfa1}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="00. System\Graphic\Renderer">
+      <UniqueIdentifier>{23888c06-ac79-4f36-b2b1-27016403d515}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="00. System\Graphic\Material">
+      <UniqueIdentifier>{90573b0a-1ee2-400b-aa9f-984253c34e63}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="include\core_defines.h">
@@ -123,6 +132,21 @@
       <Filter>00. System\Input</Filter>
     </ClInclude>
     <ClInclude Include="include\json.hpp" />
+    <ClInclude Include="include\Camera.h">
+      <Filter>00. System\Camera</Filter>
+    </ClInclude>
+    <ClInclude Include="include\core_struct.h">
+      <Filter>99. Defines</Filter>
+    </ClInclude>
+    <ClInclude Include="include\RenderManager.h">
+      <Filter>00. System\Graphic</Filter>
+    </ClInclude>
+    <ClInclude Include="include\Renderer.h">
+      <Filter>00. System\Graphic\Renderer</Filter>
+    </ClInclude>
+    <ClInclude Include="include\Material.h">
+      <Filter>00. System\Graphic\Material</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\GameObject.cpp">
@@ -170,6 +194,18 @@
     </ClCompile>
     <ClCompile Include="src\InputManager.cpp">
       <Filter>00. System\Input</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Camera.cpp">
+      <Filter>00. System\Camera</Filter>
+    </ClCompile>
+    <ClCompile Include="src\RenderManager.cpp">
+      <Filter>00. System\Graphic</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Renderer.cpp">
+      <Filter>00. System\Graphic\Renderer</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Material.cpp">
+      <Filter>00. System\Graphic\Material</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

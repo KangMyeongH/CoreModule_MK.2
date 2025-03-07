@@ -36,6 +36,11 @@ namespace engine
         void                    UpdateGameObjectTag(const SharedPtr<GameObject>& obj, const _string& newTag);
         void 					FlushDestroyGameObjects();
         void 					Release();
+
+        //======================================//
+        //				 serialize				//
+        //======================================//
+
         nlohmann::ordered_json 	To_Json() const;
         void 					From_Json(const nlohmann::ordered_json& j);
         
