@@ -12,7 +12,10 @@ engine::Material::Material(const SharedPtr<Renderer>& owner)
 engine::Material::~Material()
 {
 	m_Owner.reset();
-	m_DiffuseTexture->Release();
+	SafeRelease(m_DiffuseTexture);
+	SafeRelease(m_InputLayout);
+	SafeRelease(m_VertexShader);
+	SafeRelease(m_PixelShader);
 }
 
 engine::Material::Material(const Material& rhs)

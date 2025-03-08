@@ -23,14 +23,22 @@ namespace engine
 
         void SetDiffuseTexture(const _wstring& path);
 
+        //======================================//
+        //				  method				//
+        //======================================//
 
+        void LoadShader(const _wstring& path);
+
+        void Bind(ID3D11DeviceContext* context);
 
         static SharedPtr<Material> Create(const SharedPtr<Renderer>& renderer);
 	    void Destroy() override;
 
     private:
         WeakPtr<Renderer> 			m_Owner;
-        ID3D11ShaderResourceView* 	m_DiffuseTexture;
+        SharedPtr<Shader>           m_Shader;
+
+    	ID3D11ShaderResourceView* 	m_DiffuseTexture;
         _float4                     m_DiffuseColor;
         _float4                     m_AmbientColor;
     };

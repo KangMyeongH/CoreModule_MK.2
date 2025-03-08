@@ -34,9 +34,9 @@ HRESULT engine::D3D11Manager::Initialize(HWND hwnd, _bool isWindowed, _uint winS
 		nullptr,
 		0,
 		D3D11_SDK_VERSION,
-		&m_Device,
+		m_Device.GetAddressOf(),
 		&featureLV,
-		&m_DeviceContext)))
+		m_DeviceContext.GetAddressOf())))
 	{
 		return E_FAIL;
 	}
@@ -58,10 +58,10 @@ HRESULT engine::D3D11Manager::Initialize(HWND hwnd, _bool isWindowed, _uint winS
 
 	ID3D11RenderTargetView* RTVs[] =
 	{
-		m_BackBufferRTV
+		m_BackBufferRTV.Get()
 	};
 
-	m_DeviceContext->OMSetRenderTargets(0, RTVs, m_DepthStencilView);
+	m_DeviceContext->OMSetRenderTargets(0, RTVs, m_DepthStencilView.Get());
 
 	D3D11_VIEWPORT		viewPortDesc;
 	ZeroMemory(&viewPortDesc, sizeof(D3D11_VIEWPORT));
@@ -89,12 +89,12 @@ HRESULT engine::D3D11Manager::CreateTexture(const _wstring& path, ID3D11ShaderRe
 		return E_FAIL;
 	}
 
-	ID3D11ShaderResourceView* pSRV = nullptr;
+	ComPtr<ID3D11ShaderResourceView> pSRV;
 
 	if (m_TextureMap.find(path) != m_TextureMap.end())
 	{
 		pSRV = m_TextureMap[path];
-		*srv = pSRV;
+		*srv = pSRV.Get();
 
 		return S_OK;
 	}
@@ -107,7 +107,7 @@ HRESULT engine::D3D11Manager::CreateTexture(const _wstring& path, ID3D11ShaderRe
 
 	if (ext == L".dds")
 	{
-		hr = DirectX::CreateDDSTextureFromFile(m_Device, textureFilePath, nullptr, &pSRV);
+		hr = DirectX::CreateDDSTextureFromFile(m_Device.Get(), textureFilePath, nullptr, pSRV.GetAddressOf());
 	}
 
 	else if (ext == L".tga")
@@ -117,7 +117,7 @@ HRESULT engine::D3D11Manager::CreateTexture(const _wstring& path, ID3D11ShaderRe
 
 	else
 	{
-		hr = DirectX::CreateWICTextureFromFile(m_Device, textureFilePath, nullptr, &pSRV);
+		hr = DirectX::CreateWICTextureFromFile(m_Device.Get(), textureFilePath, nullptr, pSRV.GetAddressOf());
 	}
 
 	if (FAILED(hr))
@@ -125,82 +125,149 @@ HRESULT engine::D3D11Manager::CreateTexture(const _wstring& path, ID3D11ShaderRe
 		return hr;
 	}
 
-	*srv = pSRV;
+	*srv = pSRV.Get();
 
 	m_TextureMap.emplace(path, pSRV);
 
 	return S_OK;
 }
 
-//HRESULT engine::D3D11Manager::ClearBackBufferView(_float4 clearColor) const
+HRESULT engine::D3D11Manager::CreateShader(const _wstring& path, const SharedPtr<Shader>& shader)
+{
+	if (FileExists(path))
+	{
+		std::vector<std::pair<std::string, std::string>> entryPoints = {
+		{ "VSMain", "vs_5_0" },
+		{ "PSMain", "ps_5_0" },
+		{ "GSMain", "gs_5_0" },
+		{ "CSMain", "cs_5_0" },
+		{ "HSMain", "hs_5_0" },
+		{ "DSMain", "gs_5_0" }
+		};
+
+		for (auto& ep : entryPoints)
+		{
+			const _string& entryName = ep.first;
+			const _string& shaderModel = ep.second;
+
+			ComPtr<ID3DBlob> shaderBlob;
+			HRESULT hr = compileShaderFromFile(path, entryName, shaderModel, shaderBlob);
+
+			if (SUCCEEDED(hr))
+			{
+				if (shaderModel.find("vs_") == 0)
+				{
+					// TODO : InputLayout 추가 해야함.
+
+					ComPtr<ID3D11VertexShader> vs;
+					hr = m_Device->CreateVertexShader(shaderBlob->GetBufferPointer(), shaderBlob->GetBufferSize(), nullptr, vs.GetAddressOf());
+
+					if (SUCCEEDED(hr))
+					{
+						shader->VertexShader = vs;
+					}
+				}
+
+				else if (shaderModel.find("ps_") == 0)
+				{
+					ComPtr<ID3D11PixelShader> ps;
+					hr = m_Device->CreatePixelShader(shaderBlob->GetBufferPointer(), shaderBlob->GetBufferSize(), nullptr, ps.GetAddressOf());
+
+					if (SUCCEEDED(hr))
+					{
+						shader->PixelShader = ps;
+					}
+				}
+
+				else if (shaderModel.find("gs_") == 0)
+				{
+					ComPtr<ID3D11GeometryShader> gs;
+					hr = m_Device->CreateGeometryShader(shaderBlob->GetBufferPointer(), shaderBlob->GetBufferSize(), nullptr, gs.GetAddressOf());
+
+					if (SUCCEEDED(hr))
+					{
+						shader->GeometryShader = gs;
+					}
+				}
+
+				else if (shaderModel.find("cs_") == 0)
+				{
+					ComPtr<ID3D11ComputeShader> cs;
+					hr = m_Device->CreateComputeShader(shaderBlob->GetBufferPointer(), shaderBlob->GetBufferSize(), nullptr, cs.GetAddressOf());
+
+					if (SUCCEEDED(hr))
+					{
+						shader->ComputeShader = cs;
+					}
+				}
+
+				else if (shaderModel.find("hs_") == 0)
+				{
+					ComPtr<ID3D11HullShader> hs;
+					hr = m_Device->CreateHullShader(shaderBlob->GetBufferPointer(), shaderBlob->GetBufferSize(), nullptr, hs.GetAddressOf());
+
+					if (SUCCEEDED(hr))
+					{
+						shader->HullShader = hs;
+					}
+				}
+			}
+		}
+	}
+
+
+
+	return E_FAIL;
+}
+
+//HRESULT engine::D3D11Manager::CreateVertexShader(const _wstring& path, const _string& vsEntry, const D3D11_INPUT_ELEMENT_DESC* layoutDesc, ID3D11VertexShader** pVertexShader, ID3D11InputLayout** pInputLayout)
 //{
-//	if (nullptr == m_DeviceContext)
+//	ID3D11VertexShader* vertexShader = nullptr;
+//	ID3D11InputLayout* inputLayout = nullptr;
+//
+//	// blob을 만들고 
+//
+//	if (m_VertexShaderMap.find(path) == m_VertexShaderMap.end())
 //	{
-//		return E_FAIL;
+//		ID3DBlob* vsBlob = nullptr;
+//
+//		if (FAILED(D3DCompileFromFile(path.c_str(), nullptr, nullptr, vsEntry.c_str(), "vs_5_0", 0, 0, &vsBlob, nullptr)))
+//		{
+//			return E_FAIL;
+//		}
+//
+//		if (FAILED(m_Device->CreateVertexShader(vsBlob->GetBufferPointer(), vsBlob->GetBufferSize(), nullptr, &vertexShader)))
+//		{
+//			SafeRelease(vsBlob);
+//
+//			return E_FAIL;
+//		}
+//
+//		if (FAILED(m_Device->CreateInputLayout(layoutDesc, 1, vsBlob->GetBufferPointer(), vsBlob->GetBufferSize(), &inputLayout)))
+//		{
+//			SafeRelease(vsBlob);
+//			SafeRelease(vertexShader);
+//
+//			return E_FAIL;
+//		}
+//
+//		SafeRelease(vsBlob);
 //	}
 //
-//	m_DeviceContext->ClearRenderTargetView(
-//		m_BackBufferRTV,
-//		reinterpret_cast<_float*>(&clearColor));
-//
-//	return S_OK;
-//}
-//
-//HRESULT engine::D3D11Manager::ClearDepthStencilView() const
-//{
-//	if (nullptr == m_DeviceContext)
+//	else
 //	{
-//		return E_FAIL;
+//		
 //	}
 //
-//	m_DeviceContext->ClearDepthStencilView(
-//		m_DepthStencilView,
-//		D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL,
-//		1.f,
-//		0);
+//	*pVertexShader = vertexShader;
+//	*pInputLayout = inputLayout;
 //
-//	return S_OK;
-//}
-//
-//HRESULT engine::D3D11Manager::Present() const
-//{
-//	if (nullptr == m_SwapChain)
-//	{
-//		return E_FAIL;
-//	}
-//
-//	return m_SwapChain->Present(0, 0);
-//}
-//
-//HRESULT engine::D3D11Manager::ResizeBuffer()
-//{
-//	SafeRelease(m_BackBufferRTV);
-//	if (FAILED(m_SwapChain->ResizeBuffers(
-//		0,
-//		m_ResizeWidth, m_ResizeHeight,
-//		DXGI_FORMAT_UNKNOWN,
-//		0)))
-//	{
-//		return E_FAIL;
-//	}
-//
-//	m_ResizeWidth = 0;
-//	m_ResizeHeight = 0;
-//
-//	if (FAILED(readyBackBufferRenderTargetView()))
-//	{
-//		return E_FAIL;
-//	}
 //	return S_OK;
 //}
 
 void engine::D3D11Manager::Release()
 {
-	SafeRelease(m_SwapChain);
-	SafeRelease(m_DepthStencilView);
-	SafeRelease(m_BackBufferRTV);
-	SafeRelease(m_DeviceContext);
-	SafeRelease(m_Device);
+	m_TextureMap.clear();
 }
 
 HRESULT engine::D3D11Manager::readySwapChain(const HWND hWnd, const _bool isWindowed, const _uint winSizeX, const _uint winSizeY)
@@ -246,7 +313,7 @@ HRESULT engine::D3D11Manager::readySwapChain(const HWND hWnd, const _bool isWind
 	swapChainDesc.OutputWindow = hWnd;
 	swapChainDesc.SwapEffect = DXGI_SWAP_EFFECT_DISCARD;
 
-	if (FAILED(factory->CreateSwapChain(m_Device, &swapChainDesc, &m_SwapChain)))
+	if (FAILED(factory->CreateSwapChain(m_Device.Get(), &swapChainDesc, &m_SwapChain)))
 	{
 		return E_FAIL;
 	}
@@ -325,4 +392,12 @@ HRESULT engine::D3D11Manager::readyDepthStencilView(const _uint winSizeX, const 
 	SafeRelease(depthStencilTexture);
 
 	return S_OK;
+}
+
+HRESULT engine::D3D11Manager::compileShaderFromFile(const _wstring& path, const _string& entryPoint, const _string& targetProfile, ComPtr<ID3DBlob>& outBlob)
+{
+	ComPtr<ID3DBlob> errorBlob = nullptr;
+	HRESULT hr = D3DCompileFromFile(path.c_str(), nullptr, D3D_COMPILE_STANDARD_FILE_INCLUDE, entryPoint.c_str(), targetProfile.c_str(), 0, 0, outBlob.GetAddressOf(), errorBlob.GetAddressOf());
+
+	return hr;
 }

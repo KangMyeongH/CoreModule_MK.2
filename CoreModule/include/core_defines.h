@@ -12,6 +12,7 @@
 #include "WICTextureLoader.h"
 //#include "d3dx11effect.h"
 
+#include <fstream>
 #include <vector>
 #include <list>
 #include <map>
@@ -19,6 +20,7 @@
 #include <unordered_set>
 #include <functional>
 #include <string>
+#include <wrl.h>
 
 #include "json.hpp"
 

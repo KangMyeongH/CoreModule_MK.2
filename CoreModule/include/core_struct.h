@@ -33,4 +33,30 @@ namespace engine
 		_float4X4 ProjMat;
 	};
 
+	// 기본적으로 Vertex랑 Pixel Shader만을 들고 있는 Shader
+	struct Shader
+	{
+		ComPtr<ID3D11VertexShader>		VertexShader;
+		ComPtr<ID3D11PixelShader>		PixelShader;
+		ComPtr<ID3D11DomainShader>		DomainShader;
+		ComPtr<ID3D11ComputeShader>		ComputeShader;
+		ComPtr<ID3D11GeometryShader>	GeometryShader;
+		ComPtr<ID3D11HullShader>		HullShader;
+		ComPtr<ID3D11InputLayout>		InputLayout;
+
+		Shader() = default;
+		~Shader() = default;
+
+		void Bind(ID3D11DeviceContext* context)
+		{
+			context->IASetInputLayout(InputLayout);
+			context->VSSetShader(VertexShader, nullptr, 0);
+			context->HSSetShader(HullShader, nullptr, 0);
+			context->DSSetShader(DomainShader, nullptr, 0);
+			context->GSSetShader(GeometryShader, nullptr,0);
+			context->PSSetShader(PixelShader, nullptr, 0);
+			context->CSSetShader(ComputeShader, nullptr, 0);
+		}
+	};
+
 }

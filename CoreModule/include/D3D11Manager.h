@@ -3,7 +3,7 @@
 
 namespace engine
 {
-    using TextureMap = std::unordered_map<_wstring, ID3D11ShaderResourceView*>;
+    using TextureMap = std::unordered_map<_wstring, ComPtr<ID3D11ShaderResourceView>>;
 
     class COREMODULE_API D3D11Manager
     {
@@ -21,11 +21,11 @@ namespace engine
         //				 property				//
         //======================================//
 
-        ID3D11Device* 			GetDevice() const { return m_Device; }
-        ID3D11DeviceContext* 	GetContext() const { return m_DeviceContext; }
-        IDXGISwapChain* 		GetSwapChain() const { return m_SwapChain; }
-        ID3D11RenderTargetView* GetMainRTV() const { return m_BackBufferRTV; }
-        ID3D11DepthStencilView* GetDepthStencilView() const { return m_DepthStencilView; }
+        ComPtr<ID3D11Device> 			GetDevice() const { return m_Device; }
+        ComPtr<ID3D11DeviceContext> 	GetContext() const { return m_DeviceContext; }
+        ComPtr<IDXGISwapChain> 		    GetSwapChain() const { return m_SwapChain; }
+        ComPtr<ID3D11RenderTargetView>  GetMainRTV() const { return m_BackBufferRTV; }
+        ComPtr<ID3D11DepthStencilView>  GetDepthStencilView() const { return m_DepthStencilView; }
 
         //======================================//
         //				  method				//
@@ -34,8 +34,7 @@ namespace engine
         HRESULT	Initialize(HWND hwnd, _bool isWindowed, _uint winSizeX, _uint winSizeY);
 
         HRESULT CreateTexture(const _wstring& path, ID3D11ShaderResourceView** srv);
-        HRESULT CreateVertexShader(const _wstring& path);
-        HRESULT CreatePixelShader(const _wstring& path);
+        HRESULT CreateShader(const _wstring& path, const SharedPtr<Shader>& shader);
 
     	void 					Release();
 
@@ -43,14 +42,16 @@ namespace engine
         HRESULT 				readySwapChain(HWND hWnd, _bool isWindowed, _uint winSizeX, _uint winSizeY);
         HRESULT 				readyBackBufferRenderTargetView();
         HRESULT 				readyDepthStencilView(_uint winSizeX, _uint winSizeY);
+        HRESULT                 compileShaderFromFile(const _wstring& path, const _string& entryPoint, const _string& targetProfile, ComPtr<ID3DBlob>& outBlob);
 
     private:
-        ID3D11Device* 				m_Device;
-        ID3D11DeviceContext* 		m_DeviceContext;
-        IDXGISwapChain* 			m_SwapChain;
-        ID3D11RenderTargetView* 	m_BackBufferRTV;
-        ID3D11DepthStencilView* 	m_DepthStencilView;
+        ComPtr<ID3D11Device> 		    m_Device;
+        ComPtr<ID3D11DeviceContext> 	m_DeviceContext;
+        ComPtr<IDXGISwapChain> 			m_SwapChain;
+        ComPtr<ID3D11RenderTargetView> 	m_BackBufferRTV;
+        ComPtr<ID3D11DepthStencilView> 	m_DepthStencilView;
 
-        TextureMap                  m_TextureMap;
+        TextureMap                      m_TextureMap;
+		
     };
 }

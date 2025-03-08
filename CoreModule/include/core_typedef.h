@@ -45,4 +45,7 @@ namespace engine
 
 	template <typename T>
 	using		WeakPtr = std::weak_ptr<T>;
+
+	template <typename T>
+	using		ComPtr = Microsoft::WRL::ComPtr<T>;
 }
