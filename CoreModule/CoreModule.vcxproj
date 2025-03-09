@@ -29,6 +29,7 @@
     <ClCompile Include="src\GameObject.cpp" />
     <ClCompile Include="src\InputManager.cpp" />
     <ClCompile Include="src\Material.cpp" />
+    <ClCompile Include="src\Mesh.cpp" />
     <ClCompile Include="src\Object.cpp" />
     <ClCompile Include="src\PhysicsManager.cpp" />
     <ClCompile Include="src\Renderer.cpp" />
@@ -61,6 +62,7 @@
     <ClInclude Include="include\InputManager.h" />
     <ClInclude Include="include\json.hpp" />
     <ClInclude Include="include\Material.h" />
+    <ClInclude Include="include\Mesh.h" />
     <ClInclude Include="include\Object.h" />
     <ClInclude Include="include\PhysicsManager.h" />
     <ClInclude Include="include\Renderer.h" />

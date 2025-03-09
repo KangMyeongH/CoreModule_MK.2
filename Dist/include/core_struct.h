@@ -33,4 +33,29 @@ namespace engine
 		_float4X4 ProjMat;
 	};
 
+	struct Shader
+	{
+		ComPtr<ID3D11VertexShader>		VertexShader;
+		ComPtr<ID3D11PixelShader>		PixelShader;
+		ComPtr<ID3D11DomainShader>		DomainShader;
+		ComPtr<ID3D11ComputeShader>		ComputeShader;
+		ComPtr<ID3D11GeometryShader>	GeometryShader;
+		ComPtr<ID3D11HullShader>		HullShader;
+		ComPtr<ID3D11InputLayout>		InputLayout;
+
+		Shader() = default;
+		~Shader() = default;
+
+		void Bind(ID3D11DeviceContext* context) const
+		{
+			context->IASetInputLayout(InputLayout.Get());
+			context->VSSetShader(VertexShader.Get(), nullptr, 0);
+			context->HSSetShader(HullShader.Get(), nullptr, 0);
+			context->DSSetShader(DomainShader.Get(), nullptr, 0);
+			context->GSSetShader(GeometryShader.Get(), nullptr,0);
+			context->PSSetShader(PixelShader.Get(), nullptr, 0);
+			context->CSSetShader(ComputeShader.Get(), nullptr, 0);
+		}
+	};
+
 }

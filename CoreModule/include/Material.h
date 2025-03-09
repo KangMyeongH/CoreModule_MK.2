@@ -29,7 +29,7 @@ namespace engine
 
         void LoadShader(const _wstring& path);
 
-        void Bind(ID3D11DeviceContext* context);
+        void Bind(ID3D11DeviceContext* context) const;
 
         static SharedPtr<Material> Create(const SharedPtr<Renderer>& renderer);
 	    void Destroy() override;

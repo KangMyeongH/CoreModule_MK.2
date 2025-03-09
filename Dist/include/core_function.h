@@ -37,6 +37,12 @@ namespace engine
 		return wstr;
 	}
 
+	inline bool FileExists(const std::wstring& filename)
+	{
+		std::ifstream File(filename);
+		return File.good();
+	}
+
 	template<typename T>
 	void SafeDelete(T& pointer)
 	{

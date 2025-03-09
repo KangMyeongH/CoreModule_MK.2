@@ -147,6 +147,7 @@
     <ClInclude Include="include\Material.h">
       <Filter>00. System\Graphic\Material</Filter>
     </ClInclude>
+    <ClInclude Include="include\Mesh.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\GameObject.cpp">
@@ -207,5 +208,6 @@
     <ClCompile Include="src\Material.cpp">
       <Filter>00. System\Graphic\Material</Filter>
     </ClCompile>
+    <ClCompile Include="src\Mesh.cpp" />
   </ItemGroup>
 </Project>

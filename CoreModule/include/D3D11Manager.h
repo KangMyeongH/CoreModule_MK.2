@@ -36,13 +36,14 @@ namespace engine
         HRESULT CreateTexture(const _wstring& path, ID3D11ShaderResourceView** srv);
         HRESULT CreateShader(const _wstring& path, const SharedPtr<Shader>& shader);
 
-    	void 					Release();
+    	void 	Release();
 
     private:
         HRESULT 				readySwapChain(HWND hWnd, _bool isWindowed, _uint winSizeX, _uint winSizeY);
         HRESULT 				readyBackBufferRenderTargetView();
         HRESULT 				readyDepthStencilView(_uint winSizeX, _uint winSizeY);
         HRESULT                 compileShaderFromFile(const _wstring& path, const _string& entryPoint, const _string& targetProfile, ComPtr<ID3DBlob>& outBlob);
+        void	                compileInputLayoutFromReflector(std::vector<D3D11_INPUT_ELEMENT_DESC>* inputDesc, const ComPtr<ID3D11ShaderReflection>& reflector);
 
     private:
         ComPtr<ID3D11Device> 		    m_Device;

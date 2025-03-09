@@ -43,7 +43,7 @@ namespace engine
         WeakPtr<Camera> 	m_MainCamera;
         Cameras 			m_Cameras;
 
-        VS_ConstantBuffer   m_VSConstantBuffer;
+        VS_ConstantBuffer   m_VSConstantBuffer; // ???????? 내가 이걸 왜 넣은거지...?
 
     };
 }

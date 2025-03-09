@@ -142,7 +142,7 @@ HRESULT engine::D3D11Manager::CreateShader(const _wstring& path, const SharedPtr
 		{ "GSMain", "gs_5_0" },
 		{ "CSMain", "cs_5_0" },
 		{ "HSMain", "hs_5_0" },
-		{ "DSMain", "gs_5_0" }
+		{ "DSMain", "ds_5_0" }
 		};
 
 		for (auto& ep : entryPoints)
@@ -155,16 +155,29 @@ HRESULT engine::D3D11Manager::CreateShader(const _wstring& path, const SharedPtr
 
 			if (SUCCEEDED(hr))
 			{
+				ComPtr<ID3D11ShaderReflection> reflector;
+				D3DReflect(shaderBlob->GetBufferPointer(), shaderBlob->GetBufferSize(), IID_ID3D11ShaderReflection, reinterpret_cast<void**>(reflector.GetAddressOf()));
+
 				if (shaderModel.find("vs_") == 0)
 				{
-					// TODO : InputLayout 추가 해야함.
-
 					ComPtr<ID3D11VertexShader> vs;
 					hr = m_Device->CreateVertexShader(shaderBlob->GetBufferPointer(), shaderBlob->GetBufferSize(), nullptr, vs.GetAddressOf());
 
 					if (SUCCEEDED(hr))
 					{
 						shader->VertexShader = vs;
+
+						ComPtr<ID3D11InputLayout> input;
+						std::vector<D3D11_INPUT_ELEMENT_DESC> inputLayoutDesc;
+
+						compileInputLayoutFromReflector(&inputLayoutDesc, reflector);
+
+						hr = m_Device->CreateInputLayout(&inputLayoutDesc[0], static_cast<UINT>(inputLayoutDesc.size()), shaderBlob->GetBufferPointer(), shaderBlob->GetBufferSize(), input.GetAddressOf());
+
+						if (SUCCEEDED(hr))
+						{
+							shader->InputLayout = input;
+						}
 					}
 				}
 
@@ -211,59 +224,23 @@ HRESULT engine::D3D11Manager::CreateShader(const _wstring& path, const SharedPtr
 						shader->HullShader = hs;
 					}
 				}
+
+				else if (shaderModel.find("ds_") == 0)
+				{
+					ComPtr<ID3D11DomainShader> ds;
+					hr = m_Device->CreateDomainShader(shaderBlob->GetBufferPointer(), shaderBlob->GetBufferSize(), nullptr, ds.GetAddressOf());
+
+					if (SUCCEEDED(hr))
+					{
+						shader->DomainShader = ds;
+					}
+				}
 			}
 		}
 	}
 
-
-
 	return E_FAIL;
 }
-
-//HRESULT engine::D3D11Manager::CreateVertexShader(const _wstring& path, const _string& vsEntry, const D3D11_INPUT_ELEMENT_DESC* layoutDesc, ID3D11VertexShader** pVertexShader, ID3D11InputLayout** pInputLayout)
-//{
-//	ID3D11VertexShader* vertexShader = nullptr;
-//	ID3D11InputLayout* inputLayout = nullptr;
-//
-//	// blob을 만들고 
-//
-//	if (m_VertexShaderMap.find(path) == m_VertexShaderMap.end())
-//	{
-//		ID3DBlob* vsBlob = nullptr;
-//
-//		if (FAILED(D3DCompileFromFile(path.c_str(), nullptr, nullptr, vsEntry.c_str(), "vs_5_0", 0, 0, &vsBlob, nullptr)))
-//		{
-//			return E_FAIL;
-//		}
-//
-//		if (FAILED(m_Device->CreateVertexShader(vsBlob->GetBufferPointer(), vsBlob->GetBufferSize(), nullptr, &vertexShader)))
-//		{
-//			SafeRelease(vsBlob);
-//
-//			return E_FAIL;
-//		}
-//
-//		if (FAILED(m_Device->CreateInputLayout(layoutDesc, 1, vsBlob->GetBufferPointer(), vsBlob->GetBufferSize(), &inputLayout)))
-//		{
-//			SafeRelease(vsBlob);
-//			SafeRelease(vertexShader);
-//
-//			return E_FAIL;
-//		}
-//
-//		SafeRelease(vsBlob);
-//	}
-//
-//	else
-//	{
-//		
-//	}
-//
-//	*pVertexShader = vertexShader;
-//	*pInputLayout = inputLayout;
-//
-//	return S_OK;
-//}
 
 void engine::D3D11Manager::Release()
 {
@@ -399,5 +376,94 @@ HRESULT engine::D3D11Manager::compileShaderFromFile(const _wstring& path, const 
 	ComPtr<ID3DBlob> errorBlob = nullptr;
 	HRESULT hr = D3DCompileFromFile(path.c_str(), nullptr, D3D_COMPILE_STANDARD_FILE_INCLUDE, entryPoint.c_str(), targetProfile.c_str(), 0, 0, outBlob.GetAddressOf(), errorBlob.GetAddressOf());
 
+	// TODO : errorBlob 출력 메시지 확인하는거 추가 해야함.
+
 	return hr;
+}
+
+void engine::D3D11Manager::compileInputLayoutFromReflector(std::vector<D3D11_INPUT_ELEMENT_DESC>* inputDesc,
+                                                              const ComPtr<ID3D11ShaderReflection>& reflector)
+{
+	D3D11_SHADER_DESC shaderDesc;
+	reflector->GetDesc(&shaderDesc);
+
+	for (unsigned inputIndex = 0; inputIndex < shaderDesc.InputParameters; inputIndex++)
+	{
+		D3D11_SIGNATURE_PARAMETER_DESC paramDesc;
+		reflector->GetInputParameterDesc(inputIndex, &paramDesc);
+
+		D3D11_INPUT_ELEMENT_DESC elementDesc;
+		elementDesc.SemanticName = paramDesc.SemanticName;
+		elementDesc.SemanticIndex = paramDesc.SemanticIndex;
+		elementDesc.InputSlot = 0;
+		elementDesc.AlignedByteOffset = D3D11_APPEND_ALIGNED_ELEMENT;
+		elementDesc.InputSlotClass = D3D11_INPUT_PER_VERTEX_DATA;
+		elementDesc.InstanceDataStepRate = 0;
+
+		if (paramDesc.Mask == 1)
+		{
+			if (paramDesc.ComponentType == D3D_REGISTER_COMPONENT_UINT32)
+			{
+				elementDesc.Format = DXGI_FORMAT_R32_UINT;
+			}
+			else if (paramDesc.ComponentType == D3D_REGISTER_COMPONENT_SINT32)
+			{
+				elementDesc.Format = DXGI_FORMAT_R32_SINT;
+			}
+			else if (paramDesc.ComponentType == D3D_REGISTER_COMPONENT_FLOAT32)
+			{
+				elementDesc.Format = DXGI_FORMAT_R32_FLOAT;
+			}
+		}
+
+		else if (paramDesc.Mask <= 3)
+		{
+			if (paramDesc.ComponentType == D3D_REGISTER_COMPONENT_UINT32)
+			{
+				elementDesc.Format = DXGI_FORMAT_R32G32_UINT;
+			}
+			else if (paramDesc.ComponentType == D3D_REGISTER_COMPONENT_SINT32)
+			{
+				elementDesc.Format = DXGI_FORMAT_R32G32_SINT;
+			}
+			else if (paramDesc.ComponentType == D3D_REGISTER_COMPONENT_FLOAT32)
+			{
+				elementDesc.Format = DXGI_FORMAT_R32G32_FLOAT;
+			}
+		}
+
+		else if (paramDesc.Mask <= 7)
+		{
+			if (paramDesc.ComponentType == D3D_REGISTER_COMPONENT_UINT32)
+			{
+				elementDesc.Format = DXGI_FORMAT_R32G32B32_UINT;
+			}
+			else if (paramDesc.ComponentType == D3D_REGISTER_COMPONENT_SINT32)
+			{
+				elementDesc.Format = DXGI_FORMAT_R32G32B32_SINT;
+			}
+			else if (paramDesc.ComponentType == D3D_REGISTER_COMPONENT_FLOAT32)
+			{
+				elementDesc.Format = DXGI_FORMAT_R32G32B32_FLOAT;
+			}
+		}
+
+		else if (paramDesc.Mask <= 15)
+		{
+			if (paramDesc.ComponentType == D3D_REGISTER_COMPONENT_UINT32)
+			{
+				elementDesc.Format = DXGI_FORMAT_R32G32B32A32_UINT;
+			}
+			else if (paramDesc.ComponentType == D3D_REGISTER_COMPONENT_SINT32)
+			{
+				elementDesc.Format = DXGI_FORMAT_R32G32B32A32_SINT;
+			}
+			else if (paramDesc.ComponentType == D3D_REGISTER_COMPONENT_FLOAT32)
+			{
+				elementDesc.Format = DXGI_FORMAT_R32G32B32A32_FLOAT;
+			}
+		}
+
+		inputDesc->push_back(elementDesc);
+	}
 }

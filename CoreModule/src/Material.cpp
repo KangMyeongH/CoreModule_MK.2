@@ -13,9 +13,6 @@ engine::Material::~Material()
 {
 	m_Owner.reset();
 	SafeRelease(m_DiffuseTexture);
-	SafeRelease(m_InputLayout);
-	SafeRelease(m_VertexShader);
-	SafeRelease(m_PixelShader);
 }
 
 engine::Material::Material(const Material& rhs)
@@ -35,6 +32,14 @@ void engine::Material::SetDiffuseTexture(const _wstring& path)
 	}
 
 	m_DiffuseTexture->AddRef();
+}
+
+void engine::Material::Bind(ID3D11DeviceContext* context) const
+{
+	if (m_Shader)
+	{
+		m_Shader->Bind(context);
+	}
 }
 
 engine::SharedPtr<engine::Material> engine::Material::Create(const SharedPtr<Renderer>& renderer)
