@@ -58,4 +58,10 @@ namespace engine
 		}
 	};
 
+	struct VTX_MESH
+	{
+		_float3 Position;
+		_float3 Normal;
+		_float2 TexCoord0;
+	};
 }

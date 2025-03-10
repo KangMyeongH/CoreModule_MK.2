@@ -35,6 +35,8 @@ namespace engine
 
         HRESULT CreateTexture(const _wstring& path, ID3D11ShaderResourceView** srv);
         HRESULT CreateShader(const _wstring& path, const SharedPtr<Shader>& shader);
+        HRESULT CreateMesh(const _wstring& path, )
+
 
     	void 	Release();
 
