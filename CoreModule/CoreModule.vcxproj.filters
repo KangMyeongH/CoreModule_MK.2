@@ -70,6 +70,9 @@
     <Filter Include="00. System\UI\Manager">
       <UniqueIdentifier>{6f560ea2-977a-457c-a583-12d8eb919d3b}</UniqueIdentifier>
     </Filter>
+    <Filter Include="00. System\UI\Texture">
+      <UniqueIdentifier>{032f77a1-3ce4-4207-bc1e-715a24532f03}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="include\core_defines.h">
@@ -160,6 +163,9 @@
     <ClInclude Include="include\UIManager.h">
       <Filter>00. System\UI\Manager</Filter>
     </ClInclude>
+    <ClInclude Include="include\TextureUI.h">
+      <Filter>00. System\UI\Texture</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\GameObject.cpp">
@@ -226,6 +232,9 @@
     </ClCompile>
     <ClCompile Include="src\UIManager.cpp">
       <Filter>00. System\UI\Manager</Filter>
+    </ClCompile>
+    <ClCompile Include="src\TextureUI.cpp">
+      <Filter>00. System\UI\Texture</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

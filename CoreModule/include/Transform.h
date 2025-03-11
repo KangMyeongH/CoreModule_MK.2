@@ -216,7 +216,6 @@ namespace engine
 		friend void to_json(nlohmann::ordered_json& j, const SharedPtr<Transform>& t);
 		friend void from_json(const nlohmann::ordered_json& j, const SharedPtr<Transform>& t);
 
-
 	private:
 		//======================================//
 		//				  fields				//

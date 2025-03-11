@@ -33,6 +33,28 @@ namespace engine
 		_float4X4 ProjMat;
 	};
 
+	struct ShaderVarDesc
+	{
+		_string		Name;			// hlsl에 선언 된 변수 이름
+		_uint		StartOffset;	// CBuffer 내 byte offset
+		_uint		Size;			// byte size
+	};
+
+	struct ConstantBufferDesc
+	{
+		_string		Name;
+		_uint		BindPoint;
+		_uint		BufferSize;
+
+		std::unordered_map<_string, ShaderVarDesc> Variables;
+	};
+
+	struct TextureInfo
+	{
+		_string		Name;
+		_uint		BindPoint;
+	};
+
 	struct Shader
 	{
 		ComPtr<ID3D11VertexShader>		VertexShader;
@@ -42,6 +64,9 @@ namespace engine
 		ComPtr<ID3D11GeometryShader>	GeometryShader;
 		ComPtr<ID3D11HullShader>		HullShader;
 		ComPtr<ID3D11InputLayout>		InputLayout;
+
+		std::unordered_map<_string, ConstantBufferDesc> CBuffers;
+		std::unordered_map<_string, TextureInfo>		TBuffers;
 
 		Shader() = default;
 		~Shader() = default;
@@ -56,6 +81,11 @@ namespace engine
 			context->PSSetShader(PixelShader.Get(), nullptr, 0);
 			context->CSSetShader(ComputeShader.Get(), nullptr, 0);
 		}
+	};
+
+	struct Texture
+	{
+
 	};
 
 	struct VTX_MESH

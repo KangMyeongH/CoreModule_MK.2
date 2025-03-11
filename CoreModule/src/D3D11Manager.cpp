@@ -74,6 +74,9 @@ HRESULT engine::D3D11Manager::Initialize(HWND hwnd, _bool isWindowed, _uint winS
 
 	m_DeviceContext->RSSetViewports(1, &viewPortDesc);
 
+	m_WinSizeX = winSizeX;
+	m_WinSizeY = winSizeY;
+
 	return S_OK;
 }
 
@@ -235,6 +238,8 @@ HRESULT engine::D3D11Manager::CreateShader(const _wstring& path, const SharedPtr
 						shader->DomainShader = ds;
 					}
 				}
+
+
 			}
 		}
 	}

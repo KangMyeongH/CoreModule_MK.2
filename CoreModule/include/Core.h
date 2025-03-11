@@ -70,6 +70,9 @@ namespace engine
 		PhysicsManager* 		m_PhysicsManager;
 		RenderManager*			m_RenderManager;
 		UIManager*				m_UIManager;
+
+		_uint					m_WindowWidth;
+		_uint					m_WindowHeight;
 	};
 
 }

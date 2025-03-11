@@ -19,7 +19,8 @@ namespace engine
         //				 property				//
         //======================================//
 
-
+        _uint GetSorting() const;
+        void SetSorting( _uint sort);
 
         //======================================//
         //				  method				//
@@ -33,7 +34,7 @@ namespace engine
         virtual void Update() = 0;
         virtual void RenderUI() = 0;
 
-        void Destroy() override = 0;
+        void Destroy() override;
         SharedPtr<Component> Clone() const override = 0;
 
     protected:
@@ -51,5 +52,7 @@ namespace engine
         //======================================//
         //				  fields				//
         //======================================//
+
+        _uint m_SortingOrder;
     };
 }

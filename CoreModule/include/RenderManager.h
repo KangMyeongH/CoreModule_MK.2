@@ -42,7 +42,6 @@ namespace engine
         void RegisterRenderer();
         void FlushDestroyRenderer();
 
-
         void FlushDestroyCamera();
 
         void Release();
