@@ -12,6 +12,10 @@ namespace engine
 class ComponentFactory
 {
 private:
+	//======================================//
+	//				constructor				//
+	//======================================//
+
 	ComponentFactory() = default;
 	~ComponentFactory() = default;
 public:
@@ -21,6 +25,10 @@ public:
 	ComponentFactory& operator=(ComponentFactory&&) = delete;
 
 public:
+	//======================================//
+	//				  method				//
+	//======================================//
+
 	static ComponentFactory& GetInstance()
 	{
 		static ComponentFactory s_Instance;
@@ -28,6 +36,10 @@ public:
 	}
 
 	std::shared_ptr<engine::Component> CreateComponent(const engine::_string& typeName);
+
+	//======================================//
+	//				  fields				//
+	//======================================//
 
 	std::unordered_map<engine::_string, std::function<std::shared_ptr<engine::Component>()>> componentFactory;
 };

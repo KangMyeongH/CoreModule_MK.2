@@ -41,6 +41,8 @@
     <ClCompile Include="src\Test.cpp" />
     <ClCompile Include="src\TimeManager.cpp" />
     <ClCompile Include="src\Transform.cpp" />
+    <ClCompile Include="src\UI.cpp" />
+    <ClCompile Include="src\UIManager.cpp" />
   </ItemGroup>
   <ItemGroup>
     <!-- include 폴더의 모든 헤더 파일을 포함 -->
@@ -74,6 +76,8 @@
     <ClInclude Include="include\Test.h" />
     <ClInclude Include="include\TimeManager.h" />
     <ClInclude Include="include\Transform.h" />
+    <ClInclude Include="include\UI.h" />
+    <ClInclude Include="include\UIManager.h" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>17.0</VCProjectVersion>

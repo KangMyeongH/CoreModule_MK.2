@@ -35,6 +35,10 @@ namespace engine
 	    void Destroy() override;
 
     private:
+        //======================================//
+        //				  fields				//
+        //======================================//
+
         WeakPtr<Renderer> 			m_Owner;
         SharedPtr<Shader>           m_Shader;
 

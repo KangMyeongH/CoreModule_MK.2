@@ -2,6 +2,7 @@
 
 #include "Camera.h"
 #include "GameObject.h"
+#include "Renderer.h"
 
 IMPLEMENT_SINGLETON(engine::RenderManager)
 
@@ -27,9 +28,49 @@ void engine::RenderManager::UpdateMainCamera()
 	}
 }
 
-void engine::RenderManager::Render()
+void engine::RenderManager::Render(const ComPtr<ID3D11DeviceContext>& context)
 {
+	for (const auto& renderer : m_Renderers)
+	{
+		if (auto owner = renderer->GetGameObject().lock())
+		{
+			if (owner->IsActive())
+			{
+				renderer->Render(context);
+			}
+		}
+	}
+}
 
+void engine::RenderManager::RegisterRenderer()
+{
+	for (auto it = m_RegisterQueue.begin(); it != m_RegisterQueue.end();)
+	{
+		SharedPtr<Renderer> renderer = *it;
+		m_Renderers.push_back(renderer);
+	}
+}
+
+void engine::RenderManager::FlushDestroyRenderer()
+{
+	for (auto it = m_Renderers.begin(); it != m_Renderers.end();)
+	{
+		SharedPtr<Renderer> renderer = *it;
+		if (renderer->IsDestroyed())
+		{
+			if (const auto owner = renderer->GetGameObject().lock())
+			{
+				owner->RemoveComponent(renderer);
+			}
+
+			it = m_Renderers.erase(it);
+		}
+
+		else
+		{
+			++it;
+		}
+	}
 }
 
 void engine::RenderManager::FlushDestroyCamera()
@@ -57,6 +98,9 @@ void engine::RenderManager::FlushDestroyCamera()
 
 void engine::RenderManager::Release()
 {
+	m_Renderers.clear();
+	m_RegisterQueue.clear();
+
 	m_MainCamera.reset();
 	m_Cameras.clear();
 }

@@ -1,5 +1,8 @@
 #include "Rigidbody.h"
 
+#include "PhysicsManager.h"
+#include "RenderManager.h"
+
 DEFINE_REGISTER_COMPONENT(Rigidbody)
 
 engine::Rigidbody::Rigidbody(const SharedPtr<GameObject>& owner) : Component(owner)
@@ -38,6 +41,7 @@ void engine::Rigidbody::from_json(const nlohmann::ordered_json& j)
 
 void engine::Rigidbody::registerComponent()
 {
+	PhysicsManager::GetInstance().AddRigidbody(std::static_pointer_cast<Rigidbody>(shared_from_this()));
 }
 
 void engine::Rigidbody::rigidbodyUpdate(const float deltaTime)

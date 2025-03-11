@@ -3,9 +3,11 @@
 #include "D3D11Manager.h"
 #include "InputManager.h"
 #include "PhysicsManager.h"
+#include "RenderManager.h"
 #include "Scene.h"
 #include "ScriptBehaviourManager.h"
 #include "TimeManager.h"
+#include "UIManager.h"
 
 engine::Core::~Core()
 {
@@ -19,7 +21,13 @@ void engine::Core::Release()
 	m_Scene->Release();
 	m_ScriptBehaviourManager->Release();
 	m_PhysicsManager->Release();
+	m_UIManager->Release();
+}
 
+void engine::Core::registerObjects()
+{
+	m_PhysicsManager->RegisterRigidbody();
+	m_UIManager->RegisterUI();
 }
 
 void engine::Core::start()
@@ -57,13 +65,20 @@ void engine::Core::lateUpdate()
 
 void engine::Core::renderScene()
 {
-	//m_D3D11Manager->ClearBackBufferView(_float4(0.f, 0.f, 1.f, 1.f));
-	//m_D3D11Manager->ClearDepthStencilView();
+	ComPtr<ID3D11DeviceContext> context = m_D3D11Manager->GetContext();
+
+	m_RenderManager->UpdateMainCamera();
+	m_RenderManager->Render(context);
+	m_UIManager->Render(context);
 }
 
 void engine::Core::destroy()
 {
 	m_ScriptBehaviourManager->FlushDestroyScriptBehaviours();
+	m_Scene->FlushDestroyGameObjects();
+	m_RenderManager->FlushDestroyCamera();
+	m_PhysicsManager->FlushDestroyRigidbody();
+	m_UIManager->FlushDestroyUI();
 }
 
 HRESULT engine::Core::Initialize(const HWND hwnd)
@@ -76,22 +91,65 @@ HRESULT engine::Core::Initialize(const HWND hwnd)
 	m_PhysicsManager 			= &PhysicsManager::GetInstance();
 	m_TimeManager 				= &TimeManager::GetInstance();
 	m_InputManager				= &InputManager::GetInstance();
+	m_RenderManager				= &RenderManager::GetInstance();
+	m_UIManager					= &UIManager::GetInstance();
 
 	m_TimeManager->Initialize();
 
 	return S_OK;
 }
 
+/*==========================================================
+ * Unity의 LifeCycle을 참고해서 Progress을 동작 시키고 있음.
+ * 1. Initialization ( TimeUpdate -> register -> Awake -> OnEnable -> Start )
+ * 2. Physics ( FixedUpdate -> PhysicsUpdate -> OnTriggerXXX -> OnCollisionXXX )
+ * 3. Input Event
+ * 4. GameLogic ( Update -> AnimationUpdate -> LateUpdate )
+ * 5. Scene Render  ( RenderObject -> OnDrawGizmo -> OnGUI )
+ * 6. Decommissioning ( OnDisable -> OnDestroy )
+ * ==========================================================*/
 void engine::Core::Progress()
 {
+	Initialization();
+	Physics();
+	InputEvent();
+	GameLogic();
+	SceneRender();
+	Decommissioning();
+}
+
+void engine::Core::Initialization()
+{
 	m_TimeManager->TimeUpdate();
+	registerObjects();
 	start();
+}
+
+void engine::Core::Physics()
+{
 	fixedUpdate();
 	physicsUpdate();
 	onTrigger();
 	onCollision();
+}
+
+void engine::Core::InputEvent()
+{
 	m_InputManager->UpdateInput(m_Hwnd);
+}
+
+void engine::Core::GameLogic()
+{
 	update();
 	lateUpdate();
+}
+
+void engine::Core::SceneRender()
+{
+	renderScene();
+}
+
+void engine::Core::Decommissioning()
+{
 	destroy();
 }

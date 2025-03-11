@@ -37,17 +37,21 @@ namespace engine
         void 					FlushDestroyGameObjects();
         void 					Release();
 
+    private:
+        void 					setupTransformHierarchy() const;
+
         //======================================//
         //				 serialize				//
         //======================================//
 
         nlohmann::ordered_json 	To_Json() const;
         void 					From_Json(const nlohmann::ordered_json& j);
-        
-    private:
-        void 					setupTransformHierarchy() const;
 
     private:
+        //======================================//
+        //				  fields				//
+        //======================================//
+
         GameObjects 		m_GameObjects;
         GameObjectsTagMap  	m_GameObjectsTagMap;
         _string             m_SceneName;

@@ -44,6 +44,12 @@ namespace engine
 
         void Destroy() override;
 
+    protected:
+        void registerComponent() override;
+
+    private:
+        void rigidbodyUpdate(float deltaTime);
+
         //======================================//
         //				 serialize				//
         //======================================//
@@ -51,13 +57,11 @@ namespace engine
         void to_json(nlohmann::ordered_json& j) override;
         void from_json(const nlohmann::ordered_json& j) override;
 
-    protected:
-        void registerComponent() override;
-
     private:
-        void rigidbodyUpdate(float deltaTime);
+        //======================================//
+        //				  fields				//
+        //======================================//
 
-    private:
         Vector3  m_Velocity;
         _float   m_Mass;
         _float   m_Drag;

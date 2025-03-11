@@ -121,6 +121,10 @@ namespace engine
 		friend void 					from_json(const nlohmann::ordered_json& j, const SharedPtr<GameObject>& obj);
 
 	private:
+		//======================================//
+		//				  fields				//
+		//======================================//
+
 		Components						m_Components;
 		SharedPtr<Transform>			m_Transform;
 		_string							m_Tag;

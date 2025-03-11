@@ -64,6 +64,12 @@
     <Filter Include="00. System\Graphic\Material">
       <UniqueIdentifier>{90573b0a-1ee2-400b-aa9f-984253c34e63}</UniqueIdentifier>
     </Filter>
+    <Filter Include="00. System\UI">
+      <UniqueIdentifier>{4a68e35e-148a-4538-85db-d0fffd30ed86}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="00. System\UI\Manager">
+      <UniqueIdentifier>{6f560ea2-977a-457c-a583-12d8eb919d3b}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="include\core_defines.h">
@@ -148,6 +154,12 @@
       <Filter>00. System\Graphic\Material</Filter>
     </ClInclude>
     <ClInclude Include="include\Mesh.h" />
+    <ClInclude Include="include\UI.h">
+      <Filter>00. System\UI</Filter>
+    </ClInclude>
+    <ClInclude Include="include\UIManager.h">
+      <Filter>00. System\UI\Manager</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\GameObject.cpp">
@@ -209,5 +221,11 @@
       <Filter>00. System\Graphic\Material</Filter>
     </ClCompile>
     <ClCompile Include="src\Mesh.cpp" />
+    <ClCompile Include="src\UI.cpp">
+      <Filter>00. System\UI</Filter>
+    </ClCompile>
+    <ClCompile Include="src\UIManager.cpp">
+      <Filter>00. System\UI\Manager</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>
