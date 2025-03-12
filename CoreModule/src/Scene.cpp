@@ -3,7 +3,6 @@
 #include <fstream>
 
 #include "GameObject.h"
-#include "Test.h"
 
 IMPLEMENT_SINGLETON(engine::Scene)
 
@@ -27,18 +26,17 @@ bool engine::Scene::Initialize(const _wstring& path)
 	}
 
 	std::ifstream inFile(path);
+
 	if (!inFile.is_open())
 	{
 		return false;
 	}
+
 	nlohmann::ordered_json j;
 	inFile >> j;
 	From_Json(j);
 	inFile.clear();
 	inFile.close();
-
-	//SharedPtr<GameObject> temp = CreateGameObject("Test");
-	//SharedPtr<Test> test = temp->AddComponent<Test>();
 
 	return true;
 }

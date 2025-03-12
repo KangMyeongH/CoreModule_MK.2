@@ -1,10 +1,10 @@
 #pragma once
 #include "core_defines.h"
+#include "EditorCamera.h"
 
 namespace engine
 {
     class UI;
-	class Camera;
 	class Renderer;
 
     namespace editor
@@ -31,8 +31,9 @@ namespace engine
         //======================================//
         //				  method				//
         //======================================//
-
-
+        public:
+            void Render(const ComPtr<ID3D11DeviceContext>& context);
+            
 
         //======================================//
         //				  fields				//
@@ -40,8 +41,7 @@ namespace engine
         private:
             Renderers 			m_Renderers;
             UIs                 m_UIs;
-
-
+            EditorCamera        m_EditorCamera;
         };
     }
 

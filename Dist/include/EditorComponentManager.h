@@ -1,10 +1,10 @@
 #pragma once
 #include "core_defines.h"
+#include "EditorCamera.h"
 
 namespace engine
 {
     class UI;
-	class Camera;
 	class Renderer;
 
     namespace editor
@@ -40,8 +40,7 @@ namespace engine
         private:
             Renderers 			m_Renderers;
             UIs                 m_UIs;
-
-
+            EditorCamera        m_EditorCamera;
         };
     }
 

@@ -239,7 +239,9 @@ HRESULT engine::D3D11Manager::CreateShader(const _wstring& path, const SharedPtr
 					}
 				}
 
+				reflectBufferFromReflector(reflector, shader);
 
+				return true;
 			}
 		}
 	}
@@ -470,5 +472,71 @@ void engine::D3D11Manager::compileInputLayoutFromReflector(std::vector<D3D11_INP
 		}
 
 		inputDesc->push_back(elementDesc);
+	}
+}
+
+void engine::D3D11Manager::reflectBufferFromReflector(const ComPtr<ID3D11ShaderReflection>& reflector, const SharedPtr<Shader>& shader)
+{
+	D3D11_SHADER_DESC shaderDesc;
+	reflector->GetDesc(&shaderDesc);
+
+	for (_uint i = 0; i < shaderDesc.BoundResources; ++i)
+	{
+		D3D11_SHADER_INPUT_BIND_DESC bindDesc;
+		reflector->GetResourceBindingDesc(i, &bindDesc);
+
+		// bindDesc.Name		: 리소스 이름
+		// bindDesc.BindPoint	: register 번호
+		// bindDesc.Type		: D3D_SIT_CBUFFER, D3D_SIT_TEXTURE, D3D_SIT_SAMPLER 등
+
+		if (bindDesc.Type == D3D_SIT_CBUFFER)
+		{
+			ConstantBufferDesc cbDest;
+			cbDest.Name = bindDesc.Name;
+			cbDest.BindPoint = bindDesc.BindPoint;
+
+			ID3D11ShaderReflectionConstantBuffer* cbuf = reflector->GetConstantBufferByName(bindDesc.Name);
+
+			if (cbuf)
+			{
+				D3D11_SHADER_BUFFER_DESC desc;
+				cbuf->GetDesc(&desc);
+
+				cbDest.BufferSize = desc.Size;
+
+				for (_uint varIndex = 0; varIndex < desc.Variables; ++varIndex)
+				{
+					ID3D11ShaderReflectionVariable* varRef = cbuf->GetVariableByIndex(varIndex);
+					D3D11_SHADER_VARIABLE_DESC varDesc;
+					varRef->GetDesc(&varDesc);
+
+					ShaderVarDesc varInfo;
+					varInfo.Name = varDesc.Name;      // 예: "_Color", "_Metallic"
+					varInfo.StartOffset = varDesc.StartOffset;
+					varInfo.Size = varDesc.Size;
+
+					cbDest.Variables[varInfo.Name] = varInfo;
+				}
+			}
+
+			shader->CBuffers[cbDest.Name] = cbDest;
+		}
+
+		else if (bindDesc.Type == D3D_SIT_TEXTURE)
+		{
+			TextureInfo tInfo;
+			tInfo.Name = bindDesc.Name;
+			tInfo.BindPoint = bindDesc.BindPoint;
+
+			shader->TBuffers[tInfo.Name] = tInfo;
+		}
+
+		//else if (bindDesc.Type == D3D_SIT_SAMPLER)
+		//{
+		//	SamplerInfo sinfo;
+		//	sinfo.name = bindDesc.Name;
+		//	sinfo.bindPoint = bindDesc.BindPoint;
+		//	outResult.samplers[sinfo.name] = sinfo;
+		//}
 	}
 }
