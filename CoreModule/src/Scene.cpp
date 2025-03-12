@@ -47,17 +47,6 @@ void engine::Scene::ChangeScene(const _wstring& sceneName)
 {
 }
 
-engine::SharedPtr<engine::GameObject> engine::Scene::CreateGameObject(const _string& name)
-{
-	SharedPtr<GameObject> newGameObject = GameObject::Create();
-	newGameObject->SetName(name);
-	m_GameObjects.push_back(newGameObject);
-	m_GameObjectsTagMap[newGameObject->GetTag()].insert(newGameObject);
-	newGameObject->m_Transform->SetOwner(newGameObject);
-
-	return newGameObject;
-}
-
 engine::SharedPtr<engine::GameObject> engine::Scene::Find(const _string& name)
 {
 	for (auto& gameObject : m_GameObjects)
@@ -99,7 +88,7 @@ engine::SharedPtr<engine::GameObject> engine::Scene::FindWithTag(const _string& 
 	return nullptr;
 }
 
-void engine::Scene::UpdateGameObjectTag(const SharedPtr<GameObject>& obj, const _string& newTag)
+void engine::Scene::updateGameObjectTag(const SharedPtr<GameObject>& obj, const _string& newTag)
 {
 	_string oldTag = obj->GetTag();
 
@@ -213,4 +202,11 @@ void engine::Scene::setupTransformHierarchy() const
 	}
 
 	transformMap.clear();
+}
+
+void engine::Scene::registerGameObject(const SharedPtr<GameObject>& gameObject)
+{
+	m_GameObjects.push_back(gameObject);
+	m_GameObjectsTagMap[gameObject->GetTag()].insert(gameObject);
+	gameObject->m_Transform->SetOwner(gameObject);
 }

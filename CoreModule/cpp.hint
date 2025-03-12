@@ -1,0 +1,4 @@
+// 힌트 파일은 Visual Studio IDE에서 함수 및 매크로 이름과 같은 Visual C++ 식별자를
+// 해석하는 데 도움이 됩니다.
+// 자세한 내용은 다음을 참조하세요. https://go.microsoft.com/fwlink/?linkid=865984
+#define DECLARE_REGISTER_COMPONENT(className) public: SharedPtr<Component> Clone() const override { SharedPtr<className> clone(CLONE_SHARED_PTR(className)); return clone; } private: static std::shared_ptr<className> create() { return std::shared_ptr<className>(new className(nullptr), [](const className* ptr) { delete ptr; }); } static ComponentRegistrar registrar_##className;

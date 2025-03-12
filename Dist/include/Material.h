@@ -5,7 +5,7 @@ namespace engine
 {
     class Renderer;
 
-    class Material : public Object
+    class COREMODULE_API Material : public Object
     {
     protected:
         //======================================//
@@ -35,6 +35,10 @@ namespace engine
 	    void Destroy() override;
 
     private:
+        //======================================//
+        //				  fields				//
+        //======================================//
+
         WeakPtr<Renderer> 			m_Owner;
         SharedPtr<Shader>           m_Shader;
 

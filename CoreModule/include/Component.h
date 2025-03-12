@@ -68,6 +68,7 @@ namespace engine
     protected:
         virtual void registerComponent() = 0;
 
+    public:
         //======================================//
         //				 serialize				//
         //======================================//
@@ -81,6 +82,5 @@ namespace engine
         //======================================//
 
         WeakPtr<GameObject> 				m_Owner;
-
     };
 }

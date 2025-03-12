@@ -15,18 +15,16 @@ namespace engine
         friend class ::ComponentFactory;
 
     protected:
-        explicit Component(const SharedPtr<GameObject>& owner) : m_Owner(owner)
-        {
-	        
-        }
+        //======================================//
+        //				constructor				//
+        //======================================//
 
+        explicit Component(const SharedPtr<GameObject>& owner) : m_Owner(owner) {}
         ~Component() override = default;
-
     	Component(const Component& rhs) : Object(rhs)
         {
             m_Owner.reset();
         }
-
         Component& operator=(const Component& rhs)
         {
             if (this != &rhs)
@@ -37,12 +35,10 @@ namespace engine
 
             return *this;
         }
-
         Component(Component&& rhs) noexcept : Object(std::move(rhs)), m_Owner(std::move(rhs.m_Owner))
     	{
             rhs.m_Owner.reset();
     	}
-
         Component& operator=(Component&& rhs) noexcept
     	{
     		if (this != &rhs)
@@ -55,20 +51,36 @@ namespace engine
     	}
 
     public:
-    	WeakPtr<GameObject> 				GetGameObject() const { return m_Owner; }
-        void        						SetOwner(const SharedPtr<GameObject>& owner) { m_Owner = owner; }
-		SharedPtr<Transform> 				GetTransform() const;
+        //======================================//
+        //				 property				//
+        //======================================//
 
-        virtual SharedPtr<Component> 		Clone() const = 0;
+    	WeakPtr<GameObject> GetGameObject() const { return m_Owner; }
+        SharedPtr<Transform> GetTransform() const;
 
-        virtual void 						to_json(nlohmann::ordered_json& j) = 0;
-        virtual void 						from_json(const nlohmann::ordered_json& j) = 0;
+        //======================================//
+        //				  method				//
+        //======================================//
+
+    	void SetOwner(const SharedPtr<GameObject>& owner) { m_Owner = owner; }
+        virtual SharedPtr<Component> Clone() const = 0;
 
     protected:
-        virtual void                        registerComponent() = 0;
+        virtual void registerComponent() = 0;
+
+    public:
+        //======================================//
+        //				 serialize				//
+        //======================================//
+
+        virtual void to_json(nlohmann::ordered_json& j) = 0;
+        virtual void from_json(const nlohmann::ordered_json& j) = 0;
 
     protected:
+        //======================================//
+        //				  fields				//
+        //======================================//
+
         WeakPtr<GameObject> 				m_Owner;
-
     };
 }

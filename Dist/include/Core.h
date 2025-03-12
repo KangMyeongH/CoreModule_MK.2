@@ -9,10 +9,16 @@ namespace engine
 	class ScriptBehaviourManager;
 	class Scene;
 	class D3D11Manager;
+	class RenderManager;
+	class UIManager;
 
 	class COREMODULE_API Core
 	{
 	private:
+		//======================================//
+		//				constructor				//
+		//======================================//
+
 		Core() = default;
 		~Core();
 	public:
@@ -24,11 +30,22 @@ namespace engine
 		static Core& GetInstance() { static Core s_Core; return s_Core; }
 
 	public:
-		HRESULT 	Initialize(HWND hwnd);
-		void 		Progress();
-		void		Release();
+		//======================================//
+		//				  method				//
+		//======================================//
+
+		HRESULT Initialize(HWND hwnd);
+		void Progress();
+		void Initialization();
+		void Physics();
+		void InputEvent();
+		void GameLogic();
+		void SceneRender();
+		void Decommissioning();
+		void Release();
 
 	private:
+		void registerObjects();
 		void start();
 		void fixedUpdate();
 		void physicsUpdate();
@@ -40,6 +57,10 @@ namespace engine
 		void destroy();
 
 	private:
+		//======================================//
+		//				  fields				//
+		//======================================//
+
 		HWND					m_Hwnd;
 		D3D11Manager* 			m_D3D11Manager;
 		TimeManager* 			m_TimeManager;
@@ -47,6 +68,11 @@ namespace engine
 		Scene* 					m_Scene;
 		ScriptBehaviourManager* m_ScriptBehaviourManager;
 		PhysicsManager* 		m_PhysicsManager;
+		RenderManager*			m_RenderManager;
+		UIManager*				m_UIManager;
+
+		_uint					m_WindowWidth;
+		_uint					m_WindowHeight;
 	};
 
 }

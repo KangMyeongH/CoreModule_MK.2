@@ -30,16 +30,19 @@ bool engine::GameObject::IsActive() const
 
 void engine::GameObject::SetTag(const _string& tag)
 {
-	Scene::GetInstance().UpdateGameObjectTag(std::static_pointer_cast<GameObject>(shared_from_this()), tag);
+	Scene::GetInstance().updateGameObjectTag(std::static_pointer_cast<GameObject>(shared_from_this()), tag);
 	m_Tag = tag;
 }
 
-engine::SharedPtr<engine::GameObject> engine::GameObject::Create()
+engine::SharedPtr<engine::GameObject> engine::GameObject::Create(const _string& name)
 {
-	return {
-	new GameObject(),
-	[](const GameObject* ptr) { delete ptr; }
+	SharedPtr<GameObject> newGameObject{
+		new GameObject(), [](const GameObject* ptr) {delete ptr; }
 	};
+
+	Scene::GetInstance().registerGameObject(newGameObject);
+
+	return newGameObject;
 }
 
 engine::SharedPtr<engine::GameObject> engine::GameObject::Clone() const

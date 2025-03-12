@@ -73,6 +73,21 @@
     <Filter Include="00. System\UI\Texture">
       <UniqueIdentifier>{032f77a1-3ce4-4207-bc1e-715a24532f03}</UniqueIdentifier>
     </Filter>
+    <Filter Include="01. Editor">
+      <UniqueIdentifier>{f5c3b9d0-3569-4993-8e21-0ad21afdec4c}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="01. Editor\Hierarchy">
+      <UniqueIdentifier>{58832291-90d4-4d3c-ac76-bcf75c8bceb3}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="01. Editor\Manager">
+      <UniqueIdentifier>{10c32623-aa7b-4262-8cb1-01d18aae3b14}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="01. Editor\Core">
+      <UniqueIdentifier>{b546b552-014b-499b-9b3d-d19faa130f89}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="01. Editor\Camera">
+      <UniqueIdentifier>{f088afbf-2555-4a27-b670-2dbe00653487}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="include\core_defines.h">
@@ -127,7 +142,6 @@
       <Filter>00. System\ScriptBehaviour\Manager</Filter>
     </ClInclude>
     <ClInclude Include="include\Engine.h" />
-    <ClInclude Include="include\Test.h" />
     <ClInclude Include="include\Rigidbody.h">
       <Filter>00. System\Physics\Rigidbody</Filter>
     </ClInclude>
@@ -166,6 +180,15 @@
     <ClInclude Include="include\TextureUI.h">
       <Filter>00. System\UI\Texture</Filter>
     </ClInclude>
+    <ClInclude Include="include\Hierarchy.h">
+      <Filter>01. Editor\Hierarchy</Filter>
+    </ClInclude>
+    <ClInclude Include="include\EditorComponentManager.h">
+      <Filter>01. Editor\Manager</Filter>
+    </ClInclude>
+    <ClInclude Include="include\EditorCamera.h">
+      <Filter>01. Editor\Camera</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\GameObject.cpp">
@@ -201,7 +224,6 @@
     <ClCompile Include="src\ScriptBehaviourManager.cpp">
       <Filter>00. System\ScriptBehaviour\Manager</Filter>
     </ClCompile>
-    <ClCompile Include="src\Test.cpp" />
     <ClCompile Include="src\Rigidbody.cpp">
       <Filter>00. System\Physics\Rigidbody</Filter>
     </ClCompile>
@@ -236,5 +258,17 @@
     <ClCompile Include="src\TextureUI.cpp">
       <Filter>00. System\UI\Texture</Filter>
     </ClCompile>
+    <ClCompile Include="src\Hierarchy.cpp">
+      <Filter>01. Editor\Hierarchy</Filter>
+    </ClCompile>
+    <ClCompile Include="src\EditorComponentManager.cpp">
+      <Filter>01. Editor\Manager</Filter>
+    </ClCompile>
+    <ClCompile Include="src\EditorCamera.cpp">
+      <Filter>01. Editor\Camera</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="cpp.hint" />
   </ItemGroup>
 </Project>

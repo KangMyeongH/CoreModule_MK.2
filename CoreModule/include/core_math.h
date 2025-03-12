@@ -611,6 +611,8 @@ namespace engine
 
 		static Quaternion Euler(const _float xDegree, const _float yDegree, const _float zDegree)
 		{
+			// TODO : Euler to quaternion에서 회전축 곱해주는 순서 바꿔야함 !!!!
+
 			const _float pitch = DirectX::XMConvertToRadians(xDegree);
 			const _float yaw = DirectX::XMConvertToRadians(yDegree);
 			const _float roll = DirectX::XMConvertToRadians(zDegree);

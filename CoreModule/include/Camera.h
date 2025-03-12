@@ -5,7 +5,6 @@ namespace engine
 {
     class COREMODULE_API Camera : public Component
     {
-        DECLARE_REGISTER_COMPONENT(Camera)
     protected:
         //======================================//
         //				constructor				//
@@ -66,5 +65,7 @@ namespace engine
         _float 		m_AspectRatio;
         _float 		m_NearPlane;
         _float 		m_FarPlane;
+
+        DECLARE_REGISTER_COMPONENT(Camera)
     };
 }

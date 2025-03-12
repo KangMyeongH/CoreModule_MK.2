@@ -3,7 +3,7 @@
 #include "D3D11Manager.h"
 #include "UI.h"
 
-engine::UIManager::UIManager(): m_bDirty(true)
+engine::UIManager::UIManager() : m_bDirty(true)
 {
 }
 

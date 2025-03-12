@@ -6,7 +6,6 @@ namespace engine
     class COREMODULE_API Rigidbody : public Component
     {
         friend class PhysicsManager;
-        DECLARE_REGISTER_COMPONENT(Rigidbody)
     private:
         //======================================//
         //				constructor				//
@@ -67,5 +66,7 @@ namespace engine
         _float   m_Drag;
         _bool    m_UseGravity;
         _bool    m_IsKinematic;
+
+        DECLARE_REGISTER_COMPONENT(Rigidbody)
     };
 }

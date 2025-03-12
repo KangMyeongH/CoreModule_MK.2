@@ -39,7 +39,7 @@ namespace engine
 
         HRESULT CreateTexture(const _wstring& path, ID3D11ShaderResourceView** srv);
         HRESULT CreateShader(const _wstring& path, const SharedPtr<Shader>& shader);
-        HRESULT CreateMesh(const _wstring& path)
+        HRESULT CreateMesh(const _wstring& path);
 
 
     	void 	Release();
@@ -50,7 +50,7 @@ namespace engine
         HRESULT readyDepthStencilView(_uint winSizeX, _uint winSizeY);
         HRESULT compileShaderFromFile(const _wstring& path, const _string& entryPoint, const _string& targetProfile, ComPtr<ID3DBlob>& outBlob);
         void	compileInputLayoutFromReflector(std::vector<D3D11_INPUT_ELEMENT_DESC>* inputDesc, const ComPtr<ID3D11ShaderReflection>& reflector);
-        void    reflectBufferFromReflector()
+        void    reflectBufferFromReflector();
 
     private:
         //======================================//

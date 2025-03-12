@@ -36,6 +36,10 @@ namespace engine
         void	SlowMotion(float timeScale, float slowMotionTime);
 
     private:
+        //======================================//
+		//				  fields				//
+    	//======================================//
+
         LARGE_INTEGER   m_Frequency;
         LARGE_INTEGER   m_LastFrameTime;
         LARGE_INTEGER   m_CurrentFrameTime;

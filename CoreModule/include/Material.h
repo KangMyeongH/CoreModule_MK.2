@@ -5,7 +5,7 @@ namespace engine
 {
     class Renderer;
 
-    class Material : public Object
+    class COREMODULE_API Material : public Object
     {
     protected:
         //======================================//

@@ -1,38 +1,48 @@
 #pragma once
-#include "Component.h"
+#include "core_defines.h"
 
 namespace engine
 {
-    class Material;
+    class UI;
+	class Camera;
+	class Renderer;
 
-    class COREMODULE_API Renderer: public Component
+    namespace editor
     {
-    protected:
+        using Renderers = std::vector<SharedPtr<Renderer>>;
+        using UIs = std::vector<SharedPtr<UI>>;
+
+        class COREMODULE_API EditorComponentManager
+        {
         //======================================//
         //				constructor				//
         //======================================//
+        private:
+            EditorComponentManager();
+            ~EditorComponentManager();
+        public:
+            DECLARE_SINGLETON(EditorComponentManager)
 
-
-    public:
         //======================================//
         //				 property				//
         //======================================//
+
 
         //======================================//
         //				  method				//
         //======================================//
 
-        virtual void Render(const ComPtr<ID3D11DeviceContext>& context) = 0;
 
-        //======================================//
-        //				 serialize				//
-        //======================================//
 
-    protected:
         //======================================//
         //				  fields				//
         //======================================//
+        private:
+            Renderers 			m_Renderers;
+            UIs                 m_UIs;
 
-        SharedPtr<Material> m_Material;
-    };
+
+        };
+    }
+
 }

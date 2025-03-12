@@ -2,5 +2,5 @@
 
 engine::SharedPtr<engine::Mesh> engine::Mesh::Create()
 {
-	
+	return nullptr;
 }
