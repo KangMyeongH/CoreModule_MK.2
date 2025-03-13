@@ -37,7 +37,7 @@ void engine::UIManager::Render(const ComPtr<ID3D11DeviceContext>& context)
 	{
 		if (ui->IsEnabled())
 		{
-			ui->RenderUI();
+			ui->RenderUI(context);
 		}
 	}
 }

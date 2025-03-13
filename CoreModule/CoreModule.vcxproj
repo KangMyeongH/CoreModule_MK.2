@@ -210,7 +210,8 @@
       <Command>xcopy /Y "$(ProjectDir)include\*.h" "$(SolutionDir)Dist\include\"
 xcopy /Y "$(ProjectDir)include\*.hpp" "$(SolutionDir)Dist\include\"
 xcopy /Y "$(SolutionDir)bin\Debug\*.dll" "$(SolutionDir)Dist\bin\"
-xcopy /Y "$(SolutionDir)bin\Debug\*.lib" "$(SolutionDir)Dist\bin\"</Command>
+xcopy /Y "$(SolutionDir)bin\Debug\*.lib" "$(SolutionDir)Dist\bin\"
+xcopy /Y "$(SolutionDir)bin\Debug\*.pdb" "$(SolutionDir)Dist\bin\"</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">

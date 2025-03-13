@@ -31,8 +31,9 @@ namespace engine
         //======================================//
         //				  method				//
         //======================================//
-
-
+        public:
+            void Render(const ComPtr<ID3D11DeviceContext>& context);
+            
 
         //======================================//
         //				  fields				//

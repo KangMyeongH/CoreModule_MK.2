@@ -97,7 +97,7 @@ void engine::TextureUI::Update()
 {
 }
 
-void engine::TextureUI::RenderUI()
+void engine::TextureUI::RenderUI(const ComPtr<ID3D11DeviceContext>& context)
 {
 	if (m_Texture)
 	{

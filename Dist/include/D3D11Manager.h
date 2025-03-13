@@ -30,7 +30,6 @@ namespace engine
         _uint                           GetWinSizeX() const { return m_WinSizeX; }
         _uint                           GetWinSizeY() const { return m_WinSizeY; }
 
-
         //======================================//
         //				  method				//
         //======================================//
@@ -41,7 +40,6 @@ namespace engine
         HRESULT CreateShader(const _wstring& path, const SharedPtr<Shader>& shader);
         HRESULT CreateMesh(const _wstring& path);
 
-
     	void 	Release();
 
     private:
@@ -50,7 +48,7 @@ namespace engine
         HRESULT readyDepthStencilView(_uint winSizeX, _uint winSizeY);
         HRESULT compileShaderFromFile(const _wstring& path, const _string& entryPoint, const _string& targetProfile, ComPtr<ID3DBlob>& outBlob);
         void	compileInputLayoutFromReflector(std::vector<D3D11_INPUT_ELEMENT_DESC>* inputDesc, const ComPtr<ID3D11ShaderReflection>& reflector);
-        void    reflectBufferFromReflector();
+        void    reflectBufferFromReflector(const ComPtr<ID3D11ShaderReflection>& reflector, const SharedPtr<Shader>& shader);
 
     private:
         //======================================//
@@ -62,11 +60,10 @@ namespace engine
         ComPtr<IDXGISwapChain> 			m_SwapChain;
         ComPtr<ID3D11RenderTargetView> 	m_BackBufferRTV;
         ComPtr<ID3D11DepthStencilView> 	m_DepthStencilView;
-
+		
         TextureMap                      m_TextureMap;
 
         _uint                           m_WinSizeX;
         _uint                           m_WinSizeY;
-		
     };
 }

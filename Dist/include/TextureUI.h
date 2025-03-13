@@ -35,7 +35,7 @@ namespace engine
         _bool IsButtonUp() override;
 
         void Update() override;
-        void RenderUI() override;
+        void RenderUI(const ComPtr<ID3D11DeviceContext>& context) override;
 
         void Destroy() override;
 

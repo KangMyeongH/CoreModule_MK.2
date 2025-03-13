@@ -30,7 +30,6 @@ namespace engine
         _uint                           GetWinSizeX() const { return m_WinSizeX; }
         _uint                           GetWinSizeY() const { return m_WinSizeY; }
 
-
         //======================================//
         //				  method				//
         //======================================//
@@ -40,7 +39,6 @@ namespace engine
         HRESULT CreateTexture(const _wstring& path, ID3D11ShaderResourceView** srv);
         HRESULT CreateShader(const _wstring& path, const SharedPtr<Shader>& shader);
         HRESULT CreateMesh(const _wstring& path);
-
 
     	void 	Release();
 
@@ -62,11 +60,10 @@ namespace engine
         ComPtr<IDXGISwapChain> 			m_SwapChain;
         ComPtr<ID3D11RenderTargetView> 	m_BackBufferRTV;
         ComPtr<ID3D11DepthStencilView> 	m_DepthStencilView;
-
+		
         TextureMap                      m_TextureMap;
 
         _uint                           m_WinSizeX;
         _uint                           m_WinSizeY;
-		
     };
 }

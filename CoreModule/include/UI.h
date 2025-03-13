@@ -32,7 +32,7 @@ namespace engine
         virtual _bool IsButtonUp() = 0;
 
         virtual void Update() = 0;
-        virtual void RenderUI() = 0;
+        virtual void RenderUI(const ComPtr<ID3D11DeviceContext>& context) = 0;
 
         void Destroy() override;
         SharedPtr<Component> Clone() const override = 0;
