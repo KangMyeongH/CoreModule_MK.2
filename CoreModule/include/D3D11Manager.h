@@ -48,7 +48,8 @@ namespace engine
         HRESULT readyDepthStencilView(_uint winSizeX, _uint winSizeY);
         HRESULT compileShaderFromFile(const _wstring& path, const _string& entryPoint, const _string& targetProfile, ComPtr<ID3DBlob>& outBlob);
         void	compileInputLayoutFromReflector(std::vector<D3D11_INPUT_ELEMENT_DESC>* inputDesc, const ComPtr<ID3D11ShaderReflection>& reflector);
-        void    reflectBufferFromReflector(const ComPtr<ID3D11ShaderReflection>& reflector, const SharedPtr<Shader>& shader);
+        void    reflectBufferFromReflector(const ComPtr<ID3D11ShaderReflection>& reflector, ReflectResult& outResult);
+        bool    createConstantBuffer(const ReflectResult& reflectResult, std::vector<SharedPtr<CBufferRuntime>>& outResult);
 
     private:
         //======================================//

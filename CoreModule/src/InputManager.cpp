@@ -93,6 +93,6 @@ void engine::InputManager::UpdateInput(HWND hwnd)
 	POINT mouse;
 	GetCursorPos(&mouse);
 	ScreenToClient(hwnd, &mouse);
-	// m_MousePos = Vector3{ static_cast<_float>(mouse.x), static_cast<_float>(mouse.y), 0.f };
+	m_MousePos = Vector3{ static_cast<_float>(mouse.x), static_cast<_float>(mouse.y), 0.f };
 }
 

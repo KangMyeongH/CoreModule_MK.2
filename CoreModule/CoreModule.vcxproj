@@ -56,6 +56,7 @@
     <ClInclude Include="include\ComponentRegistrar.h" />
     <ClInclude Include="include\Core.h" />
     <ClInclude Include="include\core_defines.h" />
+    <ClInclude Include="include\core_enum.h" />
     <ClInclude Include="include\core_function.h" />
     <ClInclude Include="include\core_macro.h" />
     <ClInclude Include="include\core_math.h" />

@@ -189,6 +189,9 @@
     <ClInclude Include="include\EditorCamera.h">
       <Filter>01. Editor\Camera</Filter>
     </ClInclude>
+    <ClInclude Include="include\core_enum.h">
+      <Filter>99. Defines</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\GameObject.cpp">

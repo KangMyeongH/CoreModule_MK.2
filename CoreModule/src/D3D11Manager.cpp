@@ -1,5 +1,7 @@
 #include "D3D11Manager.h"
 
+#include <iostream>
+
 IMPLEMENT_SINGLETON(engine::D3D11Manager)
 
 engine::D3D11Manager::D3D11Manager()
@@ -140,12 +142,12 @@ HRESULT engine::D3D11Manager::CreateShader(const _wstring& path, const SharedPtr
 	if (FileExists(path))
 	{
 		std::vector<std::pair<std::string, std::string>> entryPoints = {
-		{ "VSMain", "vs_5_0" },
-		{ "PSMain", "ps_5_0" },
-		{ "GSMain", "gs_5_0" },
-		{ "CSMain", "cs_5_0" },
-		{ "HSMain", "hs_5_0" },
-		{ "DSMain", "ds_5_0" }
+		{ "VS_Main", "vs_5_0" },
+		{ "PS_Main", "ps_5_0" },
+		{ "GS_Main", "gs_5_0" },
+		{ "CS_Main", "cs_5_0" },
+		{ "HS_Main", "hs_5_0" },
+		{ "DS_Main", "ds_5_0" }
 		};
 
 		for (auto& ep : entryPoints)
@@ -181,6 +183,9 @@ HRESULT engine::D3D11Manager::CreateShader(const _wstring& path, const SharedPtr
 						{
 							shader->InputLayout = input;
 						}
+
+						reflectBufferFromReflector(reflector, shader->VSReflect);
+						createConstantBuffer(shader->VSReflect, shader->VSCBuffers);
 					}
 				}
 
@@ -192,6 +197,8 @@ HRESULT engine::D3D11Manager::CreateShader(const _wstring& path, const SharedPtr
 					if (SUCCEEDED(hr))
 					{
 						shader->PixelShader = ps;
+						reflectBufferFromReflector(reflector, shader->PSReflect);
+						createConstantBuffer(shader->PSReflect, shader->PSCBuffers);
 					}
 				}
 
@@ -203,6 +210,8 @@ HRESULT engine::D3D11Manager::CreateShader(const _wstring& path, const SharedPtr
 					if (SUCCEEDED(hr))
 					{
 						shader->GeometryShader = gs;
+						reflectBufferFromReflector(reflector, shader->GSReflect);
+						createConstantBuffer(shader->GSReflect, shader->GSCBuffers);
 					}
 				}
 
@@ -214,6 +223,8 @@ HRESULT engine::D3D11Manager::CreateShader(const _wstring& path, const SharedPtr
 					if (SUCCEEDED(hr))
 					{
 						shader->ComputeShader = cs;
+						reflectBufferFromReflector(reflector, shader->CSReflect);
+						createConstantBuffer(shader->CSReflect, shader->CSCBuffers);
 					}
 				}
 
@@ -225,6 +236,8 @@ HRESULT engine::D3D11Manager::CreateShader(const _wstring& path, const SharedPtr
 					if (SUCCEEDED(hr))
 					{
 						shader->HullShader = hs;
+						reflectBufferFromReflector(reflector, shader->HSReflect);
+						createConstantBuffer(shader->HSReflect, shader->HSCBuffers);
 					}
 				}
 
@@ -236,10 +249,10 @@ HRESULT engine::D3D11Manager::CreateShader(const _wstring& path, const SharedPtr
 					if (SUCCEEDED(hr))
 					{
 						shader->DomainShader = ds;
+						reflectBufferFromReflector(reflector, shader->DSReflect);
+						createConstantBuffer(shader->DSReflect, shader->DSCBuffers);
 					}
 				}
-
-				reflectBufferFromReflector(reflector, shader);
 
 				return true;
 			}
@@ -383,7 +396,11 @@ HRESULT engine::D3D11Manager::compileShaderFromFile(const _wstring& path, const 
 	ComPtr<ID3DBlob> errorBlob = nullptr;
 	HRESULT hr = D3DCompileFromFile(path.c_str(), nullptr, D3D_COMPILE_STANDARD_FILE_INCLUDE, entryPoint.c_str(), targetProfile.c_str(), 0, 0, outBlob.GetAddressOf(), errorBlob.GetAddressOf());
 
-	// TODO : errorBlob 출력 메시지 확인하는거 추가 해야함.
+	if (FAILED(hr))
+	{
+		std::cerr << "Failed to compile shader from file : " << WStringToString(path).c_str() << "\n";
+		return false;
+	}
 
 	return hr;
 }
@@ -475,7 +492,7 @@ void engine::D3D11Manager::compileInputLayoutFromReflector(std::vector<D3D11_INP
 	}
 }
 
-void engine::D3D11Manager::reflectBufferFromReflector(const ComPtr<ID3D11ShaderReflection>& reflector, const SharedPtr<Shader>& shader)
+void engine::D3D11Manager::reflectBufferFromReflector(const ComPtr<ID3D11ShaderReflection>& reflector, ReflectResult& outResult)
 {
 	D3D11_SHADER_DESC shaderDesc;
 	reflector->GetDesc(&shaderDesc);
@@ -519,7 +536,7 @@ void engine::D3D11Manager::reflectBufferFromReflector(const ComPtr<ID3D11ShaderR
 				}
 			}
 
-			shader->CBuffers[cbDest.Name] = cbDest;
+			outResult.CBuffers[cbDest.Name] = cbDest;
 		}
 
 		else if (bindDesc.Type == D3D_SIT_TEXTURE)
@@ -528,15 +545,52 @@ void engine::D3D11Manager::reflectBufferFromReflector(const ComPtr<ID3D11ShaderR
 			tInfo.Name = bindDesc.Name;
 			tInfo.BindPoint = bindDesc.BindPoint;
 
-			shader->TBuffers[tInfo.Name] = tInfo;
+			outResult.Textures[tInfo.Name] = tInfo;
 		}
 
-		//else if (bindDesc.Type == D3D_SIT_SAMPLER)
-		//{
-		//	SamplerInfo sinfo;
-		//	sinfo.name = bindDesc.Name;
-		//	sinfo.bindPoint = bindDesc.BindPoint;
-		//	outResult.samplers[sinfo.name] = sinfo;
-		//}
+		else if (bindDesc.Type == D3D_SIT_SAMPLER)
+		{
+			SamplerInfo sInfo;
+			sInfo.Name = bindDesc.Name;
+			sInfo.BindPoint = bindDesc.BindPoint;
+			outResult.Samplers[sInfo.Name] = sInfo;
+		}
 	}
+}
+
+bool engine::D3D11Manager::createConstantBuffer(const ReflectResult& reflectResult, std::vector<SharedPtr<CBufferRuntime>>& outResult)
+{
+	outResult.reserve(reflectResult.CBuffers.size());
+
+	for (auto pair : reflectResult.CBuffers)
+	{
+		const auto& cbName = pair.first;
+		const auto& cbDesc = pair.second;
+
+		SharedPtr<CBufferRuntime> cBufferRuntime(new CBufferRuntime);
+
+		cBufferRuntime->BindPoint = cbDesc.BindPoint;
+		cBufferRuntime->Size = cbDesc.BufferSize;
+		cBufferRuntime->LocalData.resize(cbDesc.BufferSize, 0);
+
+		D3D11_BUFFER_DESC bd {};
+		bd.ByteWidth = cbDesc.BufferSize;
+		bd.Usage = D3D11_USAGE_DEFAULT; // 예: DEFAULT
+		bd.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
+		bd.CPUAccessFlags = 0;                   // D3D11_USAGE_DYNAMIC이면 D3D11_CPU_ACCESS_WRITE
+		bd.MiscFlags = 0;
+		bd.StructureByteStride = 0;
+
+		HRESULT hr = m_Device->CreateBuffer(&bd, nullptr, cBufferRuntime->Buffer.GetAddressOf());
+
+		if (FAILED(hr))
+		{
+			std::cerr << "Failed to create Constant Buffer : " << cbName << "\n";
+			return false;
+		}
+
+		outResult.push_back(cBufferRuntime);
+	}
+
+	return true;
 }
