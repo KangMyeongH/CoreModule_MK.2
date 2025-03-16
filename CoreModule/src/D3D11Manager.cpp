@@ -6,10 +6,10 @@ IMPLEMENT_SINGLETON(engine::D3D11Manager)
 
 engine::D3D11Manager::D3D11Manager()
 	: m_Device(nullptr),
-	m_DeviceContext(nullptr),
-	m_SwapChain(nullptr),
-	m_BackBufferRTV(nullptr),
-	m_DepthStencilView(nullptr)
+	  m_DeviceContext(nullptr),
+	  m_SwapChain(nullptr),
+	  m_BackBufferRTV(nullptr),
+	  m_DepthStencilView(nullptr), m_WinSizeX(0), m_WinSizeY(0)
 {
 }
 
@@ -82,24 +82,20 @@ HRESULT engine::D3D11Manager::Initialize(HWND hwnd, _bool isWindowed, _uint winS
 	return S_OK;
 }
 
-HRESULT engine::D3D11Manager::CreateTexture(const _wstring& path, ID3D11ShaderResourceView** srv)
+HRESULT engine::D3D11Manager::CreateTexture(const _wstring& path, ComPtr<ID3D11ShaderResourceView>& srv)
 {
-	if (!srv)
-	{
-		return E_POINTER;
-	}
-
-	if (!path.empty())
+	if (path.empty())
 	{
 		return E_FAIL;
 	}
 
 	ComPtr<ID3D11ShaderResourceView> pSRV;
 
-	if (m_TextureMap.find(path) != m_TextureMap.end())
+	const auto it = m_TextureMap.find(path);
+
+	if (it != m_TextureMap.end())
 	{
-		pSRV = m_TextureMap[path];
-		*srv = pSRV.Get();
+		srv = it->second;
 
 		return S_OK;
 	}
@@ -130,17 +126,30 @@ HRESULT engine::D3D11Manager::CreateTexture(const _wstring& path, ID3D11ShaderRe
 		return hr;
 	}
 
-	*srv = pSRV.Get();
+	srv = pSRV;
 
 	m_TextureMap.emplace(path, pSRV);
 
 	return S_OK;
 }
 
-HRESULT engine::D3D11Manager::CreateShader(const _wstring& path, const SharedPtr<Shader>& shader)
+HRESULT engine::D3D11Manager::CreateShader(const _wstring& path, SharedPtr<Shader>& shader)
 {
 	if (FileExists(path))
 	{
+		const auto it = m_ShaderMap.find(path);
+
+		if (it != m_ShaderMap.end())
+		{
+			shader = it->second->Clone(m_Device.Get());
+
+			return S_OK;
+		}
+
+		SharedPtr<Shader> newShader = std::make_shared<Shader>();
+
+		newShader->Path = path;
+
 		std::vector<std::pair<std::string, std::string>> entryPoints = {
 		{ "VS_Main", "vs_5_0" },
 		{ "PS_Main", "ps_5_0" },
@@ -170,7 +179,7 @@ HRESULT engine::D3D11Manager::CreateShader(const _wstring& path, const SharedPtr
 
 					if (SUCCEEDED(hr))
 					{
-						shader->VertexShader = vs;
+						newShader->VertexShader = vs;
 
 						ComPtr<ID3D11InputLayout> input;
 						std::vector<D3D11_INPUT_ELEMENT_DESC> inputLayoutDesc;
@@ -181,11 +190,11 @@ HRESULT engine::D3D11Manager::CreateShader(const _wstring& path, const SharedPtr
 
 						if (SUCCEEDED(hr))
 						{
-							shader->InputLayout = input;
+							newShader->InputLayout = input;
 						}
 
-						reflectBufferFromReflector(reflector, shader->VSReflect);
-						createConstantBuffer(shader->VSReflect, shader->VSCBuffers);
+						reflectBufferFromReflector(reflector, newShader->Reflects[VS]);
+						//createConstantBuffer(newShader->Reflects[VS], newShader->CBuffers[VS]);
 					}
 				}
 
@@ -196,9 +205,9 @@ HRESULT engine::D3D11Manager::CreateShader(const _wstring& path, const SharedPtr
 
 					if (SUCCEEDED(hr))
 					{
-						shader->PixelShader = ps;
-						reflectBufferFromReflector(reflector, shader->PSReflect);
-						createConstantBuffer(shader->PSReflect, shader->PSCBuffers);
+						newShader->PixelShader = ps;
+						reflectBufferFromReflector(reflector, newShader->Reflects[PS]);
+						//createConstantBuffer(newShader->Reflects[PS], newShader->CBuffers[PS]);
 					}
 				}
 
@@ -209,9 +218,9 @@ HRESULT engine::D3D11Manager::CreateShader(const _wstring& path, const SharedPtr
 
 					if (SUCCEEDED(hr))
 					{
-						shader->GeometryShader = gs;
-						reflectBufferFromReflector(reflector, shader->GSReflect);
-						createConstantBuffer(shader->GSReflect, shader->GSCBuffers);
+						newShader->GeometryShader = gs;
+						reflectBufferFromReflector(reflector, newShader->Reflects[GS]);
+						//createConstantBuffer(newShader->Reflects[GS], newShader->CBuffers[GS]);
 					}
 				}
 
@@ -222,9 +231,9 @@ HRESULT engine::D3D11Manager::CreateShader(const _wstring& path, const SharedPtr
 
 					if (SUCCEEDED(hr))
 					{
-						shader->ComputeShader = cs;
-						reflectBufferFromReflector(reflector, shader->CSReflect);
-						createConstantBuffer(shader->CSReflect, shader->CSCBuffers);
+						newShader->ComputeShader = cs;
+						reflectBufferFromReflector(reflector, newShader->Reflects[CS]);
+						//createConstantBuffer(newShader->Reflects[CS], newShader->CBuffers[CS]);
 					}
 				}
 
@@ -235,9 +244,9 @@ HRESULT engine::D3D11Manager::CreateShader(const _wstring& path, const SharedPtr
 
 					if (SUCCEEDED(hr))
 					{
-						shader->HullShader = hs;
-						reflectBufferFromReflector(reflector, shader->HSReflect);
-						createConstantBuffer(shader->HSReflect, shader->HSCBuffers);
+						newShader->HullShader = hs;
+						reflectBufferFromReflector(reflector, newShader->Reflects[HS]);
+						//createConstantBuffer(newShader->Reflects[HS], newShader->CBuffers[HS]);
 					}
 				}
 
@@ -248,15 +257,18 @@ HRESULT engine::D3D11Manager::CreateShader(const _wstring& path, const SharedPtr
 
 					if (SUCCEEDED(hr))
 					{
-						shader->DomainShader = ds;
-						reflectBufferFromReflector(reflector, shader->DSReflect);
-						createConstantBuffer(shader->DSReflect, shader->DSCBuffers);
+						newShader->DomainShader = ds;
+						reflectBufferFromReflector(reflector, newShader->Reflects[DS]);
+						//createConstantBuffer(newShader->Reflects[DS], newShader->CBuffers[DS]);
 					}
 				}
-
-				return true;
 			}
 		}
+
+		m_ShaderMap.emplace(path, newShader);
+		shader = newShader->Clone(m_Device.Get());
+
+		return S_OK;
 	}
 
 	return E_FAIL;
@@ -558,16 +570,16 @@ void engine::D3D11Manager::reflectBufferFromReflector(const ComPtr<ID3D11ShaderR
 	}
 }
 
-bool engine::D3D11Manager::createConstantBuffer(const ReflectResult& reflectResult, std::vector<SharedPtr<CBufferRuntime>>& outResult)
+bool engine::D3D11Manager::createConstantBuffer(const ReflectResult& reflectResult, std::unordered_map<_string, SharedPtr<CBufferRuntime>>& outResult)
 {
 	outResult.reserve(reflectResult.CBuffers.size());
 
-	for (auto pair : reflectResult.CBuffers)
+	for (auto& pair : reflectResult.CBuffers)
 	{
 		const auto& cbName = pair.first;
 		const auto& cbDesc = pair.second;
 
-		SharedPtr<CBufferRuntime> cBufferRuntime(new CBufferRuntime);
+		SharedPtr<CBufferRuntime> cBufferRuntime = std::make_shared<CBufferRuntime>();
 
 		cBufferRuntime->BindPoint = cbDesc.BindPoint;
 		cBufferRuntime->Size = cbDesc.BufferSize;
@@ -589,7 +601,7 @@ bool engine::D3D11Manager::createConstantBuffer(const ReflectResult& reflectResu
 			return false;
 		}
 
-		outResult.push_back(cBufferRuntime);
+		outResult.emplace(cbDesc.Name, cBufferRuntime);
 	}
 
 	return true;

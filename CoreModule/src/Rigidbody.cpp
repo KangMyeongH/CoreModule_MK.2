@@ -5,21 +5,24 @@
 
 DEFINE_REGISTER_COMPONENT(Rigidbody)
 
-engine::Rigidbody::Rigidbody(const SharedPtr<GameObject>& owner) : Component(owner)
+engine::Rigidbody::Rigidbody(const SharedPtr<GameObject>& owner, const _string& name) : Component(owner, name),
+	m_Mass(0),
+	m_Drag(0),
+	m_UseGravity(false),
+	m_IsKinematic(false)
 {
-
 }
 
 void engine::Rigidbody::AddForce(const Vector3& force)
 {
 	if (m_Mass != 0.f)
 	{
-		// m_Velocity += force / m_Mass;
+		m_Velocity += force / m_Mass;
 	}
 
 	else
 	{
-		// m_Velocity += force;
+		m_Velocity += force;
 	}
 }
 

@@ -20,6 +20,11 @@ void engine::RenderManager::AddCamera(const SharedPtr<Camera>& camera)
 	m_Cameras.push_back(camera);
 }
 
+void engine::RenderManager::AddRenderer(const SharedPtr<Renderer>& renderer)
+{
+	m_RegisterQueue.push_back(renderer);
+}
+
 void engine::RenderManager::UpdateMainCamera()
 {
 	if (auto mainCam = m_MainCamera.lock())

@@ -27,6 +27,7 @@ namespace engine
         //======================================//
 
         void 	UpdateInput(HWND hwnd);
+
         _bool   IsKeyPressed(_int key) const;
         _bool   IsKeyPressing(_int key) const;
         _bool   IsKeyDown(_int key) const;

@@ -31,6 +31,8 @@ namespace engine
 
         void                AddCamera(const SharedPtr<Camera>& camera);
 
+        void                AddRenderer(const SharedPtr<Renderer>& renderer);
+
         //======================================//
         //				  method				//
         //======================================//

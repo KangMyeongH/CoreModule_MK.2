@@ -1,4 +1,7 @@
 #pragma once
+#include <iostream>
+
+#include "core_enum.h"
 
 namespace engine
 {
@@ -71,10 +74,27 @@ namespace engine
 	struct CBufferRuntime
 	{
 		ComPtr<ID3D11Buffer>	Buffer;
-		std::vector<uint8_t>	LocalData;		// 매개 변수
+		std::vector<uint8_t>	LocalData;		// 매개 변수들
 		UINT					BindPoint = 0;	// register
 		UINT					Size = 0;		// Buffer Size
+		_bool					DirtyFlag = true;
 	};
+
+	struct TextureRuntime
+	{
+		ComPtr<ID3D11ShaderResourceView> 	Texture;
+		UINT								BindPoint = 0;
+	};
+
+	struct SamplerRuntime
+	{
+		ComPtr<ID3D11SamplerState>			Sampler;
+		UINT								BindPoint = 0;
+	};
+
+	// CBufferRuntime의 LocalData. TextureRuntime, SamplerRuntime은
+	// 각각의 객체가 고유한 값을 가지고 있어야함.
+	// 그 외의 정보는 다 공유해서 가지고 있음.
 
 	struct Shader
 	{
@@ -89,25 +109,185 @@ namespace engine
 
 		ComPtr<ID3D11InputLayout>		InputLayout;
 
-		ReflectResult		VSReflect;
-		ReflectResult		PSReflect;
-		ReflectResult		DSReflect;
-		ReflectResult		CSReflect;
-		ReflectResult		GSReflect;
-		ReflectResult		HSReflect;
+		ReflectResult Reflects[ShaderTypeEnd];
 
-		std::vector<SharedPtr<CBufferRuntime>>	VSCBuffers;
-		std::vector<SharedPtr<CBufferRuntime>>	PSCBuffers;
-		std::vector<SharedPtr<CBufferRuntime>>	DSCBuffers;
-		std::vector<SharedPtr<CBufferRuntime>>	CSCBuffers;
-		std::vector<SharedPtr<CBufferRuntime>>	GSCBuffers;
-		std::vector<SharedPtr<CBufferRuntime>>	HSCBuffers;
+		std::unordered_map<_string, SharedPtr<CBufferRuntime>> CBuffers[ShaderTypeEnd];
+		std::unordered_map<_string, SharedPtr<TextureRuntime>> Textures[ShaderTypeEnd];
+		std::unordered_map<_string, SharedPtr<SamplerRuntime>> Samplers[ShaderTypeEnd];
 
 		Shader() = default;
 		~Shader() = default;
-
-		void Bind(ID3D11DeviceContext* context) const
+		Shader(const Shader& rhs)
+			: Path(rhs.Path),
+			VertexShader(rhs.VertexShader),
+			PixelShader(rhs.PixelShader),
+			DomainShader(rhs.DomainShader),
+			ComputeShader(rhs.ComputeShader),
+			GeometryShader(rhs.GeometryShader),
+			HullShader(rhs.HullShader),
+			InputLayout(rhs.InputLayout)
 		{
+			if (this != &rhs)
+			{
+				std::copy(std::begin(rhs.Reflects), std::end(rhs.Reflects), std::begin(Reflects));
+			}
+		}
+
+		void UploadConstantBuffers(ID3D11DeviceContext* context)
+		{
+			for (auto& cbMap : CBuffers)
+			{
+				for (auto& pair : cbMap)
+				{
+					const auto& cbr = pair.second;
+
+					if (cbr->DirtyFlag)
+					{
+						context->UpdateSubresource(cbr->Buffer.Get(), 0, nullptr, cbr->LocalData.data(), 0, 0);
+					}
+				}
+			}
+		}
+
+		void BindConstantBuffers(ID3D11DeviceContext* context) const
+		{
+			for (const auto& cb : CBuffers[VS])
+			{
+				context->VSSetConstantBuffers(cb.second->BindPoint, 1, cb.second->Buffer.GetAddressOf());
+			}
+
+			for (const auto& cb : CBuffers[HS])
+			{
+				context->HSSetConstantBuffers(cb.second->BindPoint, 1, cb.second->Buffer.GetAddressOf());
+			}
+
+			for (const auto& cb : CBuffers[DS])
+			{
+				context->DSSetConstantBuffers(cb.second->BindPoint, 1, cb.second->Buffer.GetAddressOf());
+			}
+
+			for (const auto& cb : CBuffers[GS])
+			{
+				context->GSSetConstantBuffers(cb.second->BindPoint, 1, cb.second->Buffer.GetAddressOf());
+			}
+
+			for (const auto& cb : CBuffers[PS])
+			{
+				context->PSSetConstantBuffers(cb.second->BindPoint, 1, cb.second->Buffer.GetAddressOf());
+			}
+
+			for (const auto& cb : CBuffers[CS])
+			{
+				context->CSSetConstantBuffers(cb.second->BindPoint, 1, cb.second->Buffer.GetAddressOf());
+			}
+		}
+
+		void BindTextures(ID3D11DeviceContext* context) const
+		{
+			for (const auto& pair : Textures[VS])
+			{
+				const auto& bindPoint = pair.second->BindPoint;
+				auto srv = pair.second->Texture;
+
+				context->VSSetShaderResources(bindPoint, 1, srv.GetAddressOf());
+			}
+
+			for (const auto& pair : Textures[HS])
+			{
+				const auto& bindPoint = pair.second->BindPoint;
+				auto srv = pair.second->Texture;
+
+				context->HSSetShaderResources(bindPoint, 1, srv.GetAddressOf());
+			}
+
+			for (const auto& pair : Textures[DS])
+			{
+				const auto& bindPoint = pair.second->BindPoint;
+				auto srv = pair.second->Texture;
+
+				context->DSSetShaderResources(bindPoint, 1, srv.GetAddressOf());
+			}
+
+			for (const auto& pair : Textures[GS])
+			{
+				const auto& bindPoint = pair.second->BindPoint;
+				auto srv = pair.second->Texture;
+
+				context->GSSetShaderResources(bindPoint, 1, srv.GetAddressOf());
+			}
+
+			for (const auto& pair : Textures[PS])
+			{
+				const auto& bindPoint = pair.second->BindPoint;
+				auto srv = pair.second->Texture;
+
+				context->PSSetShaderResources(bindPoint, 1, srv.GetAddressOf());
+			}
+
+			for (const auto& pair : Textures[CS])
+			{
+				const auto& bindPoint = pair.second->BindPoint;
+				auto srv = pair.second->Texture;
+
+				context->CSSetShaderResources(bindPoint, 1, srv.GetAddressOf());
+			}
+		}
+
+		void BindSamplers(ID3D11DeviceContext* context) const
+		{
+			for (const auto& pair : Samplers[VS])
+			{
+				const auto& bindPoint = pair.second->BindPoint;
+				auto sampler = pair.second->Sampler;
+
+				context->VSSetSamplers(bindPoint, 1, sampler.GetAddressOf());
+			}
+
+			for (const auto& pair : Samplers[HS])
+			{
+				const auto& bindPoint = pair.second->BindPoint;
+				auto sampler = pair.second->Sampler;
+
+				context->HSSetSamplers(bindPoint, 1, sampler.GetAddressOf());
+			}
+
+			for (const auto& pair : Samplers[DS])
+			{
+				const auto& bindPoint = pair.second->BindPoint;
+				auto sampler = pair.second->Sampler;
+
+				context->DSSetSamplers(bindPoint, 1, sampler.GetAddressOf());
+			}
+
+			for (const auto& pair : Samplers[GS])
+			{
+				const auto& bindPoint = pair.second->BindPoint;
+				auto sampler = pair.second->Sampler;
+
+				context->GSSetSamplers(bindPoint, 1, sampler.GetAddressOf());
+			}
+
+			for (const auto& pair : Samplers[PS])
+			{
+				const auto& bindPoint = pair.second->BindPoint;
+				auto sampler = pair.second->Sampler;
+
+				context->PSSetSamplers(bindPoint, 1, sampler.GetAddressOf());
+			}
+
+			for (const auto& pair : Samplers[CS])
+			{
+				const auto& bindPoint = pair.second->BindPoint;
+				auto sampler = pair.second->Sampler;
+
+				context->CSSetSamplers(bindPoint, 1, sampler.GetAddressOf());
+			}
+		}
+
+		void Bind(ID3D11DeviceContext* context)
+		{
+			UploadConstantBuffers(context);
+
 			context->IASetInputLayout(InputLayout.Get());
 
 			context->VSSetShader(VertexShader.Get(), nullptr, 0);
@@ -117,41 +297,53 @@ namespace engine
 			context->PSSetShader(PixelShader.Get(), nullptr, 0);
 			context->CSSetShader(ComputeShader.Get(), nullptr, 0);
 
-			for (auto& cb : VSCBuffers)
-			{
-				context->VSSetConstantBuffers(cb->BindPoint, 1, cb->Buffer.GetAddressOf());
-			}
-
-			for (auto& cb : HSCBuffers)
-			{
-				context->HSSetConstantBuffers(cb->BindPoint, 1, cb->Buffer.GetAddressOf());
-			}
-
-			for (auto& cb : DSCBuffers)
-			{
-				context->DSSetConstantBuffers(cb->BindPoint, 1, cb->Buffer.GetAddressOf());
-			}
-
-			for (auto& cb : GSCBuffers)
-			{
-				context->GSSetConstantBuffers(cb->BindPoint, 1, cb->Buffer.GetAddressOf());
-			}
-
-			for (auto& cb : PSCBuffers)
-			{
-				context->PSSetConstantBuffers(cb->BindPoint, 1, cb->Buffer.GetAddressOf());
-			}
-
-			for (auto& cb : CSCBuffers)
-			{
-				context->CSSetConstantBuffers(cb->BindPoint, 1, cb->Buffer.GetAddressOf());
-			}
+			BindConstantBuffers(context);
+			BindTextures(context);
+			BindSamplers(context);
 		}
-	};
 
-	struct Texture
-	{
+		SharedPtr<Shader> Clone(ID3D11Device* device)
+		{
+			SharedPtr<Shader> clone = std::make_shared<Shader>(*this);
 
+			auto& cBuffers = clone->CBuffers;
+
+			for (_uint i = 0; i < ShaderTypeEnd; ++i)
+			{
+				auto& reflectResult = Reflects[i];
+
+				for (auto& pair : reflectResult.CBuffers)
+				{
+					const auto& cbName = pair.first;
+					const auto& cbDesc = pair.second;
+
+					SharedPtr<CBufferRuntime> cBufferRuntime = std::make_shared<CBufferRuntime>();
+					cBufferRuntime->BindPoint = cbDesc.BindPoint;
+					cBufferRuntime->Size = cbDesc.BufferSize;
+					cBufferRuntime->LocalData.resize(cbDesc.BufferSize, 0);
+
+					D3D11_BUFFER_DESC bd{};
+					bd.ByteWidth = cbDesc.BufferSize;
+					bd.Usage = D3D11_USAGE_DEFAULT; // 예: DEFAULT
+					bd.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
+					bd.CPUAccessFlags = 0;                   // D3D11_USAGE_DYNAMIC이면 D3D11_CPU_ACCESS_WRITE
+					bd.MiscFlags = 0;
+					bd.StructureByteStride = 0;
+
+					HRESULT hr = device->CreateBuffer(&bd, nullptr, cBufferRuntime->Buffer.GetAddressOf());
+
+					if (FAILED(hr))
+					{
+						std::cerr << "Failed to create Constant Buffer : " << cbName << "\n";
+						return nullptr;
+					}
+
+					cBuffers[i].emplace(cbDesc.Name, cBufferRuntime);
+				}
+			}
+
+			return clone;
+		}
 	};
 
 	struct VTX_MESH

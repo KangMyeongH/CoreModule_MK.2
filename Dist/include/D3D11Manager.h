@@ -4,6 +4,8 @@
 namespace engine
 {
     using TextureMap = std::unordered_map<_wstring, ComPtr<ID3D11ShaderResourceView>>;
+    using ShaderMap = std::unordered_map<_wstring, SharedPtr<Shader>>;
+
 
     class COREMODULE_API D3D11Manager
     {
@@ -36,8 +38,8 @@ namespace engine
 
         HRESULT	Initialize(HWND hwnd, _bool isWindowed, _uint winSizeX, _uint winSizeY);
 
-        HRESULT CreateTexture(const _wstring& path, ID3D11ShaderResourceView** srv);
-        HRESULT CreateShader(const _wstring& path, const SharedPtr<Shader>& shader);
+        HRESULT CreateTexture(const _wstring& path, ComPtr<ID3D11ShaderResourceView>& srv);
+        HRESULT CreateShader(const _wstring& path, SharedPtr<Shader>& shader);
         HRESULT CreateMesh(const _wstring& path);
 
     	void 	Release();
@@ -48,7 +50,8 @@ namespace engine
         HRESULT readyDepthStencilView(_uint winSizeX, _uint winSizeY);
         HRESULT compileShaderFromFile(const _wstring& path, const _string& entryPoint, const _string& targetProfile, ComPtr<ID3DBlob>& outBlob);
         void	compileInputLayoutFromReflector(std::vector<D3D11_INPUT_ELEMENT_DESC>* inputDesc, const ComPtr<ID3D11ShaderReflection>& reflector);
-        void    reflectBufferFromReflector(const ComPtr<ID3D11ShaderReflection>& reflector, const SharedPtr<Shader>& shader);
+        void    reflectBufferFromReflector(const ComPtr<ID3D11ShaderReflection>& reflector, ReflectResult& outResult);
+        bool    createConstantBuffer(const ReflectResult& reflectResult, std::unordered_map<_string, SharedPtr<CBufferRuntime>>& outResult);
 
     private:
         //======================================//
@@ -62,6 +65,7 @@ namespace engine
         ComPtr<ID3D11DepthStencilView> 	m_DepthStencilView;
 		
         TextureMap                      m_TextureMap;
+        ShaderMap	 					m_ShaderMap;
 
         _uint                           m_WinSizeX;
         _uint                           m_WinSizeY;

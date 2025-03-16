@@ -19,7 +19,7 @@ namespace engine
         //				constructor				//
         //======================================//
 
-        explicit Component(const SharedPtr<GameObject>& owner) : m_Owner(owner) {}
+        explicit Component(const SharedPtr<GameObject>& owner, const _string& name = "Component") : Object(name), m_Owner(owner) {}
         ~Component() override = default;
     	Component(const Component& rhs) : Object(rhs)
         {

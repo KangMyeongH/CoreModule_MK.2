@@ -3,6 +3,11 @@
 
 namespace engine
 {
+	class Material;
+}
+
+namespace engine
+{
     class COREMODULE_API TextureUI : public UI
     {
         DECLARE_REGISTER_COMPONENT(TextureUI)
@@ -52,6 +57,7 @@ namespace engine
         //				  fields				//
         //======================================//
 
+        SharedPtr<Material>                 m_Material;
         ComPtr<ID3D11ShaderResourceView>    m_Texture;
         _float4X4                           m_TextureScaleMatrix;
         _wstring                            m_Path;

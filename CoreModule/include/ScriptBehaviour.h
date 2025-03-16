@@ -6,8 +6,8 @@ namespace engine
     class COREMODULE_API ScriptBehaviour : public Behaviour
     {
     protected:
-        explicit ScriptBehaviour(const SharedPtr<GameObject>& owner)
-	        : Behaviour(owner) {}
+        explicit ScriptBehaviour(const SharedPtr<GameObject>& owner, const _string& name = "ScriptBehaviour")
+	        : Behaviour(owner, name) {}
 
         ~ScriptBehaviour() override = default;
 
@@ -25,10 +25,11 @@ namespace engine
         //virtual void OnCollisionStay(Collision other) {}
         //virtual void OnCollisionExit(Collision other) {}
 
-        void SetEnable(bool enabled) final;
+        void SetEnable(_bool enabled) final;
         void Destroy() final;
 
         SharedPtr<Component> Clone() const override = 0;
+
         void to_json(nlohmann::ordered_json& j) override = 0;
         void from_json(const nlohmann::ordered_json& j) override = 0;
 

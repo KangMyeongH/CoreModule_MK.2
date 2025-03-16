@@ -1,6 +1,6 @@
 #include "ScriptBehaviour.h"
 
-void engine::ScriptBehaviour::SetEnable(const bool enabled)
+void engine::ScriptBehaviour::SetEnable(const _bool enabled)
 {
 	if (m_bEnabled != enabled)
 	{

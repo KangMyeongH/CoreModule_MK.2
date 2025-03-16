@@ -23,7 +23,7 @@ void engine::TextureUI::SetTexture(const _wstring& path)
 {
 	if (m_Path != path)
 	{
-		D3D11Manager::GetInstance().CreateTexture(path, m_Texture.GetAddressOf());
+		D3D11Manager::GetInstance().CreateTexture(path, m_Texture);
 
 		ComPtr<ID3D11Resource> resource = nullptr;
 		m_Texture->GetResource(resource.GetAddressOf());
