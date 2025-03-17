@@ -18,6 +18,18 @@ engine::D3D11Manager::~D3D11Manager()
 	Release();
 }
 
+engine::SharedPtr<engine::VIBuffer> engine::D3D11Manager::GetVIBuffer(const VIBufferType type)
+{
+	auto viBufferIt = m_VIBufferMap.find(type);
+
+	if (viBufferIt != m_VIBufferMap.end())
+	{
+		return viBufferIt->second;
+	}
+
+	return nullptr;
+}
+
 HRESULT engine::D3D11Manager::Initialize(HWND hwnd, _bool isWindowed, _uint winSizeX, _uint winSizeY)
 {
 	_uint	flag = 0;
@@ -78,6 +90,11 @@ HRESULT engine::D3D11Manager::Initialize(HWND hwnd, _bool isWindowed, _uint winS
 
 	m_WinSizeX = winSizeX;
 	m_WinSizeY = winSizeY;
+
+	if (FAILED(readyVIBuffers()))
+	{
+		return E_FAIL;
+	}
 
 	return S_OK;
 }
@@ -272,6 +289,19 @@ HRESULT engine::D3D11Manager::CreateShader(const _wstring& path, SharedPtr<Shade
 	}
 
 	return E_FAIL;
+}
+
+HRESULT engine::D3D11Manager::CreateSampler(const D3D11_SAMPLER_DESC& desc, ComPtr<ID3D11SamplerState>& sampler) const
+{
+	HRESULT hr = m_Device->CreateSamplerState(&desc, sampler.GetAddressOf());
+
+	if (FAILED(hr))
+	{
+		std::cerr << "Failed create Sampler! \n";
+		return E_FAIL;
+	}
+
+	return S_OK;
 }
 
 void engine::D3D11Manager::Release()
@@ -605,4 +635,97 @@ bool engine::D3D11Manager::createConstantBuffer(const ReflectResult& reflectResu
 	}
 
 	return true;
+}
+
+HRESULT engine::D3D11Manager::readyVIBuffers()
+{
+	// TODO : 아 모르겠다 그냥 하드코딩해 시부레...
+	// 하.. 근데 mesh는 객체 마다 다른댜
+
+
+	//======Create VIBufferType_POSTEX_RECT=======//
+#pragma region VIBufferType_POSTEX_RECT
+	auto viPosTex = std::make_shared<VIBuffer>();
+	viPosTex->NumVertexBuffers = 1;
+	viPosTex->VertexStride = sizeof(VTX_TEXTURE_UI);
+	viPosTex->NumVertices = 4;
+	viPosTex->IndexStride = 2;
+	viPosTex->NumIndices = 6;
+	viPosTex->IndexFormat = DXGI_FORMAT_R16_UINT;
+	viPosTex->PrimitiveTopology = D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST;
+
+	D3D11_BUFFER_DESC vbDesc;
+	ZeroMemory(&vbDesc, sizeof(vbDesc));
+	vbDesc.ByteWidth = viPosTex->VertexStride * viPosTex->NumVertices;
+	vbDesc.Usage = D3D11_USAGE_DEFAULT;
+	vbDesc.BindFlags = D3D11_BIND_VERTEX_BUFFER;
+	vbDesc.StructureByteStride = viPosTex->VertexStride;
+	vbDesc.CPUAccessFlags = 0;
+	vbDesc.MiscFlags = 0;
+
+	VTX_TEXTURE_UI* vtxPosTexRect = new VTX_TEXTURE_UI[viPosTex->NumVertices];
+	ZeroMemory(vtxPosTexRect, sizeof(VTX_TEXTURE_UI) * viPosTex->NumVertices);
+
+	vtxPosTexRect[0].Position  = _float3(-0.5f, 0.5f, 0.f);
+	vtxPosTexRect[0].TexCoord0 = _float2(0.f, 0.f);
+
+	vtxPosTexRect[1].Position  = _float3(0.5f, 0.5f, 0.f);
+	vtxPosTexRect[1].TexCoord0 = _float2(1.f, 0.f);
+
+	vtxPosTexRect[2].Position  = _float3(0.5f, -0.5f, 0.f);
+	vtxPosTexRect[2].TexCoord0 = _float2(1.f, 1.f);
+
+	vtxPosTexRect[3].Position  = _float3(-0.5f, -0.5f, 0.f);
+	vtxPosTexRect[3].TexCoord0 = _float2(0.f, 1.f);
+
+	D3D11_SUBRESOURCE_DATA initDesc;
+	ZeroMemory(&initDesc, sizeof(initDesc));
+
+	if (FAILED(m_Device->CreateBuffer(&vbDesc, &initDesc, viPosTex->VertexBuffer.GetAddressOf())))
+	{
+		std::cerr << "Failed to create VBufferType_POSTEX_RECT ! \n";
+		return E_FAIL;
+	}
+
+	SafeDeleteArray(vtxPosTexRect);
+
+	D3D11_BUFFER_DESC ibDesc;
+	ZeroMemory(&ibDesc, sizeof(ibDesc));
+	ibDesc.ByteWidth = viPosTex->IndexStride * viPosTex->NumIndices;
+	ibDesc.Usage = D3D11_USAGE_DEFAULT;
+	ibDesc.BindFlags = D3D11_BIND_INDEX_BUFFER;
+	ibDesc.StructureByteStride = viPosTex->IndexStride;
+	ibDesc.CPUAccessFlags = 0;
+	ibDesc.MiscFlags = 0;
+
+	_ushort* idxPosTexRect = new _ushort[viPosTex->NumIndices];
+	ZeroMemory(idxPosTexRect, sizeof(_ushort) * viPosTex->NumIndices);
+
+	idxPosTexRect[0] = 0;
+	idxPosTexRect[1] = 1;
+	idxPosTexRect[2] = 2;
+
+	idxPosTexRect[3] = 0;
+	idxPosTexRect[4] = 2;
+	idxPosTexRect[5] = 3;
+
+	ZeroMemory(&initDesc, sizeof(initDesc));
+	initDesc.pSysMem = idxPosTexRect;
+
+	if (FAILED(m_Device->CreateBuffer(&ibDesc, &initDesc, viPosTex->IndexBuffer.GetAddressOf())))
+	{
+		std::cerr << "Failed to create IBufferType_POSTEX_RECT ! \n";
+		return E_FAIL;
+	}
+
+	SafeDeleteArray(idxPosTexRect);
+
+	m_VIBufferMap.emplace(VIBufferType_POSTEX_RECT, viPosTex);
+#pragma endregion
+	//============================================//
+
+
+
+
+	return S_OK;
 }

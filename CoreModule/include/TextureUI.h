@@ -29,6 +29,8 @@ namespace engine
         void SetTexture(const _wstring& path);
         ComPtr<ID3D11ShaderResourceView> GetTexture() const;
 
+        _wstring GetPath() const { return m_TexturePath; }
+
     public:
         //======================================//
         //				  method				//
@@ -40,9 +42,13 @@ namespace engine
         _bool IsButtonUp() override;
 
         void Update() override;
+        HRESULT InputAssembler(const ComPtr<ID3D11DeviceContext>& context) override;
         void RenderUI(const ComPtr<ID3D11DeviceContext>& context) override;
 
         void Destroy() override;
+
+    protected:
+        void registerComponent() override;
 
     public:
         //======================================//
@@ -57,10 +63,8 @@ namespace engine
         //				  fields				//
         //======================================//
 
-        SharedPtr<Material>                 m_Material;
-        ComPtr<ID3D11ShaderResourceView>    m_Texture;
         _float4X4                           m_TextureScaleMatrix;
-        _wstring                            m_Path;
+        _wstring                            m_TexturePath;
         _uint                               m_Width;
         _uint                               m_Height;
         _bool                               m_bFlipX;

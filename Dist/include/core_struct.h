@@ -29,13 +29,6 @@ namespace engine
 		RayHit() : Point(0,0,0), Normal(0,0,0), Distance(0.f) {}
 	};
 
-	struct VS_ConstantBuffer
-	{
-		_float4X4 WorldMat;
-		_float4X4 ViewMat;
-		_float4X4 ProjMat;
-	};
-
 	struct ShaderVarDesc
 	{
 		_string		Name;			// hlsl에 선언 된 변수 이름
@@ -344,6 +337,46 @@ namespace engine
 
 			return clone;
 		}
+	};
+
+	struct VIBuffer
+	{
+		ComPtr<ID3D11Buffer> VertexBuffer;
+		ComPtr<ID3D11Buffer> IndexBuffer;
+		
+		_uint NumVertexBuffers;					// 사용되는 정점 버퍼의 개수
+		_uint VertexStride;						// 하나의 정점 구조체 크기
+		_uint NumVertices;						// 정점 개수
+		_uint IndexStride;						// 인덱스 데이터의 크기 (바이트 단위, 16비트 = 2, 32비트 = 4)
+		_uint NumIndices;						// 인덱스 개수
+		DXGI_FORMAT IndexFormat;				// 인덱스 버퍼의 데이터 형식
+		D3D11_PRIMITIVE_TOPOLOGY PrimitiveTopology;	// 그리기 방식 ( D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST )
+
+		VIBuffer(): NumVertexBuffers(0), VertexStride(0), NumVertices(0), IndexStride(0), NumIndices(0), IndexFormat(),
+		            PrimitiveTopology()
+		{
+		}
+
+		void Initialize(ID3D11Device* device)
+		{
+			D3D11_BUFFER_DESC vbDesc;
+			ZeroMemory(&vbDesc, sizeof(vbDesc));
+			vbDesc.ByteWidth = VertexStride * NumVertexBuffers;
+			vbDesc.Usage = D3D11_USAGE_DEFAULT;
+			vbDesc.BindFlags = D3D11_BIND_VERTEX_BUFFER;
+			vbDesc.StructureByteStride = VertexStride;
+			vbDesc.CPUAccessFlags = 0;
+			vbDesc.MiscFlags = 0;
+
+
+		}
+	};
+
+
+	struct VTX_TEXTURE_UI
+	{
+		_float3 Position;
+		_float2 TexCoord0;
 	};
 
 	struct VTX_MESH

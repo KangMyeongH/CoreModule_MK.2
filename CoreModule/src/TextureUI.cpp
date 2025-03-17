@@ -2,6 +2,7 @@
 
 #include "D3D11Manager.h"
 #include "InputManager.h"
+#include "Material.h"
 
 DEFINE_REGISTER_COMPONENT(TextureUI)
 
@@ -13,7 +14,7 @@ engine::TextureUI::TextureUI(const SharedPtr<GameObject>& owner)
 }
 
 engine::TextureUI::TextureUI(const TextureUI& rhs)
-	: UI(rhs), m_Texture(rhs.m_Texture), m_TextureScaleMatrix(rhs.m_TextureScaleMatrix),
+	: UI(rhs), m_TextureScaleMatrix(rhs.m_TextureScaleMatrix),
 	  m_Width(rhs.m_Width), m_Height(rhs.m_Height),
 	  m_bFlipX(rhs.m_bFlipX), m_bFlipY(rhs.m_bFlipY)
 {
@@ -21,12 +22,14 @@ engine::TextureUI::TextureUI(const TextureUI& rhs)
 
 void engine::TextureUI::SetTexture(const _wstring& path)
 {
-	if (m_Path != path)
+	if (m_TexturePath != path)
 	{
-		D3D11Manager::GetInstance().CreateTexture(path, m_Texture);
+		ComPtr<ID3D11ShaderResourceView> texture;
+		D3D11Manager::GetInstance().CreateTexture(path, texture);
+		m_Material->SetTexture("g_Texture", texture);
 
 		ComPtr<ID3D11Resource> resource = nullptr;
-		m_Texture->GetResource(resource.GetAddressOf());
+		texture->GetResource(resource.GetAddressOf());
 
 		ComPtr<ID3D11Texture2D> texture2D = nullptr;
 		resource->QueryInterface(__uuidof(ID3D11Texture2D), reinterpret_cast<void**>(texture2D.GetAddressOf()));
@@ -39,12 +42,14 @@ void engine::TextureUI::SetTexture(const _wstring& path)
 
 		const _matrix mat = DirectX::XMMatrixScaling(static_cast<_float>(m_Width), static_cast<_float>(m_Height), 1.f);
 		XMStoreFloat4x4(&m_TextureScaleMatrix, mat);
+
+		m_TexturePath = path;
 	}
 }
 
 engine::ComPtr<ID3D11ShaderResourceView> engine::TextureUI::GetTexture() const
 {
-	return m_Texture;
+	return nullptr;
 }
 
 engine::_bool engine::TextureUI::IsMouseHovered()
@@ -97,12 +102,52 @@ void engine::TextureUI::Update()
 {
 }
 
+HRESULT engine::TextureUI::InputAssembler(const ComPtr<ID3D11DeviceContext>& context)
+{
+	if (m_VIBuffer)
+	{
+		ID3D11Buffer* vertexBuffers[] = {
+			m_VIBuffer->VertexBuffer.Get()
+		};
+
+		_uint		vertexStrides[] = {
+			m_VIBuffer->VertexStride
+		};
+
+		_uint		offsets[] = {
+			0,
+		};
+		
+		context->IASetVertexBuffers(0, m_VIBuffer->NumVertexBuffers, vertexBuffers, vertexStrides, offsets);
+		context->IASetIndexBuffer(m_VIBuffer->IndexBuffer.Get(), m_VIBuffer->IndexFormat, 0);
+		context->IASetPrimitiveTopology(m_VIBuffer->PrimitiveTopology);
+
+		return S_OK;
+	}
+
+
+	std::cerr << "No VIBuffer! \n";
+
+	return E_FAIL;
+}
+
 void engine::TextureUI::RenderUI(const ComPtr<ID3D11DeviceContext>& context)
 {
-	if (m_Texture)
+	if (m_Material != nullptr)
 	{
-		_matrix worldMat = XMMatrixMultiply(XMLoadFloat4x4(&m_TextureScaleMatrix), GetTransform()->GetWorldMatrix());
+		_float4X4 worldMat;
+		XMStoreFloat4x4(&worldMat, XMMatrixMultiply(XMLoadFloat4x4(&m_TextureScaleMatrix), GetTransform()->GetWorldMatrix()));
 
+		m_Material->SetMatrix("g_WorldMat", worldMat);
+
+		m_Material->Bind(context.Get());
+
+		if (FAILED(InputAssembler(context)))
+		{
+			std::cerr << "Failed IA \n";
+		}
+
+		context->DrawIndexed(m_VIBuffer->NumIndices, 0, 0);
 	}
 }
 
@@ -111,13 +156,41 @@ void engine::TextureUI::Destroy()
 	m_bDestroyed = true;
 }
 
+void engine::TextureUI::registerComponent()
+{
+	UI::registerComponent();
+
+	m_Material = Material::Create(shared_from_this());
+	m_Material->LoadShader(L"..\\Client\\Assets\\Resource\\Shader\\TextureShader.hlsl");
+	m_VIBuffer = D3D11Manager::GetInstance().GetVIBuffer(VIBufferType_POSTEX_RECT);
+
+	D3D11_SAMPLER_DESC samplerDesc = {};
+	samplerDesc.Filter = D3D11_FILTER_ANISOTROPIC;  			// 고품질 필터링 (텍스처 왜곡 방지)
+	samplerDesc.MaxAnisotropy = 16;  							// 최대 16배 이방성 필터링
+	samplerDesc.AddressU = D3D11_TEXTURE_ADDRESS_BORDER;
+	samplerDesc.AddressV = D3D11_TEXTURE_ADDRESS_BORDER;
+	samplerDesc.AddressW = D3D11_TEXTURE_ADDRESS_BORDER;
+	samplerDesc.BorderColor[0] = 0.0f;  						// 투명한 배경 유지
+	samplerDesc.BorderColor[1] = 0.0f;
+	samplerDesc.BorderColor[2] = 0.0f;
+	samplerDesc.BorderColor[3] = 0.0f;
+	samplerDesc.MinLOD = 0;
+	samplerDesc.MaxLOD = D3D11_FLOAT32_MAX;
+
+	ComPtr<ID3D11SamplerState> sampler;
+
+	D3D11Manager::GetInstance().CreateSampler(samplerDesc, sampler);
+
+	m_Material->SetSampler("g_Sampler", sampler);
+}
+
 void engine::TextureUI::to_json(nlohmann::ordered_json& j)
 {
 	std::string type = "TextureUI";
 	j = nlohmann::ordered_json{
 		{"type", type},
 		{"enable", m_bEnabled},
-		{"path", m_Path},
+		{"path", m_TexturePath},
 		{"flipX", m_bFlipX},
 		{"flipY", m_bFlipY}
 	};
@@ -131,7 +204,7 @@ void engine::TextureUI::from_json(const nlohmann::ordered_json& j)
 	}
 	if (j.contains("path"))
 	{
-		j.at("path").get_to(m_Path);
+		j.at("path").get_to(m_TexturePath);
 	}
 	if (j.contains("flipX"))
 	{

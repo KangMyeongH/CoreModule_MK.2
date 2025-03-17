@@ -11,7 +11,7 @@ namespace engine
         //				constructor				//
         //======================================//
 
-        explicit Rigidbody(const SharedPtr<GameObject>& owner);
+        explicit Rigidbody(const SharedPtr<GameObject>& owner, const _string& name = "Rigidbody");
         ~Rigidbody() override = default;
 
     public:

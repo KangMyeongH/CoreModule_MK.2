@@ -2,7 +2,7 @@
 
 #include "D3D11Manager.h"
 
-engine::Material::Material(const SharedPtr<Renderer>& owner, const _string& name)
+engine::Material::Material(const SharedPtr<Object>& owner, const _string& name)
 	: Object(name), m_Owner(owner)
 {
 
@@ -240,7 +240,7 @@ void engine::Material::SetTexture(const _string& name, const ComPtr<ID3D11Shader
 			textureRuntime->Texture = texture;
 			textureRuntime->BindPoint = texIt->second.BindPoint;
 
-			m_Shader->Textures[i].emplace(name, textureRuntime);
+			m_Shader->Textures[i][name] = textureRuntime;
 
 			break;
 		}
@@ -279,7 +279,7 @@ void engine::Material::SetSampler(const _string& name, const ComPtr<ID3D11Sample
 			samplerRuntime->Sampler = sampler;
 			samplerRuntime->BindPoint = texIt->second.BindPoint;
 
-			m_Shader->Samplers[i].emplace(name, samplerRuntime);
+			m_Shader->Samplers[i][name] = samplerRuntime;
 
 			break;
 		}
@@ -307,7 +307,7 @@ void engine::Material::Bind(ID3D11DeviceContext* context) const
 	}
 }
 
-engine::SharedPtr<engine::Material> engine::Material::Create(const SharedPtr<Renderer>& renderer)
+engine::SharedPtr<engine::Material> engine::Material::Create(const SharedPtr<Object>& renderer)
 {
 	return {
 		new Material(renderer),
@@ -315,7 +315,7 @@ engine::SharedPtr<engine::Material> engine::Material::Create(const SharedPtr<Ren
 	};
 }
 
-engine::SharedPtr<engine::Material> engine::Material::Clone(const SharedPtr<Renderer>& renderer) const
+engine::SharedPtr<engine::Material> engine::Material::Clone(const SharedPtr<Object>& renderer) const
 {
 	SharedPtr<Material> clone(CLONE_SHARED_PTR(Material));
 	clone->SetOwner(renderer);
@@ -326,8 +326,4 @@ engine::SharedPtr<engine::Material> engine::Material::Clone(const SharedPtr<Rend
 
 void engine::Material::Destroy()
 {
-	if (auto owner = m_Owner.lock())
-	{
-		
-	}
 }

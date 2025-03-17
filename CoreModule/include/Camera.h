@@ -34,7 +34,7 @@ namespace engine
         //				  method				//
         //======================================//
 
-    	void    UpdateCamera(VS_ConstantBuffer* constantBuffer) const;
+    	void    UpdateCamera(_float4X4& viewMat, _float4X4& projMat) const;
     	void    SetMainCamera();
 
         void 	Destroy() override;

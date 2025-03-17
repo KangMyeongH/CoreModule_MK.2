@@ -12,7 +12,7 @@ namespace engine
         //				constructor				//
         //======================================//
 
-        explicit Material(const SharedPtr<Renderer>& owner, const _string& name = "Material");
+        explicit Material(const SharedPtr<Object>& owner, const _string& name = "Material");
         ~Material() override;
     	Material(const Material& rhs);
 
@@ -44,8 +44,8 @@ namespace engine
 
         void SetSampler(const _string& name, const ComPtr<ID3D11SamplerState>& sampler);
 
-        void SetOwner(const SharedPtr<Renderer>& renderer) { m_Owner = renderer; }
-    	SharedPtr<Renderer> GetOwner() const { return m_Owner.lock(); }
+        void SetOwner(const SharedPtr<Object>& renderer) { m_Owner = renderer; }
+    	SharedPtr<Object> GetOwner() const { return m_Owner.lock(); }
 
         SharedPtr<Shader> GetShader() const { return m_Shader; }
 
@@ -57,9 +57,9 @@ namespace engine
 
         void Bind(ID3D11DeviceContext* context) const;
 
-        static SharedPtr<Material> Create(const SharedPtr<Renderer>& renderer);
+        static SharedPtr<Material> Create(const SharedPtr<Object>& renderer);
 
-        SharedPtr<Material> Clone(const SharedPtr<Renderer>& renderer) const;
+        SharedPtr<Material> Clone(const SharedPtr<Object>& renderer) const;
 
 	    void Destroy() override;
 
@@ -68,7 +68,7 @@ namespace engine
         //				  fields				//
         //======================================//
 
-        WeakPtr<Renderer> 					m_Owner;
+        WeakPtr<Object> 					m_Owner;
         SharedPtr<Shader>           		m_Shader;
         _wstring                            m_ShaderPath;
     };

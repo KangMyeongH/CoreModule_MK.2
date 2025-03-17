@@ -5,7 +5,7 @@ namespace engine
 {
     using TextureMap = std::unordered_map<_wstring, ComPtr<ID3D11ShaderResourceView>>;
     using ShaderMap = std::unordered_map<_wstring, SharedPtr<Shader>>;
-
+    using VIBufferMap = std::unordered_map<VIBufferType, SharedPtr<VIBuffer>>;
 
     class COREMODULE_API D3D11Manager
     {
@@ -28,6 +28,8 @@ namespace engine
         ComPtr<IDXGISwapChain> 		    GetSwapChain() const { return m_SwapChain; }
         ComPtr<ID3D11RenderTargetView>  GetMainRTV() const { return m_BackBufferRTV; }
         ComPtr<ID3D11DepthStencilView>  GetDepthStencilView() const { return m_DepthStencilView; }
+
+        SharedPtr<VIBuffer>             GetVIBuffer(VIBufferType type);
 
         _uint                           GetWinSizeX() const { return m_WinSizeX; }
         _uint                           GetWinSizeY() const { return m_WinSizeY; }
@@ -53,6 +55,8 @@ namespace engine
         void    reflectBufferFromReflector(const ComPtr<ID3D11ShaderReflection>& reflector, ReflectResult& outResult);
         bool    createConstantBuffer(const ReflectResult& reflectResult, std::unordered_map<_string, SharedPtr<CBufferRuntime>>& outResult);
 
+        HRESULT readyVIBuffers();
+
     private:
         //======================================//
         //				  fields				//
@@ -63,7 +67,9 @@ namespace engine
         ComPtr<IDXGISwapChain> 			m_SwapChain;
         ComPtr<ID3D11RenderTargetView> 	m_BackBufferRTV;
         ComPtr<ID3D11DepthStencilView> 	m_DepthStencilView;
-		
+
+        VIBufferMap                     m_VIBufferMap;
+
         TextureMap                      m_TextureMap;
         ShaderMap	 					m_ShaderMap;
 

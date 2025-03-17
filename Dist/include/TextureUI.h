@@ -3,6 +3,11 @@
 
 namespace engine
 {
+	class Material;
+}
+
+namespace engine
+{
     class COREMODULE_API TextureUI : public UI
     {
         DECLARE_REGISTER_COMPONENT(TextureUI)
@@ -35,9 +40,13 @@ namespace engine
         _bool IsButtonUp() override;
 
         void Update() override;
+        HRESULT InputAssembler(const ComPtr<ID3D11DeviceContext>& context) override;
         void RenderUI(const ComPtr<ID3D11DeviceContext>& context) override;
 
         void Destroy() override;
+
+    protected:
+        void registerComponent() override;
 
     public:
         //======================================//
@@ -52,9 +61,8 @@ namespace engine
         //				  fields				//
         //======================================//
 
-        ComPtr<ID3D11ShaderResourceView>    m_Texture;
         _float4X4                           m_TextureScaleMatrix;
-        _wstring                            m_Path;
+        _wstring                            m_TexturePath;
         _uint                               m_Width;
         _uint                               m_Height;
         _bool                               m_bFlipX;

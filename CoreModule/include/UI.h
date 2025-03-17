@@ -3,7 +3,9 @@
 
 namespace engine
 {
-    class COREMODULE_API UI : public Behaviour
+	class Material;
+
+	class COREMODULE_API UI : public Behaviour
     {
     protected:
         //======================================//
@@ -22,6 +24,8 @@ namespace engine
         _uint GetSorting() const;
         void SetSorting( _uint sort);
 
+        SharedPtr<Material> GetMaterial() const { return m_Material; }
+
         //======================================//
         //				  method				//
         //======================================//
@@ -32,6 +36,7 @@ namespace engine
         virtual _bool IsButtonUp() = 0;
 
         virtual void Update() = 0;
+        virtual HRESULT InputAssembler(const ComPtr<ID3D11DeviceContext>& context) = 0;
         virtual void RenderUI(const ComPtr<ID3D11DeviceContext>& context) = 0;
 
         void Destroy() override;
@@ -53,6 +58,8 @@ namespace engine
         //				  fields				//
         //======================================//
 
-        _uint m_SortingOrder;
+        SharedPtr<Material> 	m_Material;
+        SharedPtr<VIBuffer>     m_VIBuffer;
+        _uint 					m_SortingOrder;
     };
 }

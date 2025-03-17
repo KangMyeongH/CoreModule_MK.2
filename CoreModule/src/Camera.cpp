@@ -26,7 +26,7 @@ engine::Camera::Camera(const Camera& rhs)
 	
 }
 
-void engine::Camera::UpdateCamera(VS_ConstantBuffer* constantBuffer) const
+void engine::Camera::UpdateCamera(_float4X4& viewMat, _float4X4& projMat) const
 {
 	_matrix rotMat = DirectX::XMMatrixRotationQuaternion(GetTransform()->GetLocalRotation().ToVector());
 
@@ -40,11 +40,11 @@ void engine::Camera::UpdateCamera(VS_ConstantBuffer* constantBuffer) const
 	forward = DirectX::XMVector3Normalize(forward);
 	up 		= DirectX::XMVector3Normalize(up);
 
-	const _matrix viewMat = DirectX::XMMatrixLookToLH(eye, forward, up);
-	const _matrix projMat = DirectX::XMMatrixPerspectiveFovLH(m_FiledOfView, m_AspectRatio, m_NearPlane, m_FarPlane);
+	const _matrix viewMatrix = DirectX::XMMatrixLookToLH(eye, forward, up);
+	const _matrix projMatrix = DirectX::XMMatrixPerspectiveFovLH(m_FiledOfView, m_AspectRatio, m_NearPlane, m_FarPlane);
 
-	XMStoreFloat4x4(&constantBuffer->ViewMat, viewMat);
-	XMStoreFloat4x4(&constantBuffer->ProjMat, projMat);
+	XMStoreFloat4x4(&viewMat, viewMatrix);
+	XMStoreFloat4x4(&projMat, projMatrix);
 }
 
 void engine::Camera::SetMainCamera()

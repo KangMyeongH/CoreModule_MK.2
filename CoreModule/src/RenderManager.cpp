@@ -6,7 +6,7 @@
 
 IMPLEMENT_SINGLETON(engine::RenderManager)
 
-engine::RenderManager::RenderManager(): m_VSConstantBuffer()
+engine::RenderManager::RenderManager()
 {
 }
 
@@ -29,7 +29,12 @@ void engine::RenderManager::UpdateMainCamera()
 {
 	if (auto mainCam = m_MainCamera.lock())
 	{
-		mainCam->UpdateCamera(&m_VSConstantBuffer);
+		mainCam->UpdateCamera(m_ViewMat, m_ProjMat);
+	}
+
+	else
+	{
+		// TODO : MainCam이 없을 때 예외 처리.
 	}
 }
 

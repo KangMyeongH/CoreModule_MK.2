@@ -14,6 +14,7 @@ namespace engine
 
         explicit Renderer(const SharedPtr<GameObject>& owner, const _string& name = "Renderer");
         ~Renderer() override = default;
+        Renderer(const Renderer& rhs);
 
     public:
         //======================================//
