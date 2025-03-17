@@ -29,6 +29,8 @@ namespace engine
         void SetTexture(const _wstring& path);
         ComPtr<ID3D11ShaderResourceView> GetTexture() const;
 
+        _wstring GetPath() const { return m_TexturePath; }
+
     public:
         //======================================//
         //				  method				//

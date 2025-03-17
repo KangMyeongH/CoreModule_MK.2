@@ -14,7 +14,7 @@ engine::TextureUI::TextureUI(const SharedPtr<GameObject>& owner)
 }
 
 engine::TextureUI::TextureUI(const TextureUI& rhs)
-	: UI(rhs), m_TextureScaleMatrix(rhs.m_TextureScaleMatrix),
+	: UI(rhs), m_TextureScaleMatrix(rhs.m_TextureScaleMatrix), m_TexturePath(rhs.m_TexturePath),
 	  m_Width(rhs.m_Width), m_Height(rhs.m_Height),
 	  m_bFlipX(rhs.m_bFlipX), m_bFlipY(rhs.m_bFlipY)
 {
@@ -28,10 +28,10 @@ void engine::TextureUI::SetTexture(const _wstring& path)
 		D3D11Manager::GetInstance().CreateTexture(path, texture);
 		m_Material->SetTexture("g_Texture", texture);
 
-		ComPtr<ID3D11Resource> resource = nullptr;
+		ComPtr<ID3D11Resource> resource;
 		texture->GetResource(resource.GetAddressOf());
 
-		ComPtr<ID3D11Texture2D> texture2D = nullptr;
+		ComPtr<ID3D11Texture2D> texture2D;
 		resource->QueryInterface(__uuidof(ID3D11Texture2D), reinterpret_cast<void**>(texture2D.GetAddressOf()));
 
 		D3D11_TEXTURE2D_DESC desc;

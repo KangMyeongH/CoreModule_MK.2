@@ -42,6 +42,7 @@ namespace engine
 
         HRESULT CreateTexture(const _wstring& path, ComPtr<ID3D11ShaderResourceView>& srv);
         HRESULT CreateShader(const _wstring& path, SharedPtr<Shader>& shader);
+        HRESULT CreateSampler(const D3D11_SAMPLER_DESC& desc, ComPtr<ID3D11SamplerState>& sampler) const;
         HRESULT CreateMesh(const _wstring& path);
 
     	void 	Release();

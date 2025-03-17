@@ -5,7 +5,7 @@
 
 engine::PhysicsManager::~PhysicsManager()
 {
-	Release();
+
 }
 
 void engine::PhysicsManager::PhysicsUpdate(const float deltaTime) const

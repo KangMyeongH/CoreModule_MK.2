@@ -10,7 +10,7 @@ engine::Scene::Scene() = default;
 
 engine::Scene::~Scene()
 {
-	Release();
+
 }
 
 engine::GameObjects* engine::Scene::GetGameObjects()

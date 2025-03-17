@@ -12,7 +12,6 @@ engine::RenderManager::RenderManager()
 
 engine::RenderManager::~RenderManager()
 {
-	Release();
 }
 
 void engine::RenderManager::AddCamera(const SharedPtr<Camera>& camera)

@@ -10,7 +10,7 @@ engine::UIManager::UIManager() : m_bDirty(true)
 
 engine::UIManager::~UIManager()
 {
-	Release();
+
 }
 
 void engine::UIManager::UpdateUI()

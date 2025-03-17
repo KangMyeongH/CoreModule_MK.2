@@ -5,17 +5,13 @@
 IMPLEMENT_SINGLETON(engine::D3D11Manager)
 
 engine::D3D11Manager::D3D11Manager()
-	: m_Device(nullptr),
-	  m_DeviceContext(nullptr),
-	  m_SwapChain(nullptr),
-	  m_BackBufferRTV(nullptr),
-	  m_DepthStencilView(nullptr), m_WinSizeX(0), m_WinSizeY(0)
+	: m_WinSizeX(0), m_WinSizeY(0)
 {
 }
 
 engine::D3D11Manager::~D3D11Manager()
 {
-	Release();
+
 }
 
 engine::SharedPtr<engine::VIBuffer> engine::D3D11Manager::GetVIBuffer(const VIBufferType type)
@@ -307,6 +303,8 @@ HRESULT engine::D3D11Manager::CreateSampler(const D3D11_SAMPLER_DESC& desc, ComP
 void engine::D3D11Manager::Release()
 {
 	m_TextureMap.clear();
+	m_VIBufferMap.clear();
+	m_ShaderMap.clear();
 }
 
 HRESULT engine::D3D11Manager::readySwapChain(const HWND hWnd, const _bool isWindowed, const _uint winSizeX, const _uint winSizeY)
@@ -352,7 +350,7 @@ HRESULT engine::D3D11Manager::readySwapChain(const HWND hWnd, const _bool isWind
 	swapChainDesc.OutputWindow = hWnd;
 	swapChainDesc.SwapEffect = DXGI_SWAP_EFFECT_DISCARD;
 
-	if (FAILED(factory->CreateSwapChain(m_Device.Get(), &swapChainDesc, &m_SwapChain)))
+	if (FAILED(factory->CreateSwapChain(m_Device.Get(), &swapChainDesc, m_SwapChain.GetAddressOf())))
 	{
 		return E_FAIL;
 	}
@@ -380,7 +378,7 @@ HRESULT engine::D3D11Manager::readyBackBufferRenderTargetView()
 	}
 
 	if (FAILED(m_Device->CreateRenderTargetView(
-		backBufferTexture, nullptr, &m_BackBufferRTV)))
+		backBufferTexture, nullptr, m_BackBufferRTV.GetAddressOf())))
 	{
 		return E_FAIL;
 	}
@@ -423,7 +421,7 @@ HRESULT engine::D3D11Manager::readyDepthStencilView(const _uint winSizeX, const 
 	}
 
 	if (FAILED(m_Device->CreateDepthStencilView(
-		depthStencilTexture, nullptr, &m_DepthStencilView)))
+		depthStencilTexture, nullptr, m_DepthStencilView.GetAddressOf())))
 	{
 		return E_FAIL;
 	}
@@ -435,7 +433,7 @@ HRESULT engine::D3D11Manager::readyDepthStencilView(const _uint winSizeX, const 
 
 HRESULT engine::D3D11Manager::compileShaderFromFile(const _wstring& path, const _string& entryPoint, const _string& targetProfile, ComPtr<ID3DBlob>& outBlob)
 {
-	ComPtr<ID3DBlob> errorBlob = nullptr;
+	ComPtr<ID3DBlob> errorBlob;
 	HRESULT hr = D3DCompileFromFile(path.c_str(), nullptr, D3D_COMPILE_STANDARD_FILE_INCLUDE, entryPoint.c_str(), targetProfile.c_str(), 0, 0, outBlob.GetAddressOf(), errorBlob.GetAddressOf());
 
 	if (FAILED(hr))
@@ -555,7 +553,7 @@ void engine::D3D11Manager::reflectBufferFromReflector(const ComPtr<ID3D11ShaderR
 			cbDest.BindPoint = bindDesc.BindPoint;
 
 			ID3D11ShaderReflectionConstantBuffer* cbuf = reflector->GetConstantBufferByName(bindDesc.Name);
-
+			
 			if (cbuf)
 			{
 				D3D11_SHADER_BUFFER_DESC desc;
@@ -680,6 +678,7 @@ HRESULT engine::D3D11Manager::readyVIBuffers()
 
 	D3D11_SUBRESOURCE_DATA initDesc;
 	ZeroMemory(&initDesc, sizeof(initDesc));
+	initDesc.pSysMem = vtxPosTexRect;
 
 	if (FAILED(m_Device->CreateBuffer(&vbDesc, &initDesc, viPosTex->VertexBuffer.GetAddressOf())))
 	{

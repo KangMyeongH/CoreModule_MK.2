@@ -11,17 +11,17 @@
 
 engine::Core::~Core()
 {
-	Release();
 }
 
 void engine::Core::Release()
 {
 	// TODO : release manager
-	m_D3D11Manager->Release();
 	m_Scene->Release();
 	m_ScriptBehaviourManager->Release();
 	m_PhysicsManager->Release();
 	m_UIManager->Release();
+	m_RenderManager->Release();
+	m_D3D11Manager->Release();
 }
 
 void engine::Core::registerObjects()

@@ -5,7 +5,7 @@ namespace engine
 {
     class GameObject;
     using GameObjects 		= std::list<SharedPtr<GameObject>>;
-    using GameObjectsTagMap = std::unordered_map<std::string, std::unordered_set<std::shared_ptr<GameObject>>>;
+    using GameObjectsTagMap = std::unordered_map<std::string, std::unordered_set<SharedPtr<GameObject>>>;
 
     class COREMODULE_API Scene
     {
