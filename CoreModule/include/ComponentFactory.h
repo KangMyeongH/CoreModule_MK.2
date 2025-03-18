@@ -9,7 +9,7 @@ namespace engine
 	class Component;
 }
 
-class ComponentFactory
+class COREMODULE_API ComponentFactory
 {
 private:
 	//======================================//
@@ -33,6 +33,11 @@ public:
 	{
 		static ComponentFactory s_Instance;
 		return s_Instance;
+	}
+
+	void Release()
+	{
+		componentFactory.clear();
 	}
 
 	std::shared_ptr<engine::Component> CreateComponent(const engine::_string& typeName);

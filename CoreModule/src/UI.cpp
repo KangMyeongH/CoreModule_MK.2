@@ -34,7 +34,10 @@ void engine::UI::Destroy()
 	m_bDestroyed = true;
 }
 
-void engine::UI::registerComponent()
+void engine::UI::registerComponent(ApplicationMode mode)
 {
-	UIManager::GetInstance().AddUI(std::static_pointer_cast<UI>(shared_from_this()));
+	if (mode == CLIENT)
+	{
+		UIManager::GetInstance().AddUI(std::static_pointer_cast<UI>(shared_from_this()));
+	}
 }

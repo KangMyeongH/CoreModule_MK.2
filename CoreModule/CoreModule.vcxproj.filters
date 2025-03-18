@@ -192,6 +192,10 @@
     <ClInclude Include="include\core_enum.h">
       <Filter>99. Defines</Filter>
     </ClInclude>
+    <ClInclude Include="include\Editor.h" />
+    <ClInclude Include="include\EditorCore.h">
+      <Filter>01. Editor\Core</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\GameObject.cpp">
@@ -269,6 +273,9 @@
     </ClCompile>
     <ClCompile Include="src\EditorCamera.cpp">
       <Filter>01. Editor\Camera</Filter>
+    </ClCompile>
+    <ClCompile Include="src\EditorCore.cpp">
+      <Filter>01. Editor\Core</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

@@ -82,8 +82,16 @@ void engine::Camera::from_json(const nlohmann::ordered_json& j)
 	j.at("farPlane").get_to(m_FarPlane);
 }
 
-void engine::Camera::registerComponent()
+void engine::Camera::registerComponent(ApplicationMode mode)
 {
-	RenderManager::GetInstance().AddCamera(std::static_pointer_cast<Camera>(shared_from_this()));
+	if (mode == CLIENT)
+	{
+		RenderManager::GetInstance().AddCamera(std::static_pointer_cast<Camera>(shared_from_this()));
+	}
+
+	else if (mode == EDITOR)
+	{
+		
+	}
 }
 

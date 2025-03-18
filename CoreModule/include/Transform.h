@@ -202,7 +202,7 @@ namespace engine
 
 		void setDirty();
 
-		void registerComponent() override {}
+		void registerComponent(ApplicationMode mode = CLIENT) override {}
 
 		static SharedPtr<Transform> create();
 

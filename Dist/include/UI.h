@@ -43,7 +43,7 @@ namespace engine
         SharedPtr<Component> Clone() const override = 0;
 
     protected:
-        void registerComponent() override;
+        void registerComponent(ApplicationMode mode = CLIENT) override;
 
     public:
         //======================================//

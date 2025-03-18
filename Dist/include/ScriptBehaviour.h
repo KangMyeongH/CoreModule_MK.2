@@ -34,6 +34,6 @@ namespace engine
         void from_json(const nlohmann::ordered_json& j) override = 0;
 
     protected:
-        void registerComponent() final;
+        void registerComponent(ApplicationMode mode = CLIENT) final;
     };
 }

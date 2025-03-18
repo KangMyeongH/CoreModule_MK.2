@@ -31,6 +31,12 @@ namespace engine
 
         _wstring GetPath() const { return m_TexturePath; }
 
+        void SetFlipX(const _bool flipX) { m_bFlipX = flipX; }
+        _bool IsFlipX() const { return m_bFlipX; }
+
+        void SetFlipY(const _bool flipY) { m_bFlipY = flipY; }
+        _bool IsFlipY() const { return m_bFlipY; }
+
     public:
         //======================================//
         //				  method				//
@@ -48,7 +54,7 @@ namespace engine
         void Destroy() override;
 
     protected:
-        void registerComponent() override;
+        void registerComponent(ApplicationMode mode = CLIENT) override;
 
     public:
         //======================================//

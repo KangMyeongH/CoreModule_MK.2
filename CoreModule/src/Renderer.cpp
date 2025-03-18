@@ -13,7 +13,10 @@ engine::Renderer::Renderer(const Renderer& rhs) : Component(rhs)
 
 }
 
-void engine::Renderer::registerComponent()
+void engine::Renderer::registerComponent(ApplicationMode mode)
 {
-	RenderManager::GetInstance().AddRenderer(std::static_pointer_cast<Renderer>(shared_from_this()));
+	if (mode == CLIENT)
+	{
+		RenderManager::GetInstance().AddRenderer(std::static_pointer_cast<Renderer>(shared_from_this()));
+	}
 }

@@ -24,8 +24,18 @@ void engine::TextureUI::SetTexture(const _wstring& path)
 {
 	if (m_TexturePath != path)
 	{
+		m_TexturePath = path;
+
 		ComPtr<ID3D11ShaderResourceView> texture;
-		D3D11Manager::GetInstance().CreateTexture(path, texture);
+
+		if (FAILED(D3D11Manager::GetInstance().CreateTexture(path, texture)))
+		{
+			m_Material->SetTexture("g_Texture", texture);
+
+			std::cerr << "FAIL : TextureUI::SetTexture (" << WStringToString(path).c_str() << ")\n";
+			return;
+		}
+
 		m_Material->SetTexture("g_Texture", texture);
 
 		ComPtr<ID3D11Resource> resource;
@@ -42,8 +52,6 @@ void engine::TextureUI::SetTexture(const _wstring& path)
 
 		const _matrix mat = DirectX::XMMatrixScaling(static_cast<_float>(m_Width), static_cast<_float>(m_Height), 1.f);
 		XMStoreFloat4x4(&m_TextureScaleMatrix, mat);
-
-		m_TexturePath = path;
 	}
 }
 
@@ -156,7 +164,7 @@ void engine::TextureUI::Destroy()
 	m_bDestroyed = true;
 }
 
-void engine::TextureUI::registerComponent()
+void engine::TextureUI::registerComponent(ApplicationMode mode)
 {
 	UI::registerComponent();
 

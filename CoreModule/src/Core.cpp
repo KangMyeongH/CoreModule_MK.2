@@ -1,5 +1,6 @@
 #include "Core.h"
 
+#include "ComponentFactory.h"
 #include "D3D11Manager.h"
 #include "InputManager.h"
 #include "PhysicsManager.h"
@@ -20,6 +21,7 @@ void engine::Core::Release()
 	m_ScriptBehaviourManager->Release();
 	m_PhysicsManager->Release();
 	m_UIManager->Release();
+	ComponentFactory::GetInstance().Release();
 	m_RenderManager->Release();
 	m_D3D11Manager->Release();
 }

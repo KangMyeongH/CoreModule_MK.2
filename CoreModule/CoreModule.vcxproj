@@ -28,6 +28,7 @@
     <ClCompile Include="src\D3D11Manager.cpp" />
     <ClCompile Include="src\EditorCamera.cpp" />
     <ClCompile Include="src\EditorComponentManager.cpp" />
+    <ClCompile Include="src\EditorCore.cpp" />
     <ClCompile Include="src\GameObject.cpp" />
     <ClCompile Include="src\Hierarchy.cpp" />
     <ClCompile Include="src\InputManager.cpp" />
@@ -63,8 +64,10 @@
     <ClInclude Include="include\core_struct.h" />
     <ClInclude Include="include\core_typedef.h" />
     <ClInclude Include="include\D3D11Manager.h" />
+    <ClInclude Include="include\Editor.h" />
     <ClInclude Include="include\EditorCamera.h" />
     <ClInclude Include="include\EditorComponentManager.h" />
+    <ClInclude Include="include\EditorCore.h" />
     <ClInclude Include="include\Engine.h" />
     <ClInclude Include="include\GameObject.h" />
     <ClInclude Include="include\Hierarchy.h" />

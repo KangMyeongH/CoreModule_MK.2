@@ -41,3 +41,9 @@ enum VIBufferType
 	VIBufferType_POSTEX_RECT = 0,
 	VIBufferType_END = 1
 };
+
+enum ApplicationMode
+{
+	EDITOR,
+	CLIENT
+};

@@ -42,9 +42,12 @@ void engine::Rigidbody::from_json(const nlohmann::ordered_json& j)
 {
 }
 
-void engine::Rigidbody::registerComponent()
+void engine::Rigidbody::registerComponent(ApplicationMode mode)
 {
-	PhysicsManager::GetInstance().AddRigidbody(std::static_pointer_cast<Rigidbody>(shared_from_this()));
+	if (mode == CLIENT)
+	{
+		PhysicsManager::GetInstance().AddRigidbody(std::static_pointer_cast<Rigidbody>(shared_from_this()));
+	}
 }
 
 void engine::Rigidbody::rigidbodyUpdate(const float deltaTime)

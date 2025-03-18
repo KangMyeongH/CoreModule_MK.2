@@ -44,7 +44,7 @@ namespace engine
         void Destroy() override;
 
     protected:
-        void registerComponent() override;
+        void registerComponent(ApplicationMode mode = CLIENT) override;
 
     private:
         void rigidbodyUpdate(float deltaTime);

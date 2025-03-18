@@ -9,6 +9,7 @@ namespace engine
 {
 	namespace editor
 	{
+		class EditorComponentManager;
 		class Hierarchy;
 	}
 
@@ -20,6 +21,7 @@ namespace engine
 	{
 		friend class Scene;
 		friend class editor::Hierarchy;
+		friend class editor::EditorComponentManager;
 
 	protected:
 		//======================================//

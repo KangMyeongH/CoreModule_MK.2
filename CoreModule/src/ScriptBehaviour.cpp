@@ -26,7 +26,10 @@ void engine::ScriptBehaviour::Destroy()
 	}
 }
 
-void engine::ScriptBehaviour::registerComponent()
+void engine::ScriptBehaviour::registerComponent(ApplicationMode mode)
 {
-	ScriptBehaviourManager::GetInstance().AddScriptBehaviour(std::static_pointer_cast<ScriptBehaviour>(shared_from_this()));
+	if (mode == CLIENT)
+	{
+		ScriptBehaviourManager::GetInstance().AddScriptBehaviour(std::static_pointer_cast<ScriptBehaviour>(shared_from_this()));
+	}
 }

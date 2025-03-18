@@ -66,6 +66,7 @@ namespace engine
         ComPtr<ID3D11Device> 		    m_Device;
         ComPtr<ID3D11DeviceContext> 	m_DeviceContext;
         ComPtr<IDXGISwapChain> 			m_SwapChain;
+
         ComPtr<ID3D11RenderTargetView> 	m_BackBufferRTV;
         ComPtr<ID3D11DepthStencilView> 	m_DepthStencilView;
 

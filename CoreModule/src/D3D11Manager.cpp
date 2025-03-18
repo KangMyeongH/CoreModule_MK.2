@@ -1,6 +1,7 @@
 #include "D3D11Manager.h"
 
 #include <iostream>
+#include <sstream>
 
 IMPLEMENT_SINGLETON(engine::D3D11Manager)
 
@@ -97,7 +98,7 @@ HRESULT engine::D3D11Manager::Initialize(HWND hwnd, _bool isWindowed, _uint winS
 
 HRESULT engine::D3D11Manager::CreateTexture(const _wstring& path, ComPtr<ID3D11ShaderResourceView>& srv)
 {
-	if (path.empty())
+	if (path.empty() || !FileExists(path))
 	{
 		return E_FAIL;
 	}
@@ -438,8 +439,33 @@ HRESULT engine::D3D11Manager::compileShaderFromFile(const _wstring& path, const 
 
 	if (FAILED(hr))
 	{
-		std::cerr << "Failed to compile shader from file : " << WStringToString(path).c_str() << "\n";
-		return false;
+		std::stringstream ss;
+		ss << "Failed to compile shader from file : " << WStringToString(path) << "\n";
+		std::cerr << ss.str().c_str();
+
+		if (errorBlob)
+		{
+			std::cerr << static_cast<const char*>(errorBlob->GetBufferPointer());
+		}
+
+		//std::wstringstream wss;
+		//wss << L"Failed to compile shader from file\n File path : " << path << L"\n";
+
+		//if (errorBlob)
+		//{
+		//	std::stringstream ss;
+		//	ss << "Shader Compilation Error : " << static_cast<const char*>(errorBlob->GetBufferPointer());
+
+		//	_string s = ss.str();
+		//	wss << StringToWString(s);
+		//}
+
+		//_wstring message = wss.str();
+
+		//MessageBoxW(nullptr, message.c_str(), L"Shader Error", MB_OK);
+
+
+		return hr;
 	}
 
 	return hr;
