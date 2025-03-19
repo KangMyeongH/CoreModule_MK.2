@@ -11,7 +11,7 @@ namespace engine
 		//				constructor				//
 		//======================================//
 
-		explicit Behaviour(const SharedPtr<GameObject>& owner) : Component(owner), m_bEnabled(true) {}
+		explicit Behaviour(const SharedPtr<GameObject>& owner, const _string& name = "Behaviour") : Component(owner, name), m_bEnabled(true) {}
 		~Behaviour() override = default;
 	    Behaviour(const Behaviour& rhs) : Component(rhs), m_bEnabled(rhs.m_bEnabled) {}
 
@@ -31,7 +31,7 @@ namespace engine
 		SharedPtr<Component> Clone() const override = 0;
 
 	protected:
-		void registerComponent() override = 0;
+		void registerComponent(ApplicationMode mode = CLIENT) override = 0;
 
 	public:
 		//======================================//

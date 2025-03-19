@@ -12,6 +12,10 @@ namespace engine
     class ScriptBehaviourManager
     {
     private:
+        //======================================//
+        //				constructor				//
+        //======================================//
+
         ScriptBehaviourManager() = default;
         ~ScriptBehaviourManager();
 
@@ -19,6 +23,10 @@ namespace engine
         DECLARE_SINGLETON(ScriptBehaviourManager)
 
     public:
+        //======================================//
+        //				 method					//
+        //======================================//
+
         void FixedUpdate() const;
         void Update() const;
         void LateUpdate() const;
@@ -31,6 +39,10 @@ namespace engine
         void Release();
 
     private:
+        //======================================//
+        //				  fields				//
+        //======================================//
+
         ScriptBehaviours 		m_ScriptBehaviours;
         ScriptBehaviourList 	m_RegisterQueue;
     };

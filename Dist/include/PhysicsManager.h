@@ -32,6 +32,10 @@ namespace engine
         void Release();
 
     private:
+        //======================================//
+        //				  fields				//
+        //======================================//
+
         Rigidbodies     m_Rigidbodies;
         RigidbodyList   m_RegisterQueue;
     };

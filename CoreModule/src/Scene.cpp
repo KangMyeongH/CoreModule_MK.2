@@ -3,7 +3,6 @@
 #include <fstream>
 
 #include "GameObject.h"
-#include "Test.h"
 
 IMPLEMENT_SINGLETON(engine::Scene)
 
@@ -11,7 +10,7 @@ engine::Scene::Scene() = default;
 
 engine::Scene::~Scene()
 {
-	Release();
+
 }
 
 engine::GameObjects* engine::Scene::GetGameObjects()
@@ -27,35 +26,23 @@ bool engine::Scene::Initialize(const _wstring& path)
 	}
 
 	std::ifstream inFile(path);
+
 	if (!inFile.is_open())
 	{
 		return false;
 	}
+
 	nlohmann::ordered_json j;
 	inFile >> j;
 	From_Json(j);
 	inFile.clear();
 	inFile.close();
 
-	//SharedPtr<GameObject> temp = CreateGameObject("Test");
-	//SharedPtr<Test> test = temp->AddComponent<Test>();
-
 	return true;
 }
 
 void engine::Scene::ChangeScene(const _wstring& sceneName)
 {
-}
-
-engine::SharedPtr<engine::GameObject> engine::Scene::CreateGameObject(const _string& name)
-{
-	SharedPtr<GameObject> newGameObject = GameObject::Create();
-	newGameObject->SetName(name);
-	m_GameObjects.push_back(newGameObject);
-	m_GameObjectsTagMap[newGameObject->GetTag()].insert(newGameObject);
-	newGameObject->m_Transform->SetOwner(newGameObject);
-
-	return newGameObject;
 }
 
 engine::SharedPtr<engine::GameObject> engine::Scene::Find(const _string& name)
@@ -99,7 +86,7 @@ engine::SharedPtr<engine::GameObject> engine::Scene::FindWithTag(const _string& 
 	return nullptr;
 }
 
-void engine::Scene::UpdateGameObjectTag(const SharedPtr<GameObject>& obj, const _string& newTag)
+void engine::Scene::updateGameObjectTag(const SharedPtr<GameObject>& obj, const _string& newTag)
 {
 	_string oldTag = obj->GetTag();
 
@@ -213,4 +200,11 @@ void engine::Scene::setupTransformHierarchy() const
 	}
 
 	transformMap.clear();
+}
+
+void engine::Scene::registerGameObject(const SharedPtr<GameObject>& gameObject)
+{
+	m_GameObjects.push_back(gameObject);
+	m_GameObjectsTagMap[gameObject->GetTag()].insert(gameObject);
+	gameObject->m_Transform->SetOwner(gameObject);
 }

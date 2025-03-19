@@ -26,8 +26,13 @@
     <ClCompile Include="src\ComponentFactory.cpp" />
     <ClCompile Include="src\Core.cpp" />
     <ClCompile Include="src\D3D11Manager.cpp" />
+    <ClCompile Include="src\EditorCamera.cpp" />
+    <ClCompile Include="src\EditorComponentManager.cpp" />
+    <ClCompile Include="src\EditorCore.cpp" />
     <ClCompile Include="src\GameObject.cpp" />
+    <ClCompile Include="src\Hierarchy.cpp" />
     <ClCompile Include="src\InputManager.cpp" />
+    <ClCompile Include="src\LoadManager.cpp" />
     <ClCompile Include="src\Material.cpp" />
     <ClCompile Include="src\Mesh.cpp" />
     <ClCompile Include="src\Object.cpp" />
@@ -38,7 +43,6 @@
     <ClCompile Include="src\Scene.cpp" />
     <ClCompile Include="src\ScriptBehaviour.cpp" />
     <ClCompile Include="src\ScriptBehaviourManager.cpp" />
-    <ClCompile Include="src\Test.cpp" />
     <ClCompile Include="src\TextureUI.cpp" />
     <ClCompile Include="src\TimeManager.cpp" />
     <ClCompile Include="src\Transform.cpp" />
@@ -54,16 +58,23 @@
     <ClInclude Include="include\ComponentRegistrar.h" />
     <ClInclude Include="include\Core.h" />
     <ClInclude Include="include\core_defines.h" />
+    <ClInclude Include="include\core_enum.h" />
     <ClInclude Include="include\core_function.h" />
     <ClInclude Include="include\core_macro.h" />
     <ClInclude Include="include\core_math.h" />
     <ClInclude Include="include\core_struct.h" />
     <ClInclude Include="include\core_typedef.h" />
     <ClInclude Include="include\D3D11Manager.h" />
+    <ClInclude Include="include\Editor.h" />
+    <ClInclude Include="include\EditorCamera.h" />
+    <ClInclude Include="include\EditorComponentManager.h" />
+    <ClInclude Include="include\EditorCore.h" />
     <ClInclude Include="include\Engine.h" />
     <ClInclude Include="include\GameObject.h" />
+    <ClInclude Include="include\Hierarchy.h" />
     <ClInclude Include="include\InputManager.h" />
     <ClInclude Include="include\json.hpp" />
+    <ClInclude Include="include\LoadManager.h" />
     <ClInclude Include="include\Material.h" />
     <ClInclude Include="include\Mesh.h" />
     <ClInclude Include="include\Object.h" />
@@ -74,12 +85,14 @@
     <ClInclude Include="include\Scene.h" />
     <ClInclude Include="include\ScriptBehaviour.h" />
     <ClInclude Include="include\ScriptBehaviourManager.h" />
-    <ClInclude Include="include\Test.h" />
     <ClInclude Include="include\TextureUI.h" />
     <ClInclude Include="include\TimeManager.h" />
     <ClInclude Include="include\Transform.h" />
     <ClInclude Include="include\UI.h" />
     <ClInclude Include="include\UIManager.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="cpp.hint" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>17.0</VCProjectVersion>
@@ -203,7 +216,8 @@
       <Command>xcopy /Y "$(ProjectDir)include\*.h" "$(SolutionDir)Dist\include\"
 xcopy /Y "$(ProjectDir)include\*.hpp" "$(SolutionDir)Dist\include\"
 xcopy /Y "$(SolutionDir)bin\Debug\*.dll" "$(SolutionDir)Dist\bin\"
-xcopy /Y "$(SolutionDir)bin\Debug\*.lib" "$(SolutionDir)Dist\bin\"</Command>
+xcopy /Y "$(SolutionDir)bin\Debug\*.lib" "$(SolutionDir)Dist\bin\"
+xcopy /Y "$(SolutionDir)bin\Debug\*.pdb" "$(SolutionDir)Dist\bin\"</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">

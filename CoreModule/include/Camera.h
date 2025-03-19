@@ -5,7 +5,6 @@ namespace engine
 {
     class COREMODULE_API Camera : public Component
     {
-        DECLARE_REGISTER_COMPONENT(Camera)
     protected:
         //======================================//
         //				constructor				//
@@ -35,13 +34,13 @@ namespace engine
         //				  method				//
         //======================================//
 
-    	void    UpdateCamera(VS_ConstantBuffer* constantBuffer) const;
+    	void    UpdateCamera(_float4X4& viewMat, _float4X4& projMat) const;
     	void    SetMainCamera();
 
         void 	Destroy() override;
 
     protected:
-        void 	registerComponent() override;
+        void 	registerComponent(ApplicationMode mode = CLIENT) override;
 
     public:
         //======================================//
@@ -66,5 +65,7 @@ namespace engine
         _float 		m_AspectRatio;
         _float 		m_NearPlane;
         _float 		m_FarPlane;
+
+        DECLARE_REGISTER_COMPONENT(Camera)
     };
 }

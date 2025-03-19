@@ -7,8 +7,11 @@ engine::UI::UI(const SharedPtr<GameObject>& owner) : Behaviour(owner), m_Sorting
 
 }
 
-engine::UI::UI(const UI& rhs) : Behaviour(rhs), m_SortingOrder(rhs.m_SortingOrder)
+engine::UI::UI(const UI& rhs)
+	: Behaviour(rhs),
+	m_SortingOrder(rhs.m_SortingOrder)
 {
+
 }
 
 engine::_uint engine::UI::GetSorting() const
@@ -28,10 +31,13 @@ void engine::UI::SetSorting(const _uint sort)
 
 void engine::UI::Destroy()
 {
-
+	m_bDestroyed = true;
 }
 
-void engine::UI::registerComponent()
+void engine::UI::registerComponent(ApplicationMode mode)
 {
-	UIManager::GetInstance().AddUI(std::static_pointer_cast<UI>(shared_from_this()));
+	if (mode == CLIENT)
+	{
+		UIManager::GetInstance().AddUI(std::static_pointer_cast<UI>(shared_from_this()));
+	}
 }

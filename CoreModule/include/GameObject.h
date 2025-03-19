@@ -7,6 +7,12 @@
 
 namespace engine
 {
+	namespace editor
+	{
+		class EditorComponentManager;
+		class Hierarchy;
+	}
+
 	class Component;
 
 	using Components = std::unordered_map<std::type_index, std::vector<SharedPtr<Component>>>;
@@ -14,6 +20,8 @@ namespace engine
 	class COREMODULE_API GameObject : public Object
 	{
 		friend class Scene;
+		friend class editor::Hierarchy;
+		friend class editor::EditorComponentManager;
 
 	protected:
 		//======================================//
@@ -87,6 +95,8 @@ namespace engine
 			return nullptr;
 		}
 
+		Components& GetComponents() { return m_Components; }
+
 		void RemoveComponent(const SharedPtr<Component>& component)
 		{
 			for (auto it = m_Components.begin(); it != m_Components.end();)
@@ -109,7 +119,7 @@ namespace engine
 		void 							SetTag(const _string& tag);
 		_string 						GetTag() const { return m_Tag; }
 
-		static SharedPtr<GameObject> 	Create();
+		static SharedPtr<GameObject> 	Create(const _string& name = "GameObject");
 		SharedPtr<GameObject> 			Clone() const;
 		void 							Destroy() override;
 

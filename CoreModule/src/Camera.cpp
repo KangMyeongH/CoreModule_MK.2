@@ -26,7 +26,7 @@ engine::Camera::Camera(const Camera& rhs)
 	
 }
 
-void engine::Camera::UpdateCamera(VS_ConstantBuffer* constantBuffer) const
+void engine::Camera::UpdateCamera(_float4X4& viewMat, _float4X4& projMat) const
 {
 	_matrix rotMat = DirectX::XMMatrixRotationQuaternion(GetTransform()->GetLocalRotation().ToVector());
 
@@ -40,11 +40,11 @@ void engine::Camera::UpdateCamera(VS_ConstantBuffer* constantBuffer) const
 	forward = DirectX::XMVector3Normalize(forward);
 	up 		= DirectX::XMVector3Normalize(up);
 
-	const _matrix viewMat = DirectX::XMMatrixLookToLH(eye, forward, up);
-	const _matrix projMat = DirectX::XMMatrixPerspectiveFovLH(m_FiledOfView, m_AspectRatio, m_NearPlane, m_FarPlane);
+	const _matrix viewMatrix = DirectX::XMMatrixLookToLH(eye, forward, up);
+	const _matrix projMatrix = DirectX::XMMatrixPerspectiveFovLH(m_FiledOfView, m_AspectRatio, m_NearPlane, m_FarPlane);
 
-	XMStoreFloat4x4(&constantBuffer->ViewMat, viewMat);
-	XMStoreFloat4x4(&constantBuffer->ProjMat, projMat);
+	XMStoreFloat4x4(&viewMat, viewMatrix);
+	XMStoreFloat4x4(&projMat, projMatrix);
 }
 
 void engine::Camera::SetMainCamera()
@@ -82,8 +82,16 @@ void engine::Camera::from_json(const nlohmann::ordered_json& j)
 	j.at("farPlane").get_to(m_FarPlane);
 }
 
-void engine::Camera::registerComponent()
+void engine::Camera::registerComponent(ApplicationMode mode)
 {
-	RenderManager::GetInstance().AddCamera(std::static_pointer_cast<Camera>(shared_from_this()));
+	if (mode == CLIENT)
+	{
+		RenderManager::GetInstance().AddCamera(std::static_pointer_cast<Camera>(shared_from_this()));
+	}
+
+	else if (mode == EDITOR)
+	{
+		
+	}
 }
 

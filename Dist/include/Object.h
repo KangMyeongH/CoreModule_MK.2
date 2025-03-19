@@ -78,6 +78,10 @@ namespace engine
 		}
 
 	protected:
+		//======================================//
+		//				  fields				//
+		//======================================//
+
 		_bool						m_bDestroyed;	// 삭제 플래그
 
 	private:

@@ -202,18 +202,25 @@ namespace engine
 
 		void setDirty();
 
-		void registerComponent() override {}
+		void registerComponent(ApplicationMode mode = CLIENT) override {}
 
 		static SharedPtr<Transform> create();
 
     public:
+		//======================================//
+		//				 serialize				//
+		//======================================//
+
 		void to_json(nlohmann::ordered_json& j) override;
 		void from_json(const nlohmann::ordered_json& j) override;
 		friend void to_json(nlohmann::ordered_json& j, const SharedPtr<Transform>& t);
 		friend void from_json(const nlohmann::ordered_json& j, const SharedPtr<Transform>& t);
 
-
 	private:
+		//======================================//
+		//				  fields				//
+		//======================================//
+
 		WeakPtr<Transform>					m_Parent;
 		std::vector<SharedPtr<Transform>> 	m_Children;
 		_int								m_ParentID;

@@ -6,13 +6,12 @@
 
 IMPLEMENT_SINGLETON(engine::RenderManager)
 
-engine::RenderManager::RenderManager(): m_VSConstantBuffer()
+engine::RenderManager::RenderManager()
 {
 }
 
 engine::RenderManager::~RenderManager()
 {
-	Release();
 }
 
 void engine::RenderManager::AddCamera(const SharedPtr<Camera>& camera)
@@ -20,11 +19,21 @@ void engine::RenderManager::AddCamera(const SharedPtr<Camera>& camera)
 	m_Cameras.push_back(camera);
 }
 
+void engine::RenderManager::AddRenderer(const SharedPtr<Renderer>& renderer)
+{
+	m_RegisterQueue.push_back(renderer);
+}
+
 void engine::RenderManager::UpdateMainCamera()
 {
 	if (auto mainCam = m_MainCamera.lock())
 	{
-		mainCam->UpdateCamera(&m_VSConstantBuffer);
+		mainCam->UpdateCamera(m_ViewMat, m_ProjMat);
+	}
+
+	else
+	{
+		// TODO : MainCam이 없을 때 예외 처리.
 	}
 }
 

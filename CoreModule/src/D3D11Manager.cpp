@@ -1,19 +1,30 @@
 #include "D3D11Manager.h"
 
+#include <iostream>
+#include <sstream>
+
 IMPLEMENT_SINGLETON(engine::D3D11Manager)
 
 engine::D3D11Manager::D3D11Manager()
-	: m_Device(nullptr),
-	m_DeviceContext(nullptr),
-	m_SwapChain(nullptr),
-	m_BackBufferRTV(nullptr),
-	m_DepthStencilView(nullptr)
+	: m_WinSizeX(0), m_WinSizeY(0)
 {
 }
 
 engine::D3D11Manager::~D3D11Manager()
 {
-	Release();
+
+}
+
+engine::SharedPtr<engine::VIBuffer> engine::D3D11Manager::GetVIBuffer(const VIBufferType type)
+{
+	auto viBufferIt = m_VIBufferMap.find(type);
+
+	if (viBufferIt != m_VIBufferMap.end())
+	{
+		return viBufferIt->second;
+	}
+
+	return nullptr;
 }
 
 HRESULT engine::D3D11Manager::Initialize(HWND hwnd, _bool isWindowed, _uint winSizeX, _uint winSizeY)
@@ -77,27 +88,28 @@ HRESULT engine::D3D11Manager::Initialize(HWND hwnd, _bool isWindowed, _uint winS
 	m_WinSizeX = winSizeX;
 	m_WinSizeY = winSizeY;
 
+	if (FAILED(readyVIBuffers()))
+	{
+		return E_FAIL;
+	}
+
 	return S_OK;
 }
 
-HRESULT engine::D3D11Manager::CreateTexture(const _wstring& path, ID3D11ShaderResourceView** srv)
+HRESULT engine::D3D11Manager::CreateTexture(const _wstring& path, ComPtr<ID3D11ShaderResourceView>& srv)
 {
-	if (!srv)
-	{
-		return E_POINTER;
-	}
-
-	if (!path.empty())
+	if (path.empty() || !FileExists(path))
 	{
 		return E_FAIL;
 	}
 
 	ComPtr<ID3D11ShaderResourceView> pSRV;
 
-	if (m_TextureMap.find(path) != m_TextureMap.end())
+	const auto it = m_TextureMap.find(path);
+
+	if (it != m_TextureMap.end())
 	{
-		pSRV = m_TextureMap[path];
-		*srv = pSRV.Get();
+		srv = it->second;
 
 		return S_OK;
 	}
@@ -128,24 +140,37 @@ HRESULT engine::D3D11Manager::CreateTexture(const _wstring& path, ID3D11ShaderRe
 		return hr;
 	}
 
-	*srv = pSRV.Get();
+	srv = pSRV;
 
 	m_TextureMap.emplace(path, pSRV);
 
 	return S_OK;
 }
 
-HRESULT engine::D3D11Manager::CreateShader(const _wstring& path, const SharedPtr<Shader>& shader)
+HRESULT engine::D3D11Manager::CreateShader(const _wstring& path, SharedPtr<Shader>& shader)
 {
 	if (FileExists(path))
 	{
+		const auto it = m_ShaderMap.find(path);
+
+		if (it != m_ShaderMap.end())
+		{
+			shader = it->second->Clone(m_Device.Get());
+
+			return S_OK;
+		}
+
+		SharedPtr<Shader> newShader = std::make_shared<Shader>();
+
+		newShader->Path = path;
+
 		std::vector<std::pair<std::string, std::string>> entryPoints = {
-		{ "VSMain", "vs_5_0" },
-		{ "PSMain", "ps_5_0" },
-		{ "GSMain", "gs_5_0" },
-		{ "CSMain", "cs_5_0" },
-		{ "HSMain", "hs_5_0" },
-		{ "DSMain", "ds_5_0" }
+		{ "VS_Main", "vs_5_0" },
+		{ "PS_Main", "ps_5_0" },
+		{ "GS_Main", "gs_5_0" },
+		{ "CS_Main", "cs_5_0" },
+		{ "HS_Main", "hs_5_0" },
+		{ "DS_Main", "ds_5_0" }
 		};
 
 		for (auto& ep : entryPoints)
@@ -168,7 +193,7 @@ HRESULT engine::D3D11Manager::CreateShader(const _wstring& path, const SharedPtr
 
 					if (SUCCEEDED(hr))
 					{
-						shader->VertexShader = vs;
+						newShader->VertexShader = vs;
 
 						ComPtr<ID3D11InputLayout> input;
 						std::vector<D3D11_INPUT_ELEMENT_DESC> inputLayoutDesc;
@@ -179,8 +204,11 @@ HRESULT engine::D3D11Manager::CreateShader(const _wstring& path, const SharedPtr
 
 						if (SUCCEEDED(hr))
 						{
-							shader->InputLayout = input;
+							newShader->InputLayout = input;
 						}
+
+						reflectBufferFromReflector(reflector, newShader->Reflects[VS]);
+						//createConstantBuffer(newShader->Reflects[VS], newShader->CBuffers[VS]);
 					}
 				}
 
@@ -191,7 +219,9 @@ HRESULT engine::D3D11Manager::CreateShader(const _wstring& path, const SharedPtr
 
 					if (SUCCEEDED(hr))
 					{
-						shader->PixelShader = ps;
+						newShader->PixelShader = ps;
+						reflectBufferFromReflector(reflector, newShader->Reflects[PS]);
+						//createConstantBuffer(newShader->Reflects[PS], newShader->CBuffers[PS]);
 					}
 				}
 
@@ -202,7 +232,9 @@ HRESULT engine::D3D11Manager::CreateShader(const _wstring& path, const SharedPtr
 
 					if (SUCCEEDED(hr))
 					{
-						shader->GeometryShader = gs;
+						newShader->GeometryShader = gs;
+						reflectBufferFromReflector(reflector, newShader->Reflects[GS]);
+						//createConstantBuffer(newShader->Reflects[GS], newShader->CBuffers[GS]);
 					}
 				}
 
@@ -213,7 +245,9 @@ HRESULT engine::D3D11Manager::CreateShader(const _wstring& path, const SharedPtr
 
 					if (SUCCEEDED(hr))
 					{
-						shader->ComputeShader = cs;
+						newShader->ComputeShader = cs;
+						reflectBufferFromReflector(reflector, newShader->Reflects[CS]);
+						//createConstantBuffer(newShader->Reflects[CS], newShader->CBuffers[CS]);
 					}
 				}
 
@@ -224,7 +258,9 @@ HRESULT engine::D3D11Manager::CreateShader(const _wstring& path, const SharedPtr
 
 					if (SUCCEEDED(hr))
 					{
-						shader->HullShader = hs;
+						newShader->HullShader = hs;
+						reflectBufferFromReflector(reflector, newShader->Reflects[HS]);
+						//createConstantBuffer(newShader->Reflects[HS], newShader->CBuffers[HS]);
 					}
 				}
 
@@ -235,21 +271,41 @@ HRESULT engine::D3D11Manager::CreateShader(const _wstring& path, const SharedPtr
 
 					if (SUCCEEDED(hr))
 					{
-						shader->DomainShader = ds;
+						newShader->DomainShader = ds;
+						reflectBufferFromReflector(reflector, newShader->Reflects[DS]);
+						//createConstantBuffer(newShader->Reflects[DS], newShader->CBuffers[DS]);
 					}
 				}
-
-
 			}
 		}
+
+		m_ShaderMap.emplace(path, newShader);
+		shader = newShader->Clone(m_Device.Get());
+
+		return S_OK;
 	}
 
 	return E_FAIL;
 }
 
+HRESULT engine::D3D11Manager::CreateSampler(const D3D11_SAMPLER_DESC& desc, ComPtr<ID3D11SamplerState>& sampler) const
+{
+	HRESULT hr = m_Device->CreateSamplerState(&desc, sampler.GetAddressOf());
+
+	if (FAILED(hr))
+	{
+		std::cerr << "Failed create Sampler! \n";
+		return E_FAIL;
+	}
+
+	return S_OK;
+}
+
 void engine::D3D11Manager::Release()
 {
 	m_TextureMap.clear();
+	m_VIBufferMap.clear();
+	m_ShaderMap.clear();
 }
 
 HRESULT engine::D3D11Manager::readySwapChain(const HWND hWnd, const _bool isWindowed, const _uint winSizeX, const _uint winSizeY)
@@ -295,7 +351,7 @@ HRESULT engine::D3D11Manager::readySwapChain(const HWND hWnd, const _bool isWind
 	swapChainDesc.OutputWindow = hWnd;
 	swapChainDesc.SwapEffect = DXGI_SWAP_EFFECT_DISCARD;
 
-	if (FAILED(factory->CreateSwapChain(m_Device.Get(), &swapChainDesc, &m_SwapChain)))
+	if (FAILED(factory->CreateSwapChain(m_Device.Get(), &swapChainDesc, m_SwapChain.GetAddressOf())))
 	{
 		return E_FAIL;
 	}
@@ -323,7 +379,7 @@ HRESULT engine::D3D11Manager::readyBackBufferRenderTargetView()
 	}
 
 	if (FAILED(m_Device->CreateRenderTargetView(
-		backBufferTexture, nullptr, &m_BackBufferRTV)))
+		backBufferTexture, nullptr, m_BackBufferRTV.GetAddressOf())))
 	{
 		return E_FAIL;
 	}
@@ -366,7 +422,7 @@ HRESULT engine::D3D11Manager::readyDepthStencilView(const _uint winSizeX, const 
 	}
 
 	if (FAILED(m_Device->CreateDepthStencilView(
-		depthStencilTexture, nullptr, &m_DepthStencilView)))
+		depthStencilTexture, nullptr, m_DepthStencilView.GetAddressOf())))
 	{
 		return E_FAIL;
 	}
@@ -378,10 +434,39 @@ HRESULT engine::D3D11Manager::readyDepthStencilView(const _uint winSizeX, const 
 
 HRESULT engine::D3D11Manager::compileShaderFromFile(const _wstring& path, const _string& entryPoint, const _string& targetProfile, ComPtr<ID3DBlob>& outBlob)
 {
-	ComPtr<ID3DBlob> errorBlob = nullptr;
+	ComPtr<ID3DBlob> errorBlob;
 	HRESULT hr = D3DCompileFromFile(path.c_str(), nullptr, D3D_COMPILE_STANDARD_FILE_INCLUDE, entryPoint.c_str(), targetProfile.c_str(), 0, 0, outBlob.GetAddressOf(), errorBlob.GetAddressOf());
 
-	// TODO : errorBlob 출력 메시지 확인하는거 추가 해야함.
+	if (FAILED(hr))
+	{
+		std::stringstream ss;
+		ss << "Failed to compile shader from file : " << WStringToString(path) << "\n";
+		std::cerr << ss.str().c_str();
+
+		if (errorBlob)
+		{
+			std::cerr << static_cast<const char*>(errorBlob->GetBufferPointer());
+		}
+
+		//std::wstringstream wss;
+		//wss << L"Failed to compile shader from file\n File path : " << path << L"\n";
+
+		//if (errorBlob)
+		//{
+		//	std::stringstream ss;
+		//	ss << "Shader Compilation Error : " << static_cast<const char*>(errorBlob->GetBufferPointer());
+
+		//	_string s = ss.str();
+		//	wss << StringToWString(s);
+		//}
+
+		//_wstring message = wss.str();
+
+		//MessageBoxW(nullptr, message.c_str(), L"Shader Error", MB_OK);
+
+
+		return hr;
+	}
 
 	return hr;
 }
@@ -471,4 +556,201 @@ void engine::D3D11Manager::compileInputLayoutFromReflector(std::vector<D3D11_INP
 
 		inputDesc->push_back(elementDesc);
 	}
+}
+
+void engine::D3D11Manager::reflectBufferFromReflector(const ComPtr<ID3D11ShaderReflection>& reflector, ReflectResult& outResult)
+{
+	D3D11_SHADER_DESC shaderDesc;
+	reflector->GetDesc(&shaderDesc);
+
+	for (_uint i = 0; i < shaderDesc.BoundResources; ++i)
+	{
+		D3D11_SHADER_INPUT_BIND_DESC bindDesc;
+		reflector->GetResourceBindingDesc(i, &bindDesc);
+
+		// bindDesc.Name		: 리소스 이름
+		// bindDesc.BindPoint	: register 번호
+		// bindDesc.Type		: D3D_SIT_CBUFFER, D3D_SIT_TEXTURE, D3D_SIT_SAMPLER 등
+
+		if (bindDesc.Type == D3D_SIT_CBUFFER)
+		{
+			ConstantBufferDesc cbDest;
+			cbDest.Name = bindDesc.Name;
+			cbDest.BindPoint = bindDesc.BindPoint;
+
+			ID3D11ShaderReflectionConstantBuffer* cbuf = reflector->GetConstantBufferByName(bindDesc.Name);
+			
+			if (cbuf)
+			{
+				D3D11_SHADER_BUFFER_DESC desc;
+				cbuf->GetDesc(&desc);
+
+				cbDest.BufferSize = desc.Size;
+
+				for (_uint varIndex = 0; varIndex < desc.Variables; ++varIndex)
+				{
+					ID3D11ShaderReflectionVariable* varRef = cbuf->GetVariableByIndex(varIndex);
+					D3D11_SHADER_VARIABLE_DESC varDesc;
+					varRef->GetDesc(&varDesc);
+
+					ShaderVarDesc varInfo;
+					varInfo.Name = varDesc.Name;      // 예: "_Color", "_Metallic"
+					varInfo.StartOffset = varDesc.StartOffset;
+					varInfo.Size = varDesc.Size;
+
+					cbDest.Variables[varInfo.Name] = varInfo;
+				}
+			}
+
+			outResult.CBuffers[cbDest.Name] = cbDest;
+		}
+
+		else if (bindDesc.Type == D3D_SIT_TEXTURE)
+		{
+			TextureInfo tInfo;
+			tInfo.Name = bindDesc.Name;
+			tInfo.BindPoint = bindDesc.BindPoint;
+
+			outResult.Textures[tInfo.Name] = tInfo;
+		}
+
+		else if (bindDesc.Type == D3D_SIT_SAMPLER)
+		{
+			SamplerInfo sInfo;
+			sInfo.Name = bindDesc.Name;
+			sInfo.BindPoint = bindDesc.BindPoint;
+			outResult.Samplers[sInfo.Name] = sInfo;
+		}
+	}
+}
+
+bool engine::D3D11Manager::createConstantBuffer(const ReflectResult& reflectResult, std::unordered_map<_string, SharedPtr<CBufferRuntime>>& outResult)
+{
+	outResult.reserve(reflectResult.CBuffers.size());
+
+	for (auto& pair : reflectResult.CBuffers)
+	{
+		const auto& cbName = pair.first;
+		const auto& cbDesc = pair.second;
+
+		SharedPtr<CBufferRuntime> cBufferRuntime = std::make_shared<CBufferRuntime>();
+
+		cBufferRuntime->BindPoint = cbDesc.BindPoint;
+		cBufferRuntime->Size = cbDesc.BufferSize;
+		cBufferRuntime->LocalData.resize(cbDesc.BufferSize, 0);
+
+		D3D11_BUFFER_DESC bd {};
+		bd.ByteWidth = cbDesc.BufferSize;
+		bd.Usage = D3D11_USAGE_DYNAMIC; // 예: DEFAULT
+		bd.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
+		bd.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;                   // D3D11_USAGE_DYNAMIC이면 D3D11_CPU_ACCESS_WRITE
+		bd.MiscFlags = 0;
+		bd.StructureByteStride = 0;
+
+		HRESULT hr = m_Device->CreateBuffer(&bd, nullptr, cBufferRuntime->Buffer.GetAddressOf());
+
+		if (FAILED(hr))
+		{
+			std::cerr << "Failed to create Constant Buffer : " << cbName << "\n";
+			return false;
+		}
+
+		outResult.emplace(cbDesc.Name, cBufferRuntime);
+	}
+
+	return true;
+}
+
+HRESULT engine::D3D11Manager::readyVIBuffers()
+{
+	// TODO : 아 모르겠다 그냥 하드코딩해 시부레...
+	// 근데 mesh는 객체 마다 다른댜
+
+
+	//======Create VIBufferType_POSTEX_RECT=======//
+#pragma region VIBufferType_POSTEX_RECT
+	auto viPosTex = std::make_shared<VIBuffer>();
+	viPosTex->NumVertexBuffers = 1;
+	viPosTex->VertexStride = sizeof(VTX_TEXTURE_UI);
+	viPosTex->NumVertices = 4;
+	viPosTex->IndexStride = 2;
+	viPosTex->NumIndices = 6;
+	viPosTex->IndexFormat = DXGI_FORMAT_R16_UINT;
+	viPosTex->PrimitiveTopology = D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST;
+
+	D3D11_BUFFER_DESC vbDesc;
+	ZeroMemory(&vbDesc, sizeof(vbDesc));
+	vbDesc.ByteWidth = viPosTex->VertexStride * viPosTex->NumVertices;
+	vbDesc.Usage = D3D11_USAGE_DEFAULT;
+	vbDesc.BindFlags = D3D11_BIND_VERTEX_BUFFER;
+	vbDesc.StructureByteStride = viPosTex->VertexStride;
+	vbDesc.CPUAccessFlags = 0;
+	vbDesc.MiscFlags = 0;
+
+	VTX_TEXTURE_UI* vtxPosTexRect = new VTX_TEXTURE_UI[viPosTex->NumVertices];
+	ZeroMemory(vtxPosTexRect, sizeof(VTX_TEXTURE_UI) * viPosTex->NumVertices);
+
+	vtxPosTexRect[0].Position  = _float3(-0.5f, 0.5f, 0.f);
+	vtxPosTexRect[0].TexCoord0 = _float2(0.f, 0.f);
+
+	vtxPosTexRect[1].Position  = _float3(0.5f, 0.5f, 0.f);
+	vtxPosTexRect[1].TexCoord0 = _float2(1.f, 0.f);
+
+	vtxPosTexRect[2].Position  = _float3(0.5f, -0.5f, 0.f);
+	vtxPosTexRect[2].TexCoord0 = _float2(1.f, 1.f);
+
+	vtxPosTexRect[3].Position  = _float3(-0.5f, -0.5f, 0.f);
+	vtxPosTexRect[3].TexCoord0 = _float2(0.f, 1.f);
+
+	D3D11_SUBRESOURCE_DATA initDesc;
+	ZeroMemory(&initDesc, sizeof(initDesc));
+	initDesc.pSysMem = vtxPosTexRect;
+
+	if (FAILED(m_Device->CreateBuffer(&vbDesc, &initDesc, viPosTex->VertexBuffer.GetAddressOf())))
+	{
+		std::cerr << "Failed to create VBufferType_POSTEX_RECT ! \n";
+		return E_FAIL;
+	}
+
+	SafeDeleteArray(vtxPosTexRect);
+
+	D3D11_BUFFER_DESC ibDesc;
+	ZeroMemory(&ibDesc, sizeof(ibDesc));
+	ibDesc.ByteWidth = viPosTex->IndexStride * viPosTex->NumIndices;
+	ibDesc.Usage = D3D11_USAGE_DEFAULT;
+	ibDesc.BindFlags = D3D11_BIND_INDEX_BUFFER;
+	ibDesc.StructureByteStride = viPosTex->IndexStride;
+	ibDesc.CPUAccessFlags = 0;
+	ibDesc.MiscFlags = 0;
+
+	_ushort* idxPosTexRect = new _ushort[viPosTex->NumIndices];
+	ZeroMemory(idxPosTexRect, sizeof(_ushort) * viPosTex->NumIndices);
+
+	idxPosTexRect[0] = 0;
+	idxPosTexRect[1] = 1;
+	idxPosTexRect[2] = 2;
+
+	idxPosTexRect[3] = 0;
+	idxPosTexRect[4] = 2;
+	idxPosTexRect[5] = 3;
+
+	ZeroMemory(&initDesc, sizeof(initDesc));
+	initDesc.pSysMem = idxPosTexRect;
+
+	if (FAILED(m_Device->CreateBuffer(&ibDesc, &initDesc, viPosTex->IndexBuffer.GetAddressOf())))
+	{
+		std::cerr << "Failed to create IBufferType_POSTEX_RECT ! \n";
+		return E_FAIL;
+	}
+
+	SafeDeleteArray(idxPosTexRect);
+
+	m_VIBufferMap.emplace(VIBufferType_POSTEX_RECT, viPosTex);
+#pragma endregion
+	//============================================//
+
+
+
+
+	return S_OK;
 }

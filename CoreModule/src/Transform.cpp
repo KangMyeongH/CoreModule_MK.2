@@ -181,6 +181,7 @@ void engine::Transform::from_json(const nlohmann::ordered_json& j)
 void engine::to_json(nlohmann::ordered_json& j, const SharedPtr<Transform>& t)
 {
 	_int parentID = -1;
+
 	if (auto parent = t->m_Parent.lock())
 	{
 		parentID = parent->GetInstanceID();

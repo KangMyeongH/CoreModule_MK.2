@@ -1,15 +1,16 @@
 #include "UIManager.h"
 
 #include "D3D11Manager.h"
+#include "Material.h"
 #include "UI.h"
 
-engine::UIManager::UIManager(): m_bDirty(true)
+engine::UIManager::UIManager() : m_bDirty(true)
 {
 }
 
 engine::UIManager::~UIManager()
 {
-	Release();
+
 }
 
 void engine::UIManager::UpdateUI()
@@ -24,8 +25,9 @@ void engine::UIManager::Render(const ComPtr<ID3D11DeviceContext>& context)
 	const _float winSizeX = static_cast<_float>(D3D11Manager::GetInstance().GetWinSizeX());
 	const _float winSizeY = static_cast<_float>(D3D11Manager::GetInstance().GetWinSizeY());
 
-	_matrix viewMat = DirectX::XMMatrixIdentity();
-	_matrix projMat = DirectX::XMMatrixOrthographicLH(winSizeX, winSizeY, -1.f, 1.f);
+	_float4X4 viewMat, projMat;
+	XMStoreFloat4x4(&viewMat, XMMatrixTranspose(DirectX::XMMatrixIdentity()));
+	XMStoreFloat4x4(&projMat, XMMatrixTranspose(DirectX::XMMatrixOrthographicLH(winSizeX, winSizeY, -1.f, 1.f)));
 
 	// TODO : Render Option에 맞게 렌더링 순서 조절 (Alpha Blend)
 	// TODO : Sorting Num에 맞게 UI들 Sorting 후 렌더링
@@ -37,7 +39,11 @@ void engine::UIManager::Render(const ComPtr<ID3D11DeviceContext>& context)
 	{
 		if (ui->IsEnabled())
 		{
-			ui->RenderUI();
+			auto material = ui->GetMaterial();
+			material->SetMatrix("g_ViewMatrix", viewMat);
+			material->SetMatrix("g_ProjMatrix", projMat);
+
+			ui->RenderUI(context);
 		}
 	}
 }

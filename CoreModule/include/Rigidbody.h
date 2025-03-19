@@ -6,13 +6,12 @@ namespace engine
     class COREMODULE_API Rigidbody : public Component
     {
         friend class PhysicsManager;
-        DECLARE_REGISTER_COMPONENT(Rigidbody)
     private:
         //======================================//
         //				constructor				//
         //======================================//
 
-        explicit Rigidbody(const SharedPtr<GameObject>& owner);
+        explicit Rigidbody(const SharedPtr<GameObject>& owner, const _string& name = "Rigidbody");
         ~Rigidbody() override = default;
 
     public:
@@ -45,7 +44,7 @@ namespace engine
         void Destroy() override;
 
     protected:
-        void registerComponent() override;
+        void registerComponent(ApplicationMode mode = CLIENT) override;
 
     private:
         void rigidbodyUpdate(float deltaTime);
@@ -67,5 +66,7 @@ namespace engine
         _float   m_Drag;
         _bool    m_UseGravity;
         _bool    m_IsKinematic;
+
+        DECLARE_REGISTER_COMPONENT(Rigidbody)
     };
 }

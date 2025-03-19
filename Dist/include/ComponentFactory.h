@@ -9,9 +9,13 @@ namespace engine
 	class Component;
 }
 
-class ComponentFactory
+class COREMODULE_API ComponentFactory
 {
 private:
+	//======================================//
+	//				constructor				//
+	//======================================//
+
 	ComponentFactory() = default;
 	~ComponentFactory() = default;
 public:
@@ -21,13 +25,26 @@ public:
 	ComponentFactory& operator=(ComponentFactory&&) = delete;
 
 public:
+	//======================================//
+	//				  method				//
+	//======================================//
+
 	static ComponentFactory& GetInstance()
 	{
 		static ComponentFactory s_Instance;
 		return s_Instance;
 	}
 
+	void Release()
+	{
+		componentFactory.clear();
+	}
+
 	std::shared_ptr<engine::Component> CreateComponent(const engine::_string& typeName);
+
+	//======================================//
+	//				  fields				//
+	//======================================//
 
 	std::unordered_map<engine::_string, std::function<std::shared_ptr<engine::Component>()>> componentFactory;
 };

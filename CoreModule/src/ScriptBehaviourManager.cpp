@@ -6,7 +6,7 @@ IMPLEMENT_SINGLETON(engine::ScriptBehaviourManager)
 
 engine::ScriptBehaviourManager::~ScriptBehaviourManager()
 {
-	Release();
+
 }
 
 void engine::ScriptBehaviourManager::FixedUpdate() const

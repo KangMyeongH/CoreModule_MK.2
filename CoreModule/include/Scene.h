@@ -5,7 +5,7 @@ namespace engine
 {
     class GameObject;
     using GameObjects 		= std::list<SharedPtr<GameObject>>;
-    using GameObjectsTagMap = std::unordered_map<std::string, std::unordered_set<std::shared_ptr<GameObject>>>;
+    using GameObjectsTagMap = std::unordered_map<std::string, std::unordered_set<SharedPtr<GameObject>>>;
 
     class COREMODULE_API Scene
     {
@@ -23,27 +23,27 @@ namespace engine
         //				  method				//
         //======================================//
 
-        GameObjects* 			GetGameObjects();
+        GameObjects* GetGameObjects();
 
-        _bool 					Initialize(const _wstring& path);
-        void 					ChangeScene(const _wstring& sceneName);
+        _bool Initialize(const _wstring& path);
+        void ChangeScene(const _wstring& sceneName);
 
-        SharedPtr<GameObject> 				CreateGameObject(const _string& name = "GameObject");
-    	SharedPtr<GameObject>   			Find(const _string& name);
-        std::vector<SharedPtr<GameObject>> 	FindGameObjectsWithTag(const _string& tag);
-        SharedPtr<GameObject> 				FindWithTag(const _string& tag);
+    	SharedPtr<GameObject> Find(const _string& name);
+        std::vector<SharedPtr<GameObject>> FindGameObjectsWithTag(const _string& tag);
+        SharedPtr<GameObject> FindWithTag(const _string& tag);
 
-        void                    UpdateGameObjectTag(const SharedPtr<GameObject>& obj, const _string& newTag);
-        void 					FlushDestroyGameObjects();
-        void 					Release();
+        void FlushDestroyGameObjects();
+        void Release();
 
     private:
-        void 					setupTransformHierarchy() const;
+        void setupTransformHierarchy() const;
+        void updateGameObjectTag(const SharedPtr<GameObject>& obj, const _string& newTag);
+    	void registerGameObject(const SharedPtr<GameObject>& gameObject);
 
         //======================================//
         //				 serialize				//
         //======================================//
-
+    public:
         nlohmann::ordered_json 	To_Json() const;
         void 					From_Json(const nlohmann::ordered_json& j);
 
@@ -55,5 +55,7 @@ namespace engine
         GameObjects 		m_GameObjects;
         GameObjectsTagMap  	m_GameObjectsTagMap;
         _string             m_SceneName;
+
+        friend class GameObject;
     };
 }

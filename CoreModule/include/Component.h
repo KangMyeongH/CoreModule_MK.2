@@ -8,18 +8,25 @@ namespace engine
     class GameObject;
     class Transform;
 
+    namespace editor
+    {
+        class EditorComponentManager;
+        class Hierarchy;
+    }
+
     class COREMODULE_API Component : public Object
     {
         friend class GameObject;
         friend class ComponentRegister;
         friend class ::ComponentFactory;
+        friend class editor::EditorComponentManager;
 
     protected:
         //======================================//
         //				constructor				//
         //======================================//
 
-        explicit Component(const SharedPtr<GameObject>& owner) : m_Owner(owner) {}
+        explicit Component(const SharedPtr<GameObject>& owner, const _string& name = "Component") : Object(name), m_Owner(owner) {}
         ~Component() override = default;
     	Component(const Component& rhs) : Object(rhs)
         {
@@ -66,8 +73,9 @@ namespace engine
         virtual SharedPtr<Component> Clone() const = 0;
 
     protected:
-        virtual void registerComponent() = 0;
+        virtual void registerComponent(ApplicationMode mode = CLIENT) = 0;
 
+    public:
         //======================================//
         //				 serialize				//
         //======================================//
@@ -81,6 +89,5 @@ namespace engine
         //======================================//
 
         WeakPtr<GameObject> 				m_Owner;
-
     };
 }

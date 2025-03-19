@@ -29,6 +29,7 @@
 #include "core_macro.h"
 #include "core_math.h"
 #include "core_struct.h"
+#include "core_enum.h"
 
 #pragma warning(disable : 4251)
 
