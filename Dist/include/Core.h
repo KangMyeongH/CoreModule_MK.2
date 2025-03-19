@@ -61,18 +61,18 @@ namespace engine
 		//				  fields				//
 		//======================================//
 
-		HWND					m_Hwnd;
-		D3D11Manager* 			m_D3D11Manager;
-		TimeManager* 			m_TimeManager;
-		InputManager* 			m_InputManager;
-		Scene* 					m_Scene;
-		ScriptBehaviourManager* m_ScriptBehaviourManager;
-		PhysicsManager* 		m_PhysicsManager;
-		RenderManager*			m_RenderManager;
-		UIManager*				m_UIManager;
+		HWND						m_Hwnd;
+		D3D11Manager* 				m_D3D11Manager;
+		TimeManager* 				m_TimeManager;
+		InputManager* 				m_InputManager;
+		Scene* 						m_Scene;
+		ScriptBehaviourManager* 	m_ScriptBehaviourManager;
+		PhysicsManager* 			m_PhysicsManager;
+		RenderManager*				m_RenderManager;
+		UIManager*					m_UIManager;
 
-		_uint					m_WindowWidth;
-		_uint					m_WindowHeight;
+		_uint						m_WindowWidth;
+		_uint						m_WindowHeight;
 	};
 
 }

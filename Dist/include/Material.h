@@ -55,6 +55,7 @@ namespace engine
 
         void LoadShader(const _wstring& path);
 
+
         void Bind(ID3D11DeviceContext* context) const;
 
         static SharedPtr<Material> Create(const SharedPtr<Object>& renderer);

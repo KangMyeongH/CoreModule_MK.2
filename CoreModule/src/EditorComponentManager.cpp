@@ -7,13 +7,12 @@
 #include "Renderer.h"
 #include "UI.h"
 
-engine::editor::EditorComponentManager::EditorComponentManager() : m_DirtyFlag(true)
+engine::editor::EditorComponentManager::EditorComponentManager() : m_ViewMat(), m_ProjMat(), m_DirtyFlag(true)
 {
 }
 
 engine::editor::EditorComponentManager::~EditorComponentManager()
-{
-}
+= default;
 
 IMPLEMENT_SINGLETON(engine::editor::EditorComponentManager)
 
@@ -39,16 +38,16 @@ void engine::editor::EditorComponentManager::RenderUIComponent(const ComPtr<ID3D
 	const _float winSizeY = static_cast<_float>(D3D11Manager::GetInstance().GetWinSizeY());
 
 	_float4X4 viewMat, projMat;
-	XMStoreFloat4x4(&viewMat, DirectX::XMMatrixIdentity());
-	XMStoreFloat4x4(&projMat, DirectX::XMMatrixOrthographicLH(winSizeX, winSizeY, -1.f, 1.f));
+	XMStoreFloat4x4(&viewMat, XMMatrixTranspose(DirectX::XMMatrixIdentity()));
+	XMStoreFloat4x4(&projMat, XMMatrixTranspose(DirectX::XMMatrixOrthographicLH(winSizeX, winSizeY, -1.f, 1.f)));
 
 	for (const auto& ui : m_UIs)
 	{
 		if (ui->IsEnabled())
 		{
 			auto material = ui->GetMaterial();
-			material->SetMatrix("g_ViewMat", viewMat);
-			material->SetMatrix("g_ProjMat", projMat);
+			material->SetMatrix("g_ViewMatrix", viewMat);
+			material->SetMatrix("g_ProjMatrix", projMat);
 
 			ui->RenderUI(context);
 		}

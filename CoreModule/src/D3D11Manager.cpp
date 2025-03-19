@@ -641,9 +641,9 @@ bool engine::D3D11Manager::createConstantBuffer(const ReflectResult& reflectResu
 
 		D3D11_BUFFER_DESC bd {};
 		bd.ByteWidth = cbDesc.BufferSize;
-		bd.Usage = D3D11_USAGE_DEFAULT; // 예: DEFAULT
+		bd.Usage = D3D11_USAGE_DYNAMIC; // 예: DEFAULT
 		bd.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
-		bd.CPUAccessFlags = 0;                   // D3D11_USAGE_DYNAMIC이면 D3D11_CPU_ACCESS_WRITE
+		bd.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;                   // D3D11_USAGE_DYNAMIC이면 D3D11_CPU_ACCESS_WRITE
 		bd.MiscFlags = 0;
 		bd.StructureByteStride = 0;
 
@@ -664,7 +664,7 @@ bool engine::D3D11Manager::createConstantBuffer(const ReflectResult& reflectResu
 HRESULT engine::D3D11Manager::readyVIBuffers()
 {
 	// TODO : 아 모르겠다 그냥 하드코딩해 시부레...
-	// 하.. 근데 mesh는 객체 마다 다른댜
+	// 근데 mesh는 객체 마다 다른댜
 
 
 	//======Create VIBufferType_POSTEX_RECT=======//

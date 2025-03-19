@@ -43,7 +43,7 @@ namespace engine
         //======================================//
         //				 serialize				//
         //======================================//
-
+    public:
         nlohmann::ordered_json 	To_Json() const;
         void 					From_Json(const nlohmann::ordered_json& j);
 

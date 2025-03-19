@@ -136,7 +136,14 @@ namespace engine
 
 					if (cbr->DirtyFlag)
 					{
-						context->UpdateSubresource(cbr->Buffer.Get(), 0, nullptr, cbr->LocalData.data(), 0, 0);
+						D3D11_MAPPED_SUBRESOURCE mappedResource;
+						if (SUCCEEDED(context->Map(cbr->Buffer.Get(), 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedResource)))
+						{
+							memcpy(mappedResource.pData, cbr->LocalData.data(), cbr->Size);
+							context->Unmap(cbr->Buffer.Get(), 0);
+							cbr->DirtyFlag = false;
+						}
+						//context->UpdateSubresource(cbr->Buffer.Get(), 0, nullptr, cbr->LocalData.data(), 0, 0);
 					}
 				}
 			}
@@ -317,9 +324,9 @@ namespace engine
 
 					D3D11_BUFFER_DESC bd{};
 					bd.ByteWidth = cbDesc.BufferSize;
-					bd.Usage = D3D11_USAGE_DEFAULT; // 예: DEFAULT
+					bd.Usage = D3D11_USAGE_DYNAMIC; // 예: DEFAULT
 					bd.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
-					bd.CPUAccessFlags = 0;                   // D3D11_USAGE_DYNAMIC이면 D3D11_CPU_ACCESS_WRITE
+					bd.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;                   // D3D11_USAGE_DYNAMIC이면 D3D11_CPU_ACCESS_WRITE
 					bd.MiscFlags = 0;
 					bd.StructureByteStride = 0;
 
@@ -367,8 +374,6 @@ namespace engine
 			vbDesc.StructureByteStride = VertexStride;
 			vbDesc.CPUAccessFlags = 0;
 			vbDesc.MiscFlags = 0;
-
-
 		}
 	};
 

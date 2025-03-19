@@ -1,5 +1,6 @@
 #include "Hierarchy.h"
 
+#include "EditorComponentManager.h"
 #include "GameObject.h"
 #include "Renderer.h"
 #include "UI.h"
@@ -103,15 +104,7 @@ void engine::editor::Hierarchy::FromJson(const nlohmann::ordered_json& j)
 		{
 			for (auto& component : pair.second)
 			{
-				if (std::dynamic_pointer_cast<Renderer>(component))
-				{
-					// TODO : EditorComponentManager에 추가.
-				}
-
-				if (std::dynamic_pointer_cast<UI>(component))
-				{
-					// TODO : EditorComponentManager에 추가.
-				}
+				EditorComponentManager::GetInstance().AddComponent(gameObject, component);
 			}
 		}
 	}

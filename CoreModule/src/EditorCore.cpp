@@ -4,35 +4,37 @@
 #include "D3D11Manager.h"
 #include "EditorComponentManager.h"
 
-editor::engine::EditorCore::EditorCore() : m_EditorComponentManager(nullptr), m_OffscreenWidth(0), m_OffscreenHeight(0),
+engine::editor::EditorCore::EditorCore() : m_EditorComponentManager(nullptr), m_OffscreenWidth(0), m_OffscreenHeight(0),
                                            m_bEditorMode(true)
 {
 
 }
 
-editor::engine::EditorCore::~EditorCore()
+engine::editor::EditorCore::~EditorCore()
 {
 
 }
 
-HRESULT editor::engine::EditorCore::Initialize(HWND hwnd)
+HRESULT engine::editor::EditorCore::Initialize(HWND hwnd)
 {
-	m_EditorComponentManager = &::engine::editor::EditorComponentManager::GetInstance();
-	readyGameView(static_cast<int>(::engine::D3D11Manager::GetInstance().GetWinSizeX()), static_cast<int>(::engine::D3D11Manager::GetInstance().GetWinSizeY()));
+	m_EditorComponentManager = &EditorComponentManager::GetInstance();
+	ReadyGameView(static_cast<int>(D3D11Manager::GetInstance().GetWinSizeX()), static_cast<int>(D3D11Manager::GetInstance().GetWinSizeY()));
+
+	return S_OK;
 }
 
-void editor::engine::EditorCore::Initialization()
+void engine::editor::EditorCore::Initialization()
 {
 
 }
 
-void editor::engine::EditorCore::SceneRender(const ::engine::ComPtr<ID3D11DeviceContext>& context)
+void engine::editor::EditorCore::SceneRender(const ComPtr<ID3D11DeviceContext>& context)
 {
-	renderScene(context);
-	renderGame(context);
+	RenderScene(context);
+	RenderGame(context);
 }
 
-void editor::engine::EditorCore::Decommissioning()
+void engine::editor::EditorCore::Decommissioning()
 {
 	if (m_bEditorMode == true)
 	{
@@ -41,11 +43,11 @@ void editor::engine::EditorCore::Decommissioning()
 
 	else
 	{
-		::engine::Core::GetInstance().Decommissioning();
+		Core::GetInstance().Decommissioning();
 	}
 }
 
-void editor::engine::EditorCore::renderScene(const ::engine::ComPtr<ID3D11DeviceContext>& context)
+void engine::editor::EditorCore::RenderScene(const ComPtr<ID3D11DeviceContext>& context)
 {
 	// Scene View와 Game View를 나눈 이유
 	// 1. 에디터 카메라, 인게임 카메라 기준의 두 개의 화면.
@@ -75,7 +77,7 @@ void editor::engine::EditorCore::renderScene(const ::engine::ComPtr<ID3D11Device
 	}
 }
 
-void editor::engine::EditorCore::readySceneView(int width, int height)
+void engine::editor::EditorCore::ReadySceneView(int width, int height)
 {
 	if (width <= 0 || height <= 0)
 	{
@@ -99,10 +101,10 @@ void editor::engine::EditorCore::readySceneView(int width, int height)
 		rtDesc.Usage = D3D11_USAGE_DEFAULT;
 		rtDesc.BindFlags = D3D11_BIND_RENDER_TARGET | D3D11_BIND_SHADER_RESOURCE;
 
-		auto device = ::engine::D3D11Manager::GetInstance().GetDevice();
+		auto device = D3D11Manager::GetInstance().GetDevice();
 
 		// Texture2D 생성
-		::engine::ComPtr<ID3D11Texture2D> renderTexture;
+		ComPtr<ID3D11Texture2D> renderTexture;
 		device->CreateTexture2D(&rtDesc, nullptr, renderTexture.GetAddressOf());
 
 		// RTV 생성
@@ -136,7 +138,7 @@ void editor::engine::EditorCore::readySceneView(int width, int height)
 		textureDesc.CPUAccessFlags = 0;
 		textureDesc.MiscFlags = 0;
 
-		::engine::ComPtr<ID3D11Texture2D> depthStencilTexture;
+		ComPtr<ID3D11Texture2D> depthStencilTexture;
 		device->CreateTexture2D(&textureDesc, nullptr, depthStencilTexture.GetAddressOf());
 		device->CreateDepthStencilView(depthStencilTexture.Get(), nullptr, m_SceneDepthStencilView.ReleaseAndGetAddressOf());
 
@@ -145,10 +147,16 @@ void editor::engine::EditorCore::readySceneView(int width, int height)
 	}
 }
 
-void editor::engine::EditorCore::renderGame(const ::engine::ComPtr<ID3D11DeviceContext>& context)
+void engine::editor::EditorCore::RenderGame(const ComPtr<ID3D11DeviceContext>& context)
 {
 	if (m_bEditorMode == true)
 	{
+		context->OMSetRenderTargets(1, m_GameTargetView.GetAddressOf(), m_GameDepthStencilView.Get());
+
+		float mainClearColor[4] = { 0.1f, 0.1f, 0.1f, 1.0f };
+		context->ClearRenderTargetView(m_GameTargetView.Get(), mainClearColor);
+		context->ClearDepthStencilView(m_GameDepthStencilView.Get(), D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.0f, 0);
+
 		m_EditorComponentManager->Render(context);
 	}
 
@@ -158,7 +166,7 @@ void editor::engine::EditorCore::renderGame(const ::engine::ComPtr<ID3D11DeviceC
 	}
 }
 
-void editor::engine::EditorCore::readyGameView(int width, int height)
+void engine::editor::EditorCore::ReadyGameView(int width, int height)
 {
 	// Render Target, Resource View Texture2D
 	D3D11_TEXTURE2D_DESC rtDesc = {};
@@ -171,10 +179,10 @@ void editor::engine::EditorCore::readyGameView(int width, int height)
 	rtDesc.Usage = D3D11_USAGE_DEFAULT;
 	rtDesc.BindFlags = D3D11_BIND_RENDER_TARGET | D3D11_BIND_SHADER_RESOURCE;
 
-	auto device = ::engine::D3D11Manager::GetInstance().GetDevice();
+	auto device = D3D11Manager::GetInstance().GetDevice();
 
 	// Texture2D 생성
-	::engine::ComPtr<ID3D11Texture2D> renderTexture;
+	ComPtr<ID3D11Texture2D> renderTexture;
 	device->CreateTexture2D(&rtDesc, nullptr, renderTexture.GetAddressOf());
 
 	// RTV 생성
@@ -208,7 +216,7 @@ void editor::engine::EditorCore::readyGameView(int width, int height)
 	textureDesc.CPUAccessFlags = 0;
 	textureDesc.MiscFlags = 0;
 
-	::engine::ComPtr<ID3D11Texture2D> depthStencilTexture;
+	ComPtr<ID3D11Texture2D> depthStencilTexture;
 	device->CreateTexture2D(&textureDesc, nullptr, depthStencilTexture.GetAddressOf());
 	device->CreateDepthStencilView(depthStencilTexture.Get(), nullptr, m_GameDepthStencilView.ReleaseAndGetAddressOf());
 

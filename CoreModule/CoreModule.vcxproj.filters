@@ -196,6 +196,9 @@
     <ClInclude Include="include\EditorCore.h">
       <Filter>01. Editor\Core</Filter>
     </ClInclude>
+    <ClInclude Include="include\LoadManager.h">
+      <Filter>00. System\SaveLoad</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\GameObject.cpp">
@@ -276,6 +279,9 @@
     </ClCompile>
     <ClCompile Include="src\EditorCore.cpp">
       <Filter>01. Editor\Core</Filter>
+    </ClCompile>
+    <ClCompile Include="src\LoadManager.cpp">
+      <Filter>00. System\SaveLoad</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

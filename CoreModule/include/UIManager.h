@@ -20,7 +20,7 @@ namespace engine
 
         //======================================//
         //				 property				//
-        //======================================//
+    	//======================================//
 
         void SetDirty(const _bool dirty) { m_bDirty = dirty; }
         _bool GetDirty() const { return m_bDirty; }
