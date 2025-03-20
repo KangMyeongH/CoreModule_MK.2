@@ -44,6 +44,8 @@ namespace engine
 
             void FlushDestroyComponent();
 
+            void Release();
+
         //======================================//
         //				  fields				//
         //======================================//

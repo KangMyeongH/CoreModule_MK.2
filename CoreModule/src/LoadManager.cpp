@@ -80,7 +80,7 @@ engine::_wstring engine::LoadManager::OpenFileDialog()
 {
 	wchar_t currentDir[MAX_PATH];
 	GetCurrentDirectoryW(MAX_PATH, currentDir);
-
+	std::wcout << currentDir << "\n";
 	OPENFILENAME ofn;
 	wchar_t filePath[MAX_PATH] = L"";
 	ZeroMemory(&ofn, sizeof(ofn));
@@ -89,6 +89,7 @@ engine::_wstring engine::LoadManager::OpenFileDialog()
 	ofn.lpstrFilter = L"All Files\0*.*\0Text Files\0*.TXT\0"; // 필터 설정
 	ofn.lpstrFile = filePath;
 	ofn.nMaxFile = MAX_PATH;
+	ofn.lpstrInitialDir = L"../Client/Assets/Scenes";
 	ofn.Flags = OFN_PATHMUSTEXIST | OFN_FILEMUSTEXIST;
 
 	if (GetOpenFileNameW(&ofn))

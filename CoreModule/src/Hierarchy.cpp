@@ -65,6 +65,7 @@ void engine::editor::Hierarchy::FlushDestroyGameObject()
 void engine::editor::Hierarchy::Release()
 {
 	m_GameObjects.clear();
+	EditorComponentManager::GetInstance().Release();
 }
 
 nlohmann::ordered_json engine::editor::Hierarchy::ToJson() const
@@ -95,7 +96,8 @@ void engine::editor::Hierarchy::FromJson(const nlohmann::ordered_json& j)
 
 	for (const auto& objJson : j.at("GameObjects"))
 	{
-		m_GameObjects.push_back(objJson.get<SharedPtr<GameObject>>());
+		auto gameObject = GameObject::Create();
+		m_GameObjects.push_back(objJson.get_to(gameObject));
 	}
 
 	for (auto& gameObject : m_GameObjects)

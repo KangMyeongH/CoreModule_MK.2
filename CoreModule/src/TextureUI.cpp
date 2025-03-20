@@ -190,6 +190,13 @@ void engine::TextureUI::registerComponent(ApplicationMode mode)
 	D3D11Manager::GetInstance().CreateSampler(samplerDesc, sampler);
 
 	m_Material->SetSampler("g_Sampler", sampler);
+
+	if (!m_TexturePath.empty())
+	{
+		_wstring path = m_TexturePath;
+		m_TexturePath.clear();
+		SetTexture(path);
+	}
 }
 
 void engine::TextureUI::to_json(nlohmann::ordered_json& j)
@@ -197,7 +204,9 @@ void engine::TextureUI::to_json(nlohmann::ordered_json& j)
 	std::string type = "TextureUI";
 	j = nlohmann::ordered_json{
 		{"type", type},
+		{"instanceID", GetInstanceID()},
 		{"enable", m_bEnabled},
+		{"sortingOrder", m_SortingOrder},
 		{"path", m_TexturePath},
 		{"flipX", m_bFlipX},
 		{"flipY", m_bFlipY}
@@ -206,9 +215,17 @@ void engine::TextureUI::to_json(nlohmann::ordered_json& j)
 
 void engine::TextureUI::from_json(const nlohmann::ordered_json& j)
 {
+	if (j.contains("instanceID"))
+	{
+		SetInstanceID(j.at("instanceID").get<_int>());
+	}
 	if (j.contains("enable"))
 	{
 		j.at("enable").get_to(m_bEnabled);
+	}
+	if (j.contains("sortingOrder"))
+	{
+		j.at("sortingOrder").get_to(m_SortingOrder);
 	}
 	if (j.contains("path"))
 	{

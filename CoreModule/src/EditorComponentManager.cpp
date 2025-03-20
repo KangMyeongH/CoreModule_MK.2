@@ -78,7 +78,10 @@ void engine::editor::EditorComponentManager::AddComponent(const SharedPtr<GameOb
 
 	component->SetOwner(owner);
 	auto& components = owner->GetComponents();
-	components[typeid(*component)].push_back(component);
+	if (components.find(typeid(*component)) == components.end())
+	{
+		components[typeid(*component)].push_back(component);
+	}
 	component->registerComponent(EDITOR);
 }
 
@@ -165,4 +168,12 @@ void engine::editor::EditorComponentManager::FlushDestroyComponent()
 			++it;
 		}
 	}
+}
+
+void engine::editor::EditorComponentManager::Release()
+{
+	m_UIs.clear();
+	m_Renderers.clear();
+	m_Cameras.clear();
+	m_Components.clear();
 }

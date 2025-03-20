@@ -3,7 +3,7 @@
 
 namespace engine
 {
-    class LoadManager
+    class COREMODULE_API LoadManager
     {
         //======================================//
         //				constructor				//

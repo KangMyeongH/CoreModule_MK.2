@@ -147,6 +147,53 @@ HRESULT engine::D3D11Manager::CreateTexture(const _wstring& path, ComPtr<ID3D11S
 	return S_OK;
 }
 
+HRESULT engine::D3D11Manager::CreateTexture(const _wstring& path)
+{
+	if (path.empty() || !FileExists(path))
+	{
+		return E_FAIL;
+	}
+
+	ComPtr<ID3D11ShaderResourceView> pSRV;
+
+	const auto it = m_TextureMap.find(path);
+
+	if (it != m_TextureMap.end())
+	{
+		return S_OK;
+	}
+
+	const _wchar* textureFilePath = path.c_str();
+	_wstring ext = path.substr(path.find_last_of(L"."));
+	std::transform(ext.begin(), ext.end(), ext.begin(), ::towlower);
+
+	HRESULT hr;
+
+	if (ext == L".dds")
+	{
+		hr = DirectX::CreateDDSTextureFromFile(m_Device.Get(), textureFilePath, nullptr, pSRV.GetAddressOf());
+	}
+
+	else if (ext == L".tga")
+	{
+		hr = E_FAIL;
+	}
+
+	else
+	{
+		hr = DirectX::CreateWICTextureFromFile(m_Device.Get(), textureFilePath, nullptr, pSRV.GetAddressOf());
+	}
+
+	if (FAILED(hr))
+	{
+		return hr;
+	}
+
+	m_TextureMap.emplace(path, pSRV);
+
+	return S_OK;
+}
+
 HRESULT engine::D3D11Manager::CreateShader(const _wstring& path, SharedPtr<Shader>& shader)
 {
 	if (FileExists(path))
