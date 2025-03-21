@@ -15,6 +15,21 @@ engine::D3D11Manager::~D3D11Manager()
 
 }
 
+engine::ComPtr<ID3D11ShaderResourceView> engine::D3D11Manager::GetTexture(_wstring path)
+{
+	const auto it = m_TextureMap.find(path);
+
+	if (it != m_TextureMap.end())
+	{
+		return it->second;
+	}
+
+	else
+	{
+		return nullptr;
+	}
+}
+
 engine::SharedPtr<engine::VIBuffer> engine::D3D11Manager::GetVIBuffer(const VIBufferType type)
 {
 	auto viBufferIt = m_VIBufferMap.find(type);

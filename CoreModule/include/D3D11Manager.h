@@ -28,8 +28,9 @@ namespace engine
         ComPtr<IDXGISwapChain> 		    GetSwapChain() const { return m_SwapChain; }
         ComPtr<ID3D11RenderTargetView>  GetMainRTV() const { return m_BackBufferRTV; }
         ComPtr<ID3D11DepthStencilView>  GetDepthStencilView() const { return m_DepthStencilView; }
-
-        SharedPtr<VIBuffer>             GetVIBuffer(VIBufferType type);
+        
+        ComPtr<ID3D11ShaderResourceView> 	GetTexture(_wstring path);
+    	SharedPtr<VIBuffer>             	GetVIBuffer(VIBufferType type);
 
         _uint                           GetWinSizeX() const { return m_WinSizeX; }
         _uint                           GetWinSizeY() const { return m_WinSizeY; }

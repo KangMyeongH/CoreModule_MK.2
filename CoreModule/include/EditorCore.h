@@ -1,5 +1,14 @@
 #pragma once
 #include "core_defines.h"
+#include "EditorCamera.h"
+
+namespace engine
+{
+	namespace editor
+	{
+        class Grid;
+	}
+}
 
 namespace engine
 {
@@ -50,10 +59,6 @@ namespace engine
             void ReadyGameView(int width, int height);
 
         //======================================//
-        //				 serialize				//
-        //======================================//
-
-        //======================================//
         //				  fields				//
         //======================================//
         private:
@@ -66,6 +71,9 @@ namespace engine
             ComPtr<ID3D11RenderTargetView>    m_GameTargetView;
             ComPtr<ID3D11ShaderResourceView>  m_GameResourceView;
             ComPtr<ID3D11DepthStencilView>    m_GameDepthStencilView;
+
+            EditorCamera m_EditorCamera;
+            SharedPtr<Grid> m_Grid;
 
             _int m_OffscreenWidth;
             _int m_OffscreenHeight;

@@ -2,7 +2,7 @@
 
 engine::editor::EditorCamera::EditorCamera()
 	: m_Position(0.f, 2.f, -10.f), m_Rotation(0.f, 0.f, 0.f),
-	m_FiledOfView(90.f), m_AspectRatio(1.6f), m_NearPlane(1.0f), m_FarPlane(1000.f)
+	m_FiledOfView(PI/4), m_AspectRatio(1.6f), m_NearPlane(1.0f), m_FarPlane(1000.f)
 {
 }
 

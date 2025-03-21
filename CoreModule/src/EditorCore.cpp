@@ -3,6 +3,8 @@
 #include "Core.h"
 #include "D3D11Manager.h"
 #include "EditorComponentManager.h"
+#include "Grid.h"
+#include "Material.h"
 
 engine::editor::EditorCore::EditorCore() : m_EditorComponentManager(nullptr), m_OffscreenWidth(0), m_OffscreenHeight(0),
                                            m_bEditorMode(true)
@@ -18,7 +20,13 @@ engine::editor::EditorCore::~EditorCore()
 HRESULT engine::editor::EditorCore::Initialize(HWND hwnd)
 {
 	m_EditorComponentManager = &EditorComponentManager::GetInstance();
+
 	ReadyGameView(static_cast<int>(D3D11Manager::GetInstance().GetWinSizeX()), static_cast<int>(D3D11Manager::GetInstance().GetWinSizeY()));
+
+	m_Grid = std::make_shared<Grid>();
+	m_Grid->InitGrid(D3D11Manager::GetInstance().GetDevice(), 400);
+
+
 
 	return S_OK;
 }
@@ -61,11 +69,25 @@ void engine::editor::EditorCore::RenderScene(const ComPtr<ID3D11DeviceContext>& 
 	{
 		if (m_SceneTargetView.Get() && m_SceneResourceView.Get() && m_SceneDepthStencilView.Get())
 		{
+			D3D11_VIEWPORT vp = {};
+			vp.TopLeftX = 0;
+			vp.TopLeftY = 0;
+			vp.Width = static_cast<float>(m_OffscreenWidth);
+			vp.Height = static_cast<float>(m_OffscreenHeight);
+			vp.MinDepth = 0.0f;
+			vp.MaxDepth = 1.0f;
+
+			context->RSSetViewports(1, &vp);
+
 			context->OMSetRenderTargets(1, m_SceneTargetView.GetAddressOf(), m_SceneDepthStencilView.Get());
 
 			float mainClearColor[4] = { 0.1f, 0.1f, 0.1f, 1.0f };
 			context->ClearRenderTargetView(m_SceneTargetView.Get(), mainClearColor);
 			context->ClearDepthStencilView(m_SceneDepthStencilView.Get(), D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.0f, 0);
+
+			m_Grid->UpdateGridVertices(context, m_EditorCamera.GetCameraPos(), 1.0f, 100);
+			m_Grid->Bind(context, m_EditorCamera);
+			m_Grid->RenderGird(context);
 
 			m_EditorComponentManager->Render(context);
 		}
@@ -105,20 +127,30 @@ void engine::editor::EditorCore::ReadySceneView(int width, int height)
 
 		// Texture2D 持失
 		ComPtr<ID3D11Texture2D> renderTexture;
-		device->CreateTexture2D(&rtDesc, nullptr, renderTexture.GetAddressOf());
+		if (FAILED(device->CreateTexture2D(&rtDesc, nullptr, renderTexture.GetAddressOf())))
+		{
+			std::cerr << "ERROR : Failed Create Scene View renderTexture! \n";
+		}
 
 		// RTV 持失
 		D3D11_RENDER_TARGET_VIEW_DESC rtvDesc = {};
 		rtvDesc.Format = rtDesc.Format;
 		rtvDesc.ViewDimension = D3D11_RTV_DIMENSION_TEXTURE2D;
-		device->CreateRenderTargetView(renderTexture.Get(), &rtvDesc, m_SceneTargetView.ReleaseAndGetAddressOf());
+		if (FAILED(device->CreateRenderTargetView(renderTexture.Get(), &rtvDesc, m_SceneTargetView.ReleaseAndGetAddressOf())))
+		{
+			std::cerr << "ERROR : Failed Create Scene View RenderTargetView! \n";
+		}
 
 		// SRV 持失
 		D3D11_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
 		srvDesc.Format = rtDesc.Format;
 		srvDesc.ViewDimension = D3D11_SRV_DIMENSION_TEXTURE2D;
 		srvDesc.Texture2D.MipLevels = 1;
-		device->CreateShaderResourceView(renderTexture.Get(), &srvDesc, m_SceneResourceView.ReleaseAndGetAddressOf());
+		if (FAILED(device->CreateShaderResourceView(renderTexture.Get(), &srvDesc, m_SceneResourceView.ReleaseAndGetAddressOf())))
+		{
+			std::cerr << "ERROR : Failed Create Scene View ShaderResourceView! \n";
+		}
+
 
 		// Depth Stencil Texture2D 
 		D3D11_TEXTURE2D_DESC textureDesc;
@@ -139,11 +171,20 @@ void engine::editor::EditorCore::ReadySceneView(int width, int height)
 		textureDesc.MiscFlags = 0;
 
 		ComPtr<ID3D11Texture2D> depthStencilTexture;
-		device->CreateTexture2D(&textureDesc, nullptr, depthStencilTexture.GetAddressOf());
-		device->CreateDepthStencilView(depthStencilTexture.Get(), nullptr, m_SceneDepthStencilView.ReleaseAndGetAddressOf());
+		if (FAILED(device->CreateTexture2D(&textureDesc, nullptr, depthStencilTexture.GetAddressOf())))
+		{
+			std::cerr << "ERROR : Failed Create Scene View depthStencilTexture! \n";
+		}
+
+		if (FAILED(device->CreateDepthStencilView(depthStencilTexture.Get(), nullptr, m_SceneDepthStencilView.ReleaseAndGetAddressOf())))
+		{
+			std::cerr << "ERROR : Failed Create Scene View depthStencilView! \n";
+		}
 
 		m_OffscreenWidth = width;
 		m_OffscreenHeight = height;
+
+		m_EditorCamera.SetAspectRatio(static_cast<float>(width) / static_cast<float>(height));
 	}
 }
 
@@ -151,6 +192,16 @@ void engine::editor::EditorCore::RenderGame(const ComPtr<ID3D11DeviceContext>& c
 {
 	if (m_bEditorMode == true)
 	{
+		D3D11_VIEWPORT vp = {};
+		vp.TopLeftX = 0;
+		vp.TopLeftY = 0;
+		vp.Width = static_cast<float>(D3D11Manager::GetInstance().GetWinSizeX());
+		vp.Height = static_cast<float>(D3D11Manager::GetInstance().GetWinSizeY());
+		vp.MinDepth = 0.0f;
+		vp.MaxDepth = 1.0f;
+
+		context->RSSetViewports(1, &vp);
+
 		context->OMSetRenderTargets(1, m_GameTargetView.GetAddressOf(), m_GameDepthStencilView.Get());
 
 		float mainClearColor[4] = { 0.1f, 0.1f, 0.1f, 1.0f };

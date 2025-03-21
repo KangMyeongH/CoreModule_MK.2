@@ -38,6 +38,9 @@ namespace engine
 
             void        Release();
 
+        private:
+            void        setupTransformHierarchy() const;
+
         //======================================//
         //				 serialize				//
         //======================================//

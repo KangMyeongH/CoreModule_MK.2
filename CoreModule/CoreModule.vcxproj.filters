@@ -88,6 +88,9 @@
     <Filter Include="01. Editor\Camera">
       <UniqueIdentifier>{f088afbf-2555-4a27-b670-2dbe00653487}</UniqueIdentifier>
     </Filter>
+    <Filter Include="01. Editor\Grid">
+      <UniqueIdentifier>{4fc82722-47d4-4829-a649-e80b9eeba742}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="include\core_defines.h">
@@ -199,6 +202,9 @@
     <ClInclude Include="include\LoadManager.h">
       <Filter>00. System\SaveLoad</Filter>
     </ClInclude>
+    <ClInclude Include="include\Grid.h">
+      <Filter>01. Editor\Grid</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\GameObject.cpp">
@@ -282,6 +288,9 @@
     </ClCompile>
     <ClCompile Include="src\LoadManager.cpp">
       <Filter>00. System\SaveLoad</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Grid.cpp">
+      <Filter>01. Editor\Grid</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

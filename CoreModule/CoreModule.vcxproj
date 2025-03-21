@@ -30,6 +30,7 @@
     <ClCompile Include="src\EditorComponentManager.cpp" />
     <ClCompile Include="src\EditorCore.cpp" />
     <ClCompile Include="src\GameObject.cpp" />
+    <ClCompile Include="src\Grid.cpp" />
     <ClCompile Include="src\Hierarchy.cpp" />
     <ClCompile Include="src\InputManager.cpp" />
     <ClCompile Include="src\LoadManager.cpp" />
@@ -71,6 +72,7 @@
     <ClInclude Include="include\EditorCore.h" />
     <ClInclude Include="include\Engine.h" />
     <ClInclude Include="include\GameObject.h" />
+    <ClInclude Include="include\Grid.h" />
     <ClInclude Include="include\Hierarchy.h" />
     <ClInclude Include="include\InputManager.h" />
     <ClInclude Include="include\json.hpp" />

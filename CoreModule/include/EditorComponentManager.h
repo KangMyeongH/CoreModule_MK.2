@@ -34,10 +34,14 @@ namespace engine
         public:
             void SetDirty(const bool dirty) { m_DirtyFlag = dirty; }
 
+            SharedPtr<Camera> GetMainCam() const { return m_MainCamera.lock(); }
+
         //======================================//
         //				  method				//
         //======================================//
         public:
+			
+
             void Render(const ComPtr<ID3D11DeviceContext>& context);
             void RenderUIComponent(const ComPtr<ID3D11DeviceContext>& context);
             void AddComponent(const SharedPtr<GameObject>& owner, const SharedPtr<Component>& component);
@@ -55,7 +59,6 @@ namespace engine
             UIs                 m_UIs;
             Cameras 			m_Cameras;
 
-            EditorCamera        m_EditorCamera;
             WeakPtr<Camera> 	m_MainCamera;
 
             _float4X4           m_ViewMat;

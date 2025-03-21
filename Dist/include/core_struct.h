@@ -378,6 +378,12 @@ namespace engine
 	};
 
 
+	struct VTX_GRID
+	{
+		_float3 Position;
+		_float4 Color;
+	};
+
 	struct VTX_TEXTURE_UI
 	{
 		_float3 Position;

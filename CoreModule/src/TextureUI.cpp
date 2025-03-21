@@ -57,7 +57,8 @@ void engine::TextureUI::SetTexture(const _wstring& path)
 
 engine::ComPtr<ID3D11ShaderResourceView> engine::TextureUI::GetTexture() const
 {
-	return nullptr;
+
+	return D3D11Manager::GetInstance().GetTexture(m_TexturePath);
 }
 
 engine::_bool engine::TextureUI::IsMouseHovered()

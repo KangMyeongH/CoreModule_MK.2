@@ -28,8 +28,9 @@ namespace engine
         ComPtr<IDXGISwapChain> 		    GetSwapChain() const { return m_SwapChain; }
         ComPtr<ID3D11RenderTargetView>  GetMainRTV() const { return m_BackBufferRTV; }
         ComPtr<ID3D11DepthStencilView>  GetDepthStencilView() const { return m_DepthStencilView; }
-
-        SharedPtr<VIBuffer>             GetVIBuffer(VIBufferType type);
+        
+        ComPtr<ID3D11ShaderResourceView> 	GetTexture(_wstring path);
+    	SharedPtr<VIBuffer>             	GetVIBuffer(VIBufferType type);
 
         _uint                           GetWinSizeX() const { return m_WinSizeX; }
         _uint                           GetWinSizeY() const { return m_WinSizeY; }
@@ -41,6 +42,7 @@ namespace engine
         HRESULT	Initialize(HWND hwnd, _bool isWindowed, _uint winSizeX, _uint winSizeY);
 
         HRESULT CreateTexture(const _wstring& path, ComPtr<ID3D11ShaderResourceView>& srv);
+        HRESULT CreateTexture(const _wstring& path);
         HRESULT CreateShader(const _wstring& path, SharedPtr<Shader>& shader);
         HRESULT CreateSampler(const D3D11_SAMPLER_DESC& desc, ComPtr<ID3D11SamplerState>& sampler) const;
         HRESULT CreateMesh(const _wstring& path);

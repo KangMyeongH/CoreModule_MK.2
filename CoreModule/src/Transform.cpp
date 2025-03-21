@@ -32,9 +32,9 @@ void engine::Transform::SetParent(const SharedPtr<Transform>& parent)
 
 		m_Parent = parent;
 
-		m_LocalPosition = m_WorldPosition;
-		m_LocalRotation = m_WorldRotation;
-		m_LocalScale = m_WorldScale;
+		m_LocalPosition = Position();
+		m_LocalRotation = Rotation();
+		m_LocalScale = Scale();
 
 		if (parent != nullptr)
 		{

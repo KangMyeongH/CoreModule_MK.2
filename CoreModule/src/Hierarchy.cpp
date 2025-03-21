@@ -31,6 +31,7 @@ void engine::editor::Hierarchy::AddGameObject()
 	};
 
 	m_GameObjects.push_back(newGameObject);
+	newGameObject->m_Transform->SetOwner(newGameObject);
 }
 
 void engine::editor::Hierarchy::AddGameObject(const SharedPtr<GameObject>& gameObject)
@@ -52,6 +53,11 @@ void engine::editor::Hierarchy::FlushDestroyGameObject()
 	{
 		if ((*it)->IsDestroyed())
 		{
+			auto target = *it;
+			if (auto parent = target->GetTransform()->GetParent())
+			{
+				target->GetTransform()->SetParent(nullptr);
+			}
 			it = m_GameObjects.erase(it);
 		}
 
@@ -66,6 +72,37 @@ void engine::editor::Hierarchy::Release()
 {
 	m_GameObjects.clear();
 	EditorComponentManager::GetInstance().Release();
+}
+
+void engine::editor::Hierarchy::setupTransformHierarchy() const
+{
+	std::unordered_map<_int, SharedPtr<Transform>> transformMap;
+
+	transformMap.reserve(m_GameObjects.size());
+
+	for (const auto& gameObject : m_GameObjects)
+	{
+		_int id = gameObject->GetTransform()->GetInstanceID();
+		transformMap[id] = gameObject->GetTransform();
+	}
+
+	for (const auto& gameObject : m_GameObjects)
+	{
+		const SharedPtr<Transform> transform = gameObject->GetTransform();
+
+		_int parentID = transform->GetParentID();
+
+		if (parentID != -1)
+		{
+			auto it = transformMap.find(parentID);
+			if (it != transformMap.end())
+			{
+				transform->SetParent(transformMap[parentID]);
+			}
+		}
+	}
+
+	transformMap.clear();
 }
 
 nlohmann::ordered_json engine::editor::Hierarchy::ToJson() const
@@ -110,4 +147,6 @@ void engine::editor::Hierarchy::FromJson(const nlohmann::ordered_json& j)
 			}
 		}
 	}
+
+	setupTransformHierarchy();
 }
