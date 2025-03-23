@@ -10,22 +10,15 @@ namespace engine
         ~Mesh() override;
 
     public:
-        SharedPtr<Mesh> Create();
-
+        static SharedPtr<Mesh> Create(const SharedPtr<VIBuffer>& viBuffer);
     	void Destroy() override;
+
+        void Bind(const ComPtr<ID3D11DeviceContext>& context);
+        void Render(const ComPtr<ID3D11DeviceContext>& context);
 
 
     private:
-        D3D11_BUFFER_DESC       m_BufferDesc;
-        D3D11_SUBRESOURCE_DATA  m_InitialDesc;
-
-        _uint                   m_NumVertexBuffers;
-        _uint                   m_VertexStride;
-        _uint                   m_IndexStride;
-        _uint					m_NumIndices;
-
-        ComPtr<ID3D11Buffer> 	m_VertexBuffer;
-        ComPtr<ID3D11Buffer> 	m_IndexBuffer;
-        _uint                   m_IndexCount;
+        SharedPtr<VIBuffer> m_VIBuffer;
+        std::vector<SubMesh> m_SubMeshes;
     };
 }

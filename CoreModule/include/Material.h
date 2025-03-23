@@ -40,6 +40,7 @@ namespace engine
         _float4 GetColor(const _string& name);
 
         void SetTexture(const _string& name, const ComPtr<ID3D11ShaderResourceView>& texture);
+
         void SetTexture(const _string& name, const _wstring& path);
 
         void SetSampler(const _string& name, const ComPtr<ID3D11SamplerState>& sampler);
@@ -54,7 +55,6 @@ namespace engine
         //======================================//
 
         void LoadShader(const _wstring& path);
-
 
         void Bind(ID3D11DeviceContext* context) const;
 

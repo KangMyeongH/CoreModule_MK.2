@@ -36,6 +36,7 @@
     <ClCompile Include="src\LoadManager.cpp" />
     <ClCompile Include="src\Material.cpp" />
     <ClCompile Include="src\Mesh.cpp" />
+    <ClCompile Include="src\MeshRenderer.cpp" />
     <ClCompile Include="src\Object.cpp" />
     <ClCompile Include="src\PhysicsManager.cpp" />
     <ClCompile Include="src\Renderer.cpp" />
@@ -79,6 +80,7 @@
     <ClInclude Include="include\LoadManager.h" />
     <ClInclude Include="include\Material.h" />
     <ClInclude Include="include\Mesh.h" />
+    <ClInclude Include="include\MeshRenderer.h" />
     <ClInclude Include="include\Object.h" />
     <ClInclude Include="include\PhysicsManager.h" />
     <ClInclude Include="include\Renderer.h" />

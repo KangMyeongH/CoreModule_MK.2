@@ -91,6 +91,9 @@
     <Filter Include="01. Editor\Grid">
       <UniqueIdentifier>{4fc82722-47d4-4829-a649-e80b9eeba742}</UniqueIdentifier>
     </Filter>
+    <Filter Include="00. System\Graphic\Mesh">
+      <UniqueIdentifier>{9769851d-e8e4-4610-87f0-061f2db8f7c2}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="include\core_defines.h">
@@ -173,7 +176,6 @@
     <ClInclude Include="include\Material.h">
       <Filter>00. System\Graphic\Material</Filter>
     </ClInclude>
-    <ClInclude Include="include\Mesh.h" />
     <ClInclude Include="include\UI.h">
       <Filter>00. System\UI</Filter>
     </ClInclude>
@@ -204,6 +206,12 @@
     </ClInclude>
     <ClInclude Include="include\Grid.h">
       <Filter>01. Editor\Grid</Filter>
+    </ClInclude>
+    <ClInclude Include="include\Mesh.h">
+      <Filter>00. System\Graphic\Mesh</Filter>
+    </ClInclude>
+    <ClInclude Include="include\MeshRenderer.h">
+      <Filter>00. System\Graphic\Renderer</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -264,7 +272,6 @@
     <ClCompile Include="src\Material.cpp">
       <Filter>00. System\Graphic\Material</Filter>
     </ClCompile>
-    <ClCompile Include="src\Mesh.cpp" />
     <ClCompile Include="src\UI.cpp">
       <Filter>00. System\UI</Filter>
     </ClCompile>
@@ -291,6 +298,12 @@
     </ClCompile>
     <ClCompile Include="src\Grid.cpp">
       <Filter>01. Editor\Grid</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Mesh.cpp">
+      <Filter>00. System\Graphic\Mesh</Filter>
+    </ClCompile>
+    <ClCompile Include="src\MeshRenderer.cpp">
+      <Filter>00. System\Graphic\Renderer</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

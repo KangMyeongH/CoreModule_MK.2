@@ -5,6 +5,11 @@
 
 namespace engine
 {
+	class Material;
+}
+
+namespace engine
+{
 	struct Ray
 	{
 		Vector3 Origin;			// Ray의 시작점 		(월드 좌표)
@@ -346,6 +351,14 @@ namespace engine
 		}
 	};
 
+	struct SubMesh
+	{
+		_uint IndexOffset;	// 시작 인덱스
+		_uint IndexCount;	// 인덱스 개수
+		_uint MaterialIndex;
+
+	};
+
 	struct VIBuffer
 	{
 		ComPtr<ID3D11Buffer> VertexBuffer;
@@ -362,18 +375,6 @@ namespace engine
 		VIBuffer(): NumVertexBuffers(0), VertexStride(0), NumVertices(0), IndexStride(0), NumIndices(0), IndexFormat(),
 		            PrimitiveTopology()
 		{
-		}
-
-		void Initialize(ID3D11Device* device)
-		{
-			D3D11_BUFFER_DESC vbDesc;
-			ZeroMemory(&vbDesc, sizeof(vbDesc));
-			vbDesc.ByteWidth = VertexStride * NumVertexBuffers;
-			vbDesc.Usage = D3D11_USAGE_DEFAULT;
-			vbDesc.BindFlags = D3D11_BIND_VERTEX_BUFFER;
-			vbDesc.StructureByteStride = VertexStride;
-			vbDesc.CPUAccessFlags = 0;
-			vbDesc.MiscFlags = 0;
 		}
 	};
 

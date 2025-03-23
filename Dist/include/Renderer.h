@@ -40,7 +40,7 @@ namespace engine
         //======================================//
         //				 serialize				//
         //======================================//
-
+    public:
         void to_json(nlohmann::ordered_json& j) override = 0;
         void from_json(const nlohmann::ordered_json& j) override = 0;
 

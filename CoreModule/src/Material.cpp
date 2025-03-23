@@ -262,6 +262,11 @@ void engine::Material::SetTexture(const _string& name, const _wstring& path)
 			D3D11Manager::GetInstance().CreateTexture(path, texture);
 
 			textureRuntime->Texture = texture;
+			textureRuntime->BindPoint = texIt->second.BindPoint;
+
+			m_Shader->Textures[i][name] = textureRuntime;
+
+			break;
 		}
 	}
 }
