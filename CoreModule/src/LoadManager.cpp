@@ -57,7 +57,7 @@ engine::_bool engine::LoadManager::SaveSceneData()
 
 	std::wstring basePath = L"../Client/Assets/Scenes/";
 	std::wstring sceneName = StringToWString(editor::Hierarchy::GetInstance().GetCurrentSceneName());
-	std::wstring fullPath = basePath + sceneName + L".json";
+	std::wstring fullPath = basePath + sceneName + L".Scene";
 
 	std::ofstream outFile(fullPath, std::ios::trunc);
 	if (!outFile.is_open())

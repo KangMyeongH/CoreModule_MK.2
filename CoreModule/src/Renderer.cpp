@@ -3,12 +3,12 @@
 #include "Material.h"
 #include "RenderManager.h"
 
-engine::Renderer::Renderer(const SharedPtr<GameObject>& owner, const _string& name) : Component(owner, name)
+engine::Renderer::Renderer(const SharedPtr<GameObject>& owner, const _string& name) : Behaviour(owner, name)
 {
 
 }
 
-engine::Renderer::Renderer(const Renderer& rhs) : Component(rhs)
+engine::Renderer::Renderer(const Renderer& rhs) : Behaviour(rhs)
 {
 
 }

@@ -80,4 +80,41 @@ namespace engine
 
 		return refCnt;
 	}
+
+	inline void to_json(nlohmann::ordered_json& j, const _float2& v)
+	{
+		j = nlohmann::ordered_json{ {"x", v.x}, {"y", v.y} };
+	}
+
+	inline void from_json(const nlohmann::ordered_json& j, _float2& v)
+	{
+		j.at("x").get_to(v.x);
+		j.at("y").get_to(v.y);
+	}
+
+	inline void to_json(nlohmann::ordered_json& j, const _float3& v)
+	{
+		j = nlohmann::ordered_json{ {"x", v.x}, {"y", v.y}, {"z", v.z} };
+	}
+
+	inline void from_json(const nlohmann::ordered_json& j, _float3& v)
+	{
+		j.at("x").get_to(v.x);
+		j.at("y").get_to(v.y);
+		j.at("z").get_to(v.z);
+	}
+
+	inline void to_json(nlohmann::ordered_json& j, const _float4& v)
+	{
+		j = nlohmann::ordered_json{ {"x", v.x}, {"y", v.y}, {"z", v.z}, {"w", v.w} };
+	}
+
+	inline void from_json(const nlohmann::ordered_json& j, _float4& v)
+	{
+		j.at("x").get_to(v.x);
+		j.at("y").get_to(v.y);
+		j.at("z").get_to(v.z);
+		j.at("z").get_to(v.w);
+	}
+
 }

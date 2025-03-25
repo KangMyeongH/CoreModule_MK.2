@@ -31,7 +31,7 @@ namespace engine
         //				  method				//
         //======================================//
         public:
-        	void 		AddGameObject();
+            SharedPtr<GameObject> 		AddGameObject();
             void 		AddGameObject(const SharedPtr<GameObject>& gameObject);
             void        RemoveGameObject(const SharedPtr<GameObject>& gameObject);
             void 		FlushDestroyGameObject();

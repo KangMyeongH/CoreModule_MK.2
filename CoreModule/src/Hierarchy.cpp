@@ -24,7 +24,7 @@ engine::_string engine::editor::Hierarchy::GetCurrentSceneName() const
 	return m_CurrentSceneName;
 }
 
-void engine::editor::Hierarchy::AddGameObject()
+engine::SharedPtr<engine::GameObject> engine::editor::Hierarchy::AddGameObject()
 {
 	SharedPtr<GameObject> newGameObject{
 		new GameObject(), [](const GameObject* ptr) { delete ptr; }
@@ -32,6 +32,8 @@ void engine::editor::Hierarchy::AddGameObject()
 
 	m_GameObjects.push_back(newGameObject);
 	newGameObject->m_Transform->SetOwner(newGameObject);
+
+	return newGameObject;
 }
 
 void engine::editor::Hierarchy::AddGameObject(const SharedPtr<GameObject>& gameObject)

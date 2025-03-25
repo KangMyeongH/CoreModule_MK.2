@@ -1,4 +1,6 @@
 #pragma once
+#include "Component.h"
+#include "ComponentFactory.h"
 #include "core_defines.h"
 #include "EditorCamera.h"
 #include "RenderManager.h"
@@ -40,11 +42,26 @@ namespace engine
         //				  method				//
         //======================================//
         public:
-			
-
-            void Render(const ComPtr<ID3D11DeviceContext>& context);
+            void Render(const ComPtr<ID3D11DeviceContext>& context, _float4X4 viewMat, _float4X4 projMat);
             void RenderUIComponent(const ComPtr<ID3D11DeviceContext>& context);
             void AddComponent(const SharedPtr<GameObject>& owner, const SharedPtr<Component>& component);
+
+            template <typename T>
+            SharedPtr<T> CreateComponent(const SharedPtr<GameObject>& owner)
+            {
+                static_assert(std::is_base_of<Component, T>::value, "T must be derived from Component");
+
+                const _string typeName = StripMsvcClassName(typeid(T).name());
+
+                SharedPtr<Component> component = ComponentFactory::GetInstance().CreateComponent(typeName);
+
+                if (component)
+                {
+                    AddComponent(owner, component);
+                }
+
+                return std::static_pointer_cast<T>(component);
+            }
 
             void FlushDestroyComponent();
 

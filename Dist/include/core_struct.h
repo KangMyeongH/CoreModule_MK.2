@@ -43,7 +43,7 @@ namespace engine
 
 	struct ConstantBufferDesc
 	{
-		_string		Name;
+		_string		Name;			// CBuffer ¿Ã∏ß
 		_uint		BindPoint;
 		_uint		BufferSize;
 
@@ -81,6 +81,7 @@ namespace engine
 	struct TextureRuntime
 	{
 		ComPtr<ID3D11ShaderResourceView> 	Texture;
+		std::wstring						TexturePath;
 		UINT								BindPoint = 0;
 	};
 
@@ -396,5 +397,6 @@ namespace engine
 		_float3 Position;
 		_float3 Normal;
 		_float2 TexCoord0;
+		_float3 Tangent;
 	};
 }

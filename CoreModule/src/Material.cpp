@@ -31,6 +31,14 @@ void engine::Material::SetFloat(const std::string& name, const _float value)
 				auto& cbr = m_Shader->CBuffers[i][cbDesc.Name];
 				auto& dataVec = cbr->LocalData;
 
+				if (varInfo.Size != sizeof(_float))
+				{
+					std::cerr << "ERROR : Type mismatch in SetValue. (Class Material) " <<
+						"Property : " << name.c_str() << ", Method : SetFloat() \n";
+
+					return;
+				}
+
 				if (dataVec.size() < cbDesc.BufferSize)
 				{
 					dataVec.resize(cbDesc.BufferSize, 0);
@@ -48,6 +56,34 @@ void engine::Material::SetFloat(const std::string& name, const _float value)
 
 engine::_float engine::Material::GetFloat(const std::string& name)
 {
+	for (_uint i = 0; i < ShaderTypeEnd; ++i)
+	{
+		for (const auto& pair : m_Shader->Reflects[i].CBuffers)
+		{
+			const auto& cbDesc = pair.second;
+			auto varIt = cbDesc.Variables.find(name);
+
+			if (varIt != cbDesc.Variables.end())
+			{
+				const auto& varInfo = varIt->second;
+
+				const auto& cbr = m_Shader->CBuffers[i].at(cbDesc.Name);
+				const auto& dataVec = cbr->LocalData;
+
+				if (varInfo.Size != sizeof(_float))
+				{
+					std::cerr << "ERROR : Property " << name.c_str() << " is not Float. (Class Material) \n";
+
+					return 0.0f;
+				}
+
+				_float value = 0.0f;
+				memcpy(&value, dataVec.data() + varInfo.StartOffset, sizeof(_float));
+				return value;
+			}
+		}
+	}
+
 	return 0.f;
 }
 
@@ -66,6 +102,14 @@ void engine::Material::SetFloat2(const std::string& name, const _float2 value)
 				auto& cbr = m_Shader->CBuffers[i][cbDesc.Name];
 				auto& dataVec = cbr->LocalData;
 
+				if (varInfo.Size != sizeof(_float2))
+				{
+					std::cerr << "ERROR : Type mismatch in SetValue. (Class Material) " <<
+						"Property : " << name.c_str() << ", Method : SetFloat2() \n";
+
+					return;
+				}
+
 				if (dataVec.size() < cbDesc.BufferSize)
 				{
 					dataVec.resize(cbDesc.BufferSize, 0);
@@ -83,7 +127,33 @@ void engine::Material::SetFloat2(const std::string& name, const _float2 value)
 
 engine::_float2 engine::Material::GetFloat2(const std::string& name)
 {
-	return { 0.f,0.f };
+	for (_uint i = 0; i < ShaderTypeEnd; ++i)
+	{
+		for (const auto& pair : m_Shader->Reflects[i].CBuffers)
+		{
+			const auto& cbDesc = pair.second;
+			auto varIt = cbDesc.Variables.find(name);
+			if (varIt != cbDesc.Variables.end())
+			{
+				const auto& varInfo = varIt->second;
+				const auto& cbr = m_Shader->CBuffers[i].at(cbDesc.Name);
+				const auto& dataVec = cbr->LocalData;
+
+				if (varInfo.Size != sizeof(_float2))
+				{
+					std::cerr << "ERROR : Property " << name.c_str() << " is not Float2. (Class Material) \n";
+
+					return { 0.0f, 0.0f };
+				}
+
+				_float2 value;
+				memcpy(&value, dataVec.data() + varInfo.StartOffset, sizeof(_float2));
+				return value;
+			}
+		}
+	}
+
+	return {0.0f, 0.0f};
 }
 
 void engine::Material::SetFloat3(const std::string& name, const _float3 value)
@@ -100,6 +170,14 @@ void engine::Material::SetFloat3(const std::string& name, const _float3 value)
 				auto& varInfo = varIt->second;
 				auto& cbr = m_Shader->CBuffers[i][cbDesc.Name];
 				auto& dataVec = cbr->LocalData;
+
+				if (varInfo.Size != sizeof(_float3))
+				{
+					std::cerr << "ERROR : Type mismatch in SetValue. (Class Material) " <<
+						"Property : " << name.c_str() << ", Method : SetFloat3() \n";
+
+					return;
+				}
 
 				if (dataVec.size() < cbDesc.BufferSize)
 				{
@@ -118,7 +196,33 @@ void engine::Material::SetFloat3(const std::string& name, const _float3 value)
 
 engine::_float3 engine::Material::GetFloat3(const std::string& name)
 {
-	return { 0.f,0.f,0.f };
+	for (_uint i = 0; i < ShaderTypeEnd; ++i)
+	{
+		for (const auto& pair : m_Shader->Reflects[i].CBuffers)
+		{
+			const auto& cbDesc = pair.second;
+			auto varIt = cbDesc.Variables.find(name);
+			if (varIt != cbDesc.Variables.end())
+			{
+				const auto& varInfo = varIt->second;
+				const auto& cbr = m_Shader->CBuffers[i].at(cbDesc.Name);
+				const auto& dataVec = cbr->LocalData;
+
+				if (varInfo.Size != sizeof(_float3))
+				{
+					std::cerr << "ERROR : Property " << name.c_str() << " is not Float3. (Class Material) \n";
+
+					return { 0.0f, 0.0f, 0.0f };
+				}
+
+				_float3 value;
+				memcpy(&value, dataVec.data() + varInfo.StartOffset, sizeof(_float3));
+				return value;
+			}
+		}
+	}
+
+	return {0.0f, 0.0f, 0.0f};
 }
 
 void engine::Material::SetFloat4(const std::string& name, const _float4 value)
@@ -135,6 +239,14 @@ void engine::Material::SetFloat4(const std::string& name, const _float4 value)
 				auto& varInfo = varIt->second;
 				auto& cbr = m_Shader->CBuffers[i][cbDesc.Name];
 				auto& dataVec = cbr->LocalData;
+
+				if (varInfo.Size != sizeof(_float4))
+				{
+					std::cerr << "ERROR : Type mismatch in SetValue. (Class Material) " <<
+						"Property : " << name.c_str() << ", Method : SetFloat4() \n";
+
+					return;
+				}
 
 				if (dataVec.size() < cbDesc.BufferSize)
 				{
@@ -153,7 +265,33 @@ void engine::Material::SetFloat4(const std::string& name, const _float4 value)
 
 engine::_float4 engine::Material::GetFloat4(const std::string& name)
 {
-	return {0.f, 0.f, 0.f, 0.f};
+	for (_uint i = 0; i < ShaderTypeEnd; ++i)
+	{
+		for (const auto& pair : m_Shader->Reflects[i].CBuffers)
+		{
+			const auto& cbDesc = pair.second;
+			auto varIt = cbDesc.Variables.find(name);
+			if (varIt != cbDesc.Variables.end())
+			{
+				const auto& varInfo = varIt->second;
+				const auto& cbr = m_Shader->CBuffers[i].at(cbDesc.Name);
+				const auto& dataVec = cbr->LocalData;
+
+				if (varInfo.Size != sizeof(_float4))
+				{
+					std::cerr << "ERROR : Property " << name.c_str() << " is not Float4. (Class Material) \n";
+
+					return { 0.0f, 0.0f, 0.0f, 0.0f };
+				}
+
+				_float4 value;
+				memcpy(&value, dataVec.data() + varInfo.StartOffset, sizeof(_float4));
+				return value;
+			}
+		}
+	}
+
+	return {0.0f, 0.0f, 0.0f, 0.0f};
 }
 
 void engine::Material::SetMatrix(const std::string& name, const _float4X4& value)
@@ -170,6 +308,15 @@ void engine::Material::SetMatrix(const std::string& name, const _float4X4& value
 				auto& varInfo = varIt->second;
 				auto& cbr = m_Shader->CBuffers[i][cbDesc.Name];
 				auto& dataVec = cbr->LocalData;
+
+				if (varInfo.Size != sizeof(_float4X4))
+				{
+					std::cerr << "ERROR : Type mismatch in SetValue. (Class Material) " <<
+						"Property : " << name.c_str() << ", Method : SetFloat4X4() \n";
+
+					return;
+				}
+
 
 				if (dataVec.size() < cbDesc.BufferSize)
 				{
@@ -192,7 +339,7 @@ engine::_float4X4 engine::Material::GetMatrix(const std::string& name)
 	return mat;
 }
 
-void engine::Material::SetColor(const _string& name, _float4 value)
+void engine::Material::SetColor(const _string& name, const _float4 value)
 {
 	for (_uint i = 0; i < ShaderTypeEnd; ++i)
 	{
@@ -224,7 +371,7 @@ void engine::Material::SetColor(const _string& name, _float4 value)
 
 engine::_float4 engine::Material::GetColor(const _string& name)
 {
-	return { 0.f,0.f,0.f,0.f };
+	return GetFloat4(name);
 }
 
 void engine::Material::SetTexture(const _string& name, const ComPtr<ID3D11ShaderResourceView>& texture)
@@ -262,6 +409,7 @@ void engine::Material::SetTexture(const _string& name, const _wstring& path)
 			D3D11Manager::GetInstance().CreateTexture(path, texture);
 
 			textureRuntime->Texture = texture;
+			textureRuntime->TexturePath = path;
 			textureRuntime->BindPoint = texIt->second.BindPoint;
 
 			m_Shader->Textures[i][name] = textureRuntime;
@@ -331,4 +479,79 @@ engine::SharedPtr<engine::Material> engine::Material::Clone(const SharedPtr<Obje
 
 void engine::Material::Destroy()
 {
+}
+
+void engine::Material::to_json(nlohmann::ordered_json& j)
+{
+	j = nlohmann::ordered_json{
+		{"shaderPath", m_ShaderPath},
+		{"textureMaps", nlohmann::ordered_json::array() },
+		{"properties", nlohmann::ordered_json::array()}
+	};
+
+	for (auto& reflectResult : m_Shader->Reflects)
+	{
+		for (auto& textureInfo : reflectResult.Textures)
+		{
+			std::wstring texturePath;
+
+			for (auto& textureRuntime : m_Shader->Textures)
+			{
+				auto it = textureRuntime.find(textureInfo.first);
+
+				if (it != textureRuntime.end())
+				{
+					texturePath = it->second->TexturePath;
+					nlohmann::ordered_json textureJson = nlohmann::ordered_json{
+						{textureInfo.first.c_str(), texturePath}
+					};
+
+					j["textureMaps"].push_back(textureJson);
+
+					break;
+				}
+			}
+		}
+
+		// TODO : 유니티처럼 내용 직렬화 해서 보관 해야됨!!!
+		// 하다 말았음.
+
+		for (auto& cbufferDesc : reflectResult.CBuffers)
+		{
+			if (cbufferDesc.first == "Property")
+			{
+				for (auto& var : cbufferDesc.second.Variables)
+				{
+					if (var.second.Size == sizeof(_float))
+					{
+						_float value = GetFloat(var.first);
+
+						nlohmann::ordered_json propertyJson = nlohmann::ordered_json{
+							{var.first.c_str(), value}
+						};
+					}
+
+					else if (var.second.Size == sizeof(_float2))
+					{
+						_float2 value = GetFloat2(var.first);
+					}
+
+					else if (var.second.Size == sizeof(_float3))
+					{
+
+					}
+
+					else if (var.second.Size == sizeof(_float4))
+					{
+
+					}
+				}
+			}
+		}
+	}
+}
+
+void engine::Material::from_json(const nlohmann::ordered_json& j)
+{
+
 }

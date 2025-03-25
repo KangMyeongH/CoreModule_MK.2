@@ -63,7 +63,7 @@ void engine::editor::EditorCore::RenderScene(const ComPtr<ID3D11DeviceContext>& 
 	// 3. Game View에서는 실제 인게임 화면을 보여주는 것.
 	//=======================================================================//
 
-	// TODO : Scene View에서 사용할 그리드 + 와이어 프래임 렌더링 하는거 추가 해야함.
+	// TODO : Scene View에서 사용할 그리드(끝) + 와이어 프래임 렌더링 하는거 추가 해야함.
 
 	if (m_bEditorMode == true)
 	{
@@ -89,7 +89,12 @@ void engine::editor::EditorCore::RenderScene(const ComPtr<ID3D11DeviceContext>& 
 			m_Grid->Bind(context, m_EditorCamera);
 			m_Grid->RenderGird(context);
 
-			m_EditorComponentManager->Render(context);
+			_float4X4 viewMat, projMat;
+			XMStoreFloat4x4(&viewMat, XMMatrixTranspose(m_EditorCamera.GetViewMatrix()));
+			XMStoreFloat4x4(&projMat, XMMatrixTranspose(m_EditorCamera.GetProjectMatrix()));
+
+
+			m_EditorComponentManager->Render(context, viewMat, projMat);
 		}
 	}
 
@@ -208,7 +213,13 @@ void engine::editor::EditorCore::RenderGame(const ComPtr<ID3D11DeviceContext>& c
 		context->ClearRenderTargetView(m_GameTargetView.Get(), mainClearColor);
 		context->ClearDepthStencilView(m_GameDepthStencilView.Get(), D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.0f, 0);
 
-		m_EditorComponentManager->Render(context);
+		// TODO : 임시로 카메라 값 넣은거임 수정해야함.
+		_float4X4 viewMat, projMat;
+		XMStoreFloat4x4(&viewMat, XMMatrixTranspose(m_EditorCamera.GetViewMatrix()));
+		XMStoreFloat4x4(&projMat, XMMatrixTranspose(m_EditorCamera.GetProjectMatrix()));
+
+
+		m_EditorComponentManager->Render(context, viewMat, projMat);
 	}
 
 	else

@@ -20,6 +20,11 @@ void engine::Mesh::Destroy()
 {
 }
 
+void engine::Mesh::SetSubMesh(const std::vector<SubMesh>& subMeshes)
+{
+	m_SubMeshes = subMeshes;
+}
+
 void engine::Mesh::Bind(const ComPtr<ID3D11DeviceContext>& context)
 {
 	if (m_VIBuffer)
@@ -44,7 +49,10 @@ void engine::Mesh::Bind(const ComPtr<ID3D11DeviceContext>& context)
 
 void engine::Mesh::Render(const ComPtr<ID3D11DeviceContext>& context)
 {
-	
+	for (auto i = 0; i < m_SubMeshes.size(); ++i)
+	{
+		context->DrawIndexed(m_SubMeshes[i].IndexCount, m_SubMeshes[i].IndexOffset, 0);
+	}
 }
 
 

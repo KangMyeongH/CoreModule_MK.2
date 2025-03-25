@@ -1,4 +1,5 @@
 #pragma once
+#include "core_defines.h"
 #include "Renderer.h"
 
 namespace engine
@@ -8,7 +9,7 @@ namespace engine
 
 namespace engine
 {
-    class MeshRenderer : public Renderer
+    class COREMODULE_API MeshRenderer : public Renderer
     {
 	    DECLARE_REGISTER_COMPONENT(MeshRenderer)
 	    //======================================//
@@ -22,6 +23,9 @@ namespace engine
         //======================================//
         //				 property				//
         //======================================//
+    public:
+        SharedPtr<Mesh> GetMesh() { return m_Mesh; }
+        void SetMesh(const SharedPtr<Mesh>& mesh) { m_Mesh = mesh; }
 
         //======================================//
         //				  method				//
@@ -32,6 +36,9 @@ namespace engine
 
         void Destroy() override;
 
+    protected:
+        void registerComponent(ApplicationMode mode = CLIENT) override;
+
         //======================================//
         //				 serialize				//
         //======================================//
@@ -39,7 +46,7 @@ namespace engine
         void to_json(nlohmann::ordered_json& j) override;
         void from_json(const nlohmann::ordered_json& j) override;
 
-        //======================================//
+	    //======================================//
         //				  fields				//
         //======================================//
     private:

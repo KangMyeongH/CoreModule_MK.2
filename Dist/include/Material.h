@@ -50,6 +50,8 @@ namespace engine
 
         SharedPtr<Shader> GetShader() const { return m_Shader; }
 
+        _wstring GetShaderPath() const { return m_ShaderPath; }
+
         //======================================//
         //				  method				//
         //======================================//
@@ -63,6 +65,13 @@ namespace engine
         SharedPtr<Material> Clone(const SharedPtr<Object>& renderer) const;
 
 	    void Destroy() override;
+
+        //======================================//
+        //				 serialize				//
+        //======================================//
+    public:
+        void to_json(nlohmann::ordered_json& j);
+        void from_json(const nlohmann::ordered_json& j);
 
     private:
         //======================================//

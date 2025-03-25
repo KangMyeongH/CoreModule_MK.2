@@ -1,11 +1,11 @@
 #pragma once
-#include "Component.h"
+#include "Behaviour.h"
 
 namespace engine
 {
     class Material;
 
-    class COREMODULE_API Renderer: public Component
+    class COREMODULE_API Renderer : public Behaviour
     {
     protected:
         //======================================//
@@ -21,8 +21,8 @@ namespace engine
         //				 property				//
         //======================================//
 
-        void SetMaterial(const SharedPtr<Material>& material) { m_Material = material; }
-    	SharedPtr<Material> GetMaterial() { return m_Material; }
+        void SetMaterial(const SharedPtr<Material>& material) { m_Material.push_back(material); }
+    	std::vector<SharedPtr<Material>>& GetMaterials() { return m_Material; }
 
         //======================================//
         //				  method				//
@@ -48,6 +48,6 @@ namespace engine
         //				  fields				//
         //======================================//
 
-        SharedPtr<Material> m_Material;
+        std::vector<SharedPtr<Material>> m_Material;
     };
 }

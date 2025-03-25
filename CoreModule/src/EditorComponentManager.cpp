@@ -16,15 +16,26 @@ engine::editor::EditorComponentManager::~EditorComponentManager()
 
 IMPLEMENT_SINGLETON(engine::editor::EditorComponentManager)
 
-void engine::editor::EditorComponentManager::Render(const ComPtr<ID3D11DeviceContext>& context)
+void engine::editor::EditorComponentManager::Render(const ComPtr<ID3D11DeviceContext>& context, _float4X4 viewMat, _float4X4 projMat)
 {
+
 	for (const auto& renderer : m_Renderers)
 	{
 		if (auto owner = renderer->GetGameObject().lock())
 		{
 			if (owner->IsActive())
 			{
-				renderer->Render(context);
+				auto materials = renderer->GetMaterials();
+				for (auto material : materials)
+				{
+					if (material->GetShader())
+					{
+						material->SetMatrix("g_ViewMatrix", viewMat);
+						material->SetMatrix("g_ProjMatrix", projMat);
+
+						renderer->Render(context);
+					}
+				}
 			}
 		}
 	}

@@ -43,7 +43,7 @@ namespace engine
 
 	struct ConstantBufferDesc
 	{
-		_string		Name;
+		_string		Name;			// CBuffer ¿Ã∏ß
 		_uint		BindPoint;
 		_uint		BufferSize;
 
@@ -81,6 +81,7 @@ namespace engine
 	struct TextureRuntime
 	{
 		ComPtr<ID3D11ShaderResourceView> 	Texture;
+		std::wstring						TexturePath;
 		UINT								BindPoint = 0;
 	};
 
@@ -396,5 +397,32 @@ namespace engine
 		_float3 Position;
 		_float3 Normal;
 		_float2 TexCoord0;
+		_float3 Tangent;
+	};
+
+	struct VTX_SKINNED_MESH
+	{
+		_float3 			Position;
+		_float3 			Normal;
+		_float2 			TexCoord0;
+		_float3 			Tangent;
+
+		DirectX::XMUINT4 	BoneIndices;
+		_float4 			BoneWeight;
+	};
+
+	struct Bone
+	{
+		_string Name;
+		_int 	ParentIndex;
+
+		_float4X4 BindPoseMatrix;
+	};
+
+	struct Skeleton
+	{
+		std::vector<Bone> Bones;
+
+		std::unordered_map<_string, _int> BoneIndexMap;
 	};
 }

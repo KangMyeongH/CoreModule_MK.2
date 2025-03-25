@@ -23,3 +23,5 @@
 #include "TextureUI.h"
 #include "UIManager.h"
 #include "LoadManager.h"
+#include "Mesh.h"
+#include "MeshRenderer.h"
