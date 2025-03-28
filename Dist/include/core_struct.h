@@ -357,7 +357,6 @@ namespace engine
 		_uint IndexOffset;	// Ω√¿€ ¿Œµ¶Ω∫
 		_uint IndexCount;	// ¿Œµ¶Ω∫ ∞≥ºˆ
 		_uint MaterialIndex;
-
 	};
 
 	struct VIBuffer
@@ -398,5 +397,31 @@ namespace engine
 		_float3 Normal;
 		_float2 TexCoord0;
 		_float3 Tangent;
+	};
+
+	struct VTX_SKINNED_MESH
+	{
+		_float3 			Position;
+		_float3 			Normal;
+		_float2 			TexCoord0;
+		_float3 			Tangent;
+
+		DirectX::XMUINT4 	BoneIndices;
+		_float4 			BoneWeight;
+	};
+
+	struct Bone
+	{
+		_string Name;
+		_int 	ParentIndex;
+
+		_float4X4 BindPoseMatrix;
+	};
+
+	struct Skeleton
+	{
+		std::vector<Bone> Bones;
+
+		std::unordered_map<_string, _int> BoneIndexMap;
 	};
 }

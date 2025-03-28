@@ -23,6 +23,9 @@ namespace engine
         _bool LoadSceneData(const _wstring& path);
         _bool SaveSceneData();
 
+    	_bool LoadMaterialData(const SharedPtr<Material>& material, const _wstring& path);
+        _bool SaveMaterialData(const SharedPtr<Material>& material, const _wstring& path);
+
         void LoadHierarchyToScene();
 
         _wstring OpenFileDialog();

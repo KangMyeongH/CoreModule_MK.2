@@ -483,8 +483,10 @@ void engine::Material::Destroy()
 
 void engine::Material::to_json(nlohmann::ordered_json& j)
 {
+	std::string shaderPath = WStringToString(m_ShaderPath);
+
 	j = nlohmann::ordered_json{
-		{"shaderPath", m_ShaderPath},
+		{"shaderPath", shaderPath},
 		{"textureMaps", nlohmann::ordered_json::array() },
 		{"properties", nlohmann::ordered_json::array()}
 	};
@@ -493,7 +495,7 @@ void engine::Material::to_json(nlohmann::ordered_json& j)
 	{
 		for (auto& textureInfo : reflectResult.Textures)
 		{
-			std::wstring texturePath;
+			std::string texturePath;
 
 			for (auto& textureRuntime : m_Shader->Textures)
 			{
@@ -501,7 +503,8 @@ void engine::Material::to_json(nlohmann::ordered_json& j)
 
 				if (it != textureRuntime.end())
 				{
-					texturePath = it->second->TexturePath;
+					texturePath = WStringToString(it->second->TexturePath);
+
 					nlohmann::ordered_json textureJson = nlohmann::ordered_json{
 						{textureInfo.first.c_str(), texturePath}
 					};
@@ -529,21 +532,56 @@ void engine::Material::to_json(nlohmann::ordered_json& j)
 						nlohmann::ordered_json propertyJson = nlohmann::ordered_json{
 							{var.first.c_str(), value}
 						};
+
+						j["properties"].push_back(propertyJson);
 					}
 
 					else if (var.second.Size == sizeof(_float2))
 					{
 						_float2 value = GetFloat2(var.first);
+						_string xName = var.first + "_x";
+						_string yName = var.first + "_y";
+
+						nlohmann::ordered_json propertyJson = nlohmann::ordered_json{
+							{xName.c_str(), value.x},
+							{yName.c_str(), value.y}
+						};
+
+						j["properties"].push_back(propertyJson);
 					}
 
 					else if (var.second.Size == sizeof(_float3))
 					{
+						_float3 value = GetFloat3(var.first);
+						_string xName = var.first + "_x";
+						_string yName = var.first + "_y";
+						_string zName = var.first + "_z";
 
+						nlohmann::ordered_json propertyJson = nlohmann::ordered_json{
+							{xName.c_str(), value.x},
+							{yName.c_str(), value.y},
+							{zName.c_str(), value.z}
+						};
+
+						j["properties"].push_back(propertyJson);
 					}
 
 					else if (var.second.Size == sizeof(_float4))
 					{
+						_float4 value = GetFloat4(var.first);
+						_string xName = var.first + "_x";
+						_string yName = var.first + "_y";
+						_string zName = var.first + "_z";
+						_string wName = var.first + "_w";
 
+						nlohmann::ordered_json propertyJson = nlohmann::ordered_json{
+							{xName.c_str(), value.x},
+							{yName.c_str(), value.y},
+							{zName.c_str(), value.z},
+							{wName.c_str(), value.w}
+						};
+
+						j["properties"].push_back(propertyJson);
 					}
 				}
 			}
@@ -553,5 +591,87 @@ void engine::Material::to_json(nlohmann::ordered_json& j)
 
 void engine::Material::from_json(const nlohmann::ordered_json& j)
 {
+	_string shaderPath = j.value("shaderPath", "");
+	m_ShaderPath = StringToWString(shaderPath);
+	LoadShader(m_ShaderPath);
 
+	const auto& textureArray = j["textureMaps"];
+	for (const auto& texJson : textureArray)
+	{
+		for (auto it = texJson.begin(); it != texJson.end(); ++it)
+		{
+			_string texName = it.key();
+			_wstring texPath = StringToWString(it.value());
+
+			SetTexture(texName, texPath);
+		}
+	}
+
+	std::unordered_map<std::string, std::vector<float>> floatProperties;
+
+	const auto& propertyArray = j["properties"];
+	for (const auto& propJson : propertyArray)
+	{
+		for (auto it = propJson.begin(); it != propJson.end(); ++it)
+		{
+			const std::string& key = it.key();
+			float value = it.value();
+
+			size_t pos = key.rfind('_');
+			if (pos == std::string::npos) continue;;
+
+			std::string baseName = key.substr(0, pos);
+			std::string suffix = key.substr(pos + 1);
+
+			int index = -1;
+			if (suffix == "x")
+			{
+				index = 0;
+			}
+
+			else if (suffix == "y")
+			{
+				index = 1;
+			}
+
+			else if (suffix == "z")
+			{
+				index = 2;
+			}
+
+			else if (suffix == "w")
+			{
+				index = 3;
+			}
+			else
+				continue;
+
+			auto& vec = floatProperties[baseName];
+			if (vec.size() < index + 1)
+			{
+				vec.resize(index + 1);
+			}
+			vec[index] = value;
+		}
+	}
+
+	for (const auto& property : floatProperties)
+	{
+		auto& name = property.first;
+		auto& values = property.second;
+
+		switch (values.size())
+		{
+		case 1: SetFloat(name, values[0]);
+			break;
+		case 2: SetFloat2(name, { values[0], values[1] });
+			break;
+		case 3: SetFloat3(name, { values[0], values[1], values[2] });
+			break;
+		case 4: SetFloat4(name, { values[0], values[1], values[2], values[3] });
+			break;
+		default: 
+			break;
+		}
+	}
 }

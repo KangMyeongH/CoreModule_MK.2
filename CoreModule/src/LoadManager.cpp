@@ -1,6 +1,8 @@
 #include "LoadManager.h"
 #include <ShObjIdl.h>
 #include "Hierarchy.h"
+#include "Material.h"
+#include "Renderer.h"
 #include "Scene.h"
 #include "TimeManager.h"
 
@@ -26,6 +28,15 @@ engine::_bool engine::LoadManager::LoadProject(const std::string& path)
 
 engine::_bool engine::LoadManager::CreateNewScene(const _string& sceneName, const _wstring& path)
 {
+	if (path.empty())
+	{
+		return false;
+	}
+
+	std::ifstream inFile(path);
+
+	if (!inFile.is_open())
+
 	return false;
 }
 
@@ -55,7 +66,7 @@ engine::_bool engine::LoadManager::SaveSceneData()
 	nlohmann::ordered_json j = editor::Hierarchy::GetInstance().ToJson();
 	//nlohmann::ordered_json j = GameEngine::Scene::GetInstance().To_Json();
 
-	std::wstring basePath = L"../Client/Assets/Scenes/";
+	std::wstring basePath = L"..\\Client\\Assets\\Scenes\\";
 	std::wstring sceneName = StringToWString(editor::Hierarchy::GetInstance().GetCurrentSceneName());
 	std::wstring fullPath = basePath + sceneName + L".Scene";
 
@@ -68,6 +79,50 @@ engine::_bool engine::LoadManager::SaveSceneData()
 	outFile.close();
 
 	return false;
+}
+
+engine::_bool engine::LoadManager::LoadMaterialData(const SharedPtr<Material>& material, const _wstring& path)
+{
+	if (path.empty())
+	{
+		return false;
+	}
+
+	std::ifstream inFile(path);
+
+	if (!inFile.is_open())
+	{
+		return false;
+	}
+	nlohmann::ordered_json j;
+	inFile >> j;
+
+	material->from_json(j);
+
+	material->SetPath(path);
+
+	return true;
+}
+
+engine::_bool engine::LoadManager::SaveMaterialData(const SharedPtr<Material>& material, const _wstring& path)
+{
+	nlohmann::ordered_json j;
+	material->to_json(j);
+
+	auto renderer = std::static_pointer_cast<Renderer>(material->GetOwner());
+	_wstring materialName = StringToWString(renderer->GetGameObject().lock()->GetName());
+	std::wstring fullPath = path + L"\\" + materialName + L".mat";
+
+	std::ofstream outFile(fullPath, std::ios::trunc);
+	if (!outFile.is_open())
+	{
+		return false;
+	}
+
+	outFile << j.dump(4);
+	outFile.close();
+
+	return true;
 }
 
 void engine::LoadManager::LoadHierarchyToScene()

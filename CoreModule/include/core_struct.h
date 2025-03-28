@@ -357,7 +357,6 @@ namespace engine
 		_uint IndexOffset;	// 시작 인덱스
 		_uint IndexCount;	// 인덱스 개수
 		_uint MaterialIndex;
-
 	};
 
 	struct VIBuffer

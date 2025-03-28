@@ -52,6 +52,9 @@ namespace engine
 
         _wstring GetShaderPath() const { return m_ShaderPath; }
 
+        void SetPath(const _wstring& path) { m_MaterialPath = path; }
+        _wstring GetPath() const { return m_MaterialPath; }
+
         //======================================//
         //				  method				//
         //======================================//
@@ -81,5 +84,6 @@ namespace engine
         WeakPtr<Object> 					m_Owner;
         SharedPtr<Shader>           		m_Shader;
         _wstring                            m_ShaderPath;
+        _wstring                            m_MaterialPath;
     };
 }

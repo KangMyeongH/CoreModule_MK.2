@@ -15,13 +15,28 @@ engine::D3D11Manager::~D3D11Manager()
 
 }
 
-engine::ComPtr<ID3D11ShaderResourceView> engine::D3D11Manager::GetTexture(_wstring path)
+engine::ComPtr<ID3D11ShaderResourceView> engine::D3D11Manager::GetTexture(const _wstring& path)
 {
 	const auto it = m_TextureMap.find(path);
 
 	if (it != m_TextureMap.end())
 	{
 		return it->second;
+	}
+
+	else
+	{
+		return nullptr;
+	}
+}
+
+engine::SharedPtr<engine::Shader> engine::D3D11Manager::GetShader(const _wstring& path)
+{
+	const auto it = m_ShaderMap.find(path);
+
+	if (it != m_ShaderMap.end())
+	{
+		return it->second->Clone(m_Device.Get());
 	}
 
 	else
@@ -207,6 +222,143 @@ HRESULT engine::D3D11Manager::CreateTexture(const _wstring& path)
 	m_TextureMap.emplace(path, pSRV);
 
 	return S_OK;
+}
+
+HRESULT engine::D3D11Manager::CreateShader(const _wstring& path)
+{
+	if (FileExists(path))
+	{
+		const auto it = m_ShaderMap.find(path);
+
+		if (it != m_ShaderMap.end())
+		{
+			return S_OK;
+		}
+
+		SharedPtr<Shader> newShader = std::make_shared<Shader>();
+
+		newShader->Path = path;
+
+		std::vector<std::pair<std::string, std::string>> entryPoints = {
+		{ "VS_Main", "vs_5_0" },
+		{ "PS_Main", "ps_5_0" },
+		{ "GS_Main", "gs_5_0" },
+		{ "CS_Main", "cs_5_0" },
+		{ "HS_Main", "hs_5_0" },
+		{ "DS_Main", "ds_5_0" }
+		};
+
+		for (auto& ep : entryPoints)
+		{
+			const _string& entryName = ep.first;
+			const _string& shaderModel = ep.second;
+
+			ComPtr<ID3DBlob> shaderBlob;
+			HRESULT hr = compileShaderFromFile(path, entryName, shaderModel, shaderBlob);
+
+			if (SUCCEEDED(hr))
+			{
+				ComPtr<ID3D11ShaderReflection> reflector;
+				D3DReflect(shaderBlob->GetBufferPointer(), shaderBlob->GetBufferSize(), IID_ID3D11ShaderReflection, reinterpret_cast<void**>(reflector.GetAddressOf()));
+
+				if (shaderModel.find("vs_") == 0)
+				{
+					ComPtr<ID3D11VertexShader> vs;
+					hr = m_Device->CreateVertexShader(shaderBlob->GetBufferPointer(), shaderBlob->GetBufferSize(), nullptr, vs.GetAddressOf());
+
+					if (SUCCEEDED(hr))
+					{
+						newShader->VertexShader = vs;
+
+						ComPtr<ID3D11InputLayout> input;
+						std::vector<D3D11_INPUT_ELEMENT_DESC> inputLayoutDesc;
+
+						compileInputLayoutFromReflector(&inputLayoutDesc, reflector);
+
+						hr = m_Device->CreateInputLayout(&inputLayoutDesc[0], static_cast<UINT>(inputLayoutDesc.size()), shaderBlob->GetBufferPointer(), shaderBlob->GetBufferSize(), input.GetAddressOf());
+
+						if (SUCCEEDED(hr))
+						{
+							newShader->InputLayout = input;
+						}
+
+						reflectBufferFromReflector(reflector, newShader->Reflects[VS]);
+						//createConstantBuffer(newShader->Reflects[VS], newShader->CBuffers[VS]);
+					}
+				}
+
+				else if (shaderModel.find("ps_") == 0)
+				{
+					ComPtr<ID3D11PixelShader> ps;
+					hr = m_Device->CreatePixelShader(shaderBlob->GetBufferPointer(), shaderBlob->GetBufferSize(), nullptr, ps.GetAddressOf());
+
+					if (SUCCEEDED(hr))
+					{
+						newShader->PixelShader = ps;
+						reflectBufferFromReflector(reflector, newShader->Reflects[PS]);
+						//createConstantBuffer(newShader->Reflects[PS], newShader->CBuffers[PS]);
+					}
+				}
+
+				else if (shaderModel.find("gs_") == 0)
+				{
+					ComPtr<ID3D11GeometryShader> gs;
+					hr = m_Device->CreateGeometryShader(shaderBlob->GetBufferPointer(), shaderBlob->GetBufferSize(), nullptr, gs.GetAddressOf());
+
+					if (SUCCEEDED(hr))
+					{
+						newShader->GeometryShader = gs;
+						reflectBufferFromReflector(reflector, newShader->Reflects[GS]);
+						//createConstantBuffer(newShader->Reflects[GS], newShader->CBuffers[GS]);
+					}
+				}
+
+				else if (shaderModel.find("cs_") == 0)
+				{
+					ComPtr<ID3D11ComputeShader> cs;
+					hr = m_Device->CreateComputeShader(shaderBlob->GetBufferPointer(), shaderBlob->GetBufferSize(), nullptr, cs.GetAddressOf());
+
+					if (SUCCEEDED(hr))
+					{
+						newShader->ComputeShader = cs;
+						reflectBufferFromReflector(reflector, newShader->Reflects[CS]);
+						//createConstantBuffer(newShader->Reflects[CS], newShader->CBuffers[CS]);
+					}
+				}
+
+				else if (shaderModel.find("hs_") == 0)
+				{
+					ComPtr<ID3D11HullShader> hs;
+					hr = m_Device->CreateHullShader(shaderBlob->GetBufferPointer(), shaderBlob->GetBufferSize(), nullptr, hs.GetAddressOf());
+
+					if (SUCCEEDED(hr))
+					{
+						newShader->HullShader = hs;
+						reflectBufferFromReflector(reflector, newShader->Reflects[HS]);
+						//createConstantBuffer(newShader->Reflects[HS], newShader->CBuffers[HS]);
+					}
+				}
+
+				else if (shaderModel.find("ds_") == 0)
+				{
+					ComPtr<ID3D11DomainShader> ds;
+					hr = m_Device->CreateDomainShader(shaderBlob->GetBufferPointer(), shaderBlob->GetBufferSize(), nullptr, ds.GetAddressOf());
+
+					if (SUCCEEDED(hr))
+					{
+						newShader->DomainShader = ds;
+						reflectBufferFromReflector(reflector, newShader->Reflects[DS]);
+						//createConstantBuffer(newShader->Reflects[DS], newShader->CBuffers[DS]);
+					}
+				}
+			}
+		}
+
+		m_ShaderMap.emplace(path, newShader);
+		return S_OK;
+	}
+
+	return E_FAIL;
 }
 
 HRESULT engine::D3D11Manager::CreateShader(const _wstring& path, SharedPtr<Shader>& shader)

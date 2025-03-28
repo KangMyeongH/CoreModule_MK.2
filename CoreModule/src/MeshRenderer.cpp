@@ -33,7 +33,7 @@ void engine::MeshRenderer::Bind(const ComPtr<ID3D11DeviceContext>& context)
 void engine::MeshRenderer::Render(const ComPtr<ID3D11DeviceContext>& context)
 {
 	{
-		// TODO : Sampler는 임시임 지워야함.
+		// TODO : 아래는 임시코드 임 지워야함.
 		//=============================================================
 		D3D11_SAMPLER_DESC samplerDesc = {};
 		samplerDesc.Filter = D3D11_FILTER_ANISOTROPIC;           // Anisotropic 필터링 사용

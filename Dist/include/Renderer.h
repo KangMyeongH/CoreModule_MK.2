@@ -47,7 +47,7 @@ namespace engine
         //======================================//
         //				  fields				//
         //======================================//
-
-        std::vector<SharedPtr<Material>> m_Material;
+    protected:
+        std::vector<SharedPtr<Material>> 	m_Material;
     };
 }
