@@ -42,6 +42,8 @@ namespace engine
             ComPtr<ID3D11ShaderResourceView> GetSceneTexture() const { return m_SceneResourceView; }
             ComPtr<ID3D11ShaderResourceView> GetGameTexture() const { return m_GameResourceView; }
 
+            EditorCamera& GetEditorCamera() { return m_EditorCamera; }
+
         //======================================//
         //				  method				//
         //======================================//

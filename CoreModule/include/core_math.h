@@ -498,54 +498,48 @@ namespace engine
 
 		Vector3 EulerAngles() const
 		{
+			_matrix rot = DirectX::XMMatrixRotationQuaternion(ToVector());
+
+			_float yaw, pitch, roll;
+
 			Vector3 angles;
 
-			// x축 회전 (pitch)
-			_float sinrCosp = 2.0f * (Value.w * Value.x + Value.y * Value.z);
-			_float cosrCosp = 1.0f - 2.0f * (Value.x * Value.x + Value.y * Value.y);
+			pitch = std::asin(-rot.r[2].m128_f32[1]);
 
-			angles.Value.x = atan2f(sinrCosp, cosrCosp);
-
-			// y축 회전 (yaw)
-			_float sinp = 2.0f * (Value.w * Value.y - Value.z * Value.x);
-
-			if (fabs(sinp) >= 1.0f)
+			if (std::cos(pitch) > 0.0001f)
 			{
-				angles.Value.y = copysignf(DirectX::XM_PI / 2.0f, sinp); // 특이점: 90도 이상
+				yaw = std::atan2(rot.r[2].m128_f32[0], rot.r[2].m128_f32[2]); // m31, m33
+				roll = std::atan2(rot.r[0].m128_f32[1], rot.r[1].m128_f32[1]); // m12, m22
 			}
 
 			else
 			{
-				angles.Value.y = asinf(sinp);
+				// 짐벌락 발생 시 yaw와 roll은 서로 얽힘
+				yaw = std::atan2(-rot.r[1].m128_f32[0], rot.r[0].m128_f32[0]); // -m21, m11
+				roll = 0;
 			}
 
-			// z축 회전 (roll)
-			_float sinyCosp = 2.0f * (Value.w * Value.z + Value.x * Value.y);
-			_float cosyCosp = 1.0f - 2.0f * (Value.y * Value.y + Value.z * Value.z);
-			angles.Value.z = atan2f(sinyCosp, cosyCosp);
+
+			_float sinP = 2.0f * (Value.w * Value.x - Value.y * Value.z);
+
+			if (sinP > 1.0f)
+			{
+				sinP = 1.0f;
+			}
+
+			if (sinP < -1.f)
+			{
+				sinP = -1.f;
+			}
+
+
 
 			// 결과를 라디안에서 도 단위로 변환
-			angles.Value.x = DirectX::XMConvertToDegrees(angles.Value.x);
-			angles.Value.y = DirectX::XMConvertToDegrees(angles.Value.y);
-			angles.Value.z = DirectX::XMConvertToDegrees(angles.Value.z);
+			angles.Value.x = DirectX::XMConvertToDegrees(pitch);
+			angles.Value.y = DirectX::XMConvertToDegrees(yaw);
+			angles.Value.z = DirectX::XMConvertToDegrees(roll);
 
 			return angles;
-			//const _vector q = ToVector();
-			//const _matrix m = DirectX::XMMatrixRotationQuaternion(q);
-
-			//_float4X4 mf;
-
-			//XMStoreFloat4x4(&mf, m);
-
-			//_float pitch = std::atan2(-mf._32, mf._33);
-			//_float yaw = std::asin(mf._31);
-			//_float roll = std::atan2(-mf._21, mf._11);
-
-			//pitch = RadianToDegree(pitch);
-			//yaw = RadianToDegree(yaw);
-			//roll = RadianToDegree(roll);
-
-			//return Vector3{ pitch, yaw, roll };
 		}
 
 		//======================================//
@@ -611,17 +605,17 @@ namespace engine
 
 		static Quaternion Euler(const _float xDegree, const _float yDegree, const _float zDegree)
 		{
-			// TODO : Euler to quaternion에서 회전축 곱해주는 순서 바꿔야함 !!!!
-
 			const _float pitch = DirectX::XMConvertToRadians(xDegree);
 			const _float yaw = DirectX::XMConvertToRadians(yDegree);
 			const _float roll = DirectX::XMConvertToRadians(zDegree);
 
-			_vector qPitch 	= DirectX::XMQuaternionRotationAxis(DirectX::XMVectorSet(1.0f, 0.0f, 0.0f, 0.0f), pitch);
-			_vector qYaw 	= DirectX::XMQuaternionRotationAxis(DirectX::XMVectorSet(0.0f, 1.0f, 0.0f, 0.0f), yaw);
-			_vector qRoll 	= DirectX::XMQuaternionRotationAxis(DirectX::XMVectorSet(0.0f, 0.0f, 1.0f, 0.0f), roll);
+			//_vector qPitch 	= DirectX::XMQuaternionRotationAxis(DirectX::XMVectorSet(1.0f, 0.0f, 0.0f, 0.0f), pitch);
+			//_vector qYaw 	= DirectX::XMQuaternionRotationAxis(DirectX::XMVectorSet(0.0f, 1.0f, 0.0f, 0.0f), yaw);
+			//_vector qRoll 	= DirectX::XMQuaternionRotationAxis(DirectX::XMVectorSet(0.0f, 0.0f, 1.0f, 0.0f), roll);
 
-			_vector q = DirectX::XMQuaternionMultiply(qYaw, DirectX::XMQuaternionMultiply(qPitch, qRoll));
+			
+			_vector q = DirectX::XMQuaternionRotationRollPitchYaw(pitch, yaw, roll);
+			//_vector q = DirectX::XMQuaternionMultiply(qYaw, DirectX::XMQuaternionMultiply(qPitch, qRoll));
 
 			return FromVector(q);
 		}

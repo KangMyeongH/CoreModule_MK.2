@@ -5,7 +5,7 @@ namespace engine
 {
     namespace editor
     {
-        class EditorCamera
+        class COREMODULE_API EditorCamera
         {
             //======================================//
             //				constructor				//
@@ -45,8 +45,8 @@ namespace engine
             //				  fields				//
             //======================================//
         private:
-            Vector3 m_Position;
-            Vector3 m_Rotation;
+            Vector3 	m_Position;
+            Quaternion 	m_Rotation;
 
             _float	m_FiledOfView;
             _float	m_AspectRatio;
