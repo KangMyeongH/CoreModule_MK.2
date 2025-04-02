@@ -53,26 +53,20 @@ void engine::editor::EditorCamera::Move(const Vector3& dir, _float distance)
 
 void engine::editor::EditorCamera::RotateInView(_float xAmount, _float yAmount)
 {
-	_vector qPitch = DirectX::XMQuaternionRotationAxis(DirectX::XMVectorSet(0.f, 1.f, 0.f, 0.f), xAmount); // X축 회전
-	_vector qYaw = DirectX::XMQuaternionRotationAxis(DirectX::XMVectorSet(1.f, 0.f, 0.f, 0.f), yAmount);
+	_matrix rotMatrix = DirectX::XMMatrixRotationQuaternion(m_Rotation.ToVector());
+
+	_vector right = rotMatrix.r[0];
+	_vector up = rotMatrix.r[1];
+
+	_vector qPitch = DirectX::XMQuaternionRotationAxis(up, xAmount); // X축 회전
+	_vector qYaw = DirectX::XMQuaternionRotationAxis(right, yAmount);
 
 	m_Rotation = Quaternion::FromVector(DirectX::XMQuaternionMultiply(m_Rotation.ToVector(), DirectX::XMQuaternionMultiply(qPitch, qYaw)));
 
-	_matrix rotMatrix = DirectX::XMMatrixRotationQuaternion(m_Rotation.ToVector());
-	float yaw; 
-	float roll;
-	float pitch = asinf(-rotMatrix.r[2].m128_f32[1]); // -m13
-	if (cosf(pitch) > 0.0001f) {
-		yaw = atan2f(rotMatrix.r[2].m128_f32[0], rotMatrix.r[2].m128_f32[2]); // m11, m33
-		roll = atan2f(rotMatrix.r[0].m128_f32[1], rotMatrix.r[1].m128_f32[1]); // m21, m22
-	}
-	else {
-		// 짐벌락(gimbal lock) 상태
-		yaw = atan2f(-rotMatrix.r[1].m128_f32[0], rotMatrix.r[0].m128_f32[0]); // -m21, m11
-		roll = 0;
-	}
+	Vector3 angles = m_Rotation.EulerAngles();
+	angles.Value.z = 0.f;
 
-	roll = 0.f;
+	m_Rotation = Quaternion::Euler(angles);
 }
 
 void engine::editor::EditorCamera::Rotate(_float y, _float x)

@@ -2,6 +2,7 @@
 
 #include "Camera.h"
 #include "D3D11Manager.h"
+#include "EditorCore.h"
 #include "GameObject.h"
 #include "Material.h"
 #include "Renderer.h"
@@ -18,7 +19,8 @@ IMPLEMENT_SINGLETON(engine::editor::EditorComponentManager)
 
 void engine::editor::EditorComponentManager::Render(const ComPtr<ID3D11DeviceContext>& context, _float4X4 viewMat, _float4X4 projMat)
 {
-
+	Vector3 camPos = EditorCore::GetInstance().GetEditorCamera().GetCameraPos();
+	_float4 finalCamPos = { camPos.Value.x, camPos.Value.y, camPos.Value.z, 1.f };
 	for (const auto& renderer : m_Renderers)
 	{
 		if (auto owner = renderer->GetGameObject().lock())
@@ -28,10 +30,11 @@ void engine::editor::EditorComponentManager::Render(const ComPtr<ID3D11DeviceCon
 				auto materials = renderer->GetMaterials();
 				for (auto material : materials)
 				{
-					if (material->GetShader())
+					if (material.second->GetShader())
 					{
-						material->SetMatrix("g_ViewMatrix", viewMat);
-						material->SetMatrix("g_ProjMatrix", projMat);
+						material.second->SetMatrix("g_ViewMatrix", viewMat);
+						material.second->SetMatrix("g_ProjMatrix", projMat);
+						material.second->SetFloat4("CameraPosition", finalCamPos);
 
 						renderer->Render(context);
 					}

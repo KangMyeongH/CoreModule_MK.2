@@ -30,11 +30,11 @@ void engine::Transform::SetParent(const SharedPtr<Transform>& parent)
 			oldParent->detachChild(std::static_pointer_cast<Transform>(shared_from_this()));
 		}
 
-		m_Parent = parent;
-
 		m_LocalPosition = Position();
 		m_LocalRotation = Rotation();
 		m_LocalScale = Scale();
+
+		m_Parent = parent;
 
 		if (parent != nullptr)
 		{
@@ -43,7 +43,8 @@ void engine::Transform::SetParent(const SharedPtr<Transform>& parent)
 			_matrix parentWorldMat = parent->GetWorldMatrix();
 			_matrix parentInverseMatrix = XMMatrixInverse(nullptr, parentWorldMat);
 
-			_matrix localMat = XMMatrixMultiply(GetWorldMatrix(), parentInverseMatrix);
+			//_matrix localMat = XMMatrixMultiply(GetWorldMatrix(), parentInverseMatrix);
+			_matrix localMat = GetWorldMatrix() * parentInverseMatrix;
 
 			_vector localScale, localRot, localPosition;
 			XMMatrixDecompose(&localScale, &localRot, &localPosition, localMat);
@@ -134,7 +135,7 @@ void engine::Transform::updateMatrixIfNeeded() const
 	if (const auto parent = m_Parent.lock())
 	{
 		const _matrix matParent = parent->GetWorldMatrix();
-		const _matrix matWorld 	= XMMatrixMultiply(matLocal, matParent);
+		const _matrix matWorld 	= matLocal * matParent;
 
 		_vector wScale, wRot, wTrans;
 		XMMatrixDecompose(&wScale, &wRot, &wTrans, matWorld);

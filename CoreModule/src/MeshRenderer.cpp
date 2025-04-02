@@ -56,21 +56,21 @@ void engine::MeshRenderer::Render(const ComPtr<ID3D11DeviceContext>& context)
 
 		for (auto material : m_Material)
 		{
-			if (material->GetShader())
+			if (material.second->GetShader())
 			{
-				material->SetSampler("Sampler", sampler);
-				material->SetFloat4("DirLight_Dir", _float4(1.f, -1.f, 1.f, 0.f));
-				material->SetColor("DirLight_Diffuse", _float4(1.f, 1.f, 1.f, 1.f));
-				material->SetColor("DirLight_Ambient", _float4(1.f, 1.f, 1.f, 1.f));
-				material->SetColor("DirLight_Specular", _float4(1.f, 1.f, 1.f, 1.f));
-				material->SetFloat4("CameraPosition", _float4(0.f, 10.f, -6.f, 1.f));
+				material.second->SetSampler("Sampler", sampler);
+				material.second->SetFloat4("DirLight_Dir", _float4(1.f, -1.f, 1.f, 0.f));
+				material.second->SetColor("DirLight_Diffuse", _float4(1.f, 1.f, 1.f, 1.f));
+				material.second->SetColor("DirLight_Ambient", _float4(1.f, 1.f, 1.f, 1.f));
+				material.second->SetColor("DirLight_Specular", _float4(1.f, 1.f, 1.f, 1.f));
+				//material->SetFloat4("CameraPosition", _float4(0.f, 10.f, -6.f, 1.f));
 
-				material->SetColor("Ambient", _float4(0.3f, 0.3f, 0.3f, 0.3f));
-				material->SetColor("Specular", _float4(1.f, 1.f, 1.f, 1.f));
+				material.second->SetColor("Ambient", _float4(0.8f, 0.8f, 0.8f, 0.8f));
+				material.second->SetColor("Specular", _float4(1.f, 1.f, 1.f, 1.f));
 				_float4X4 worldMat;
 				XMStoreFloat4x4(&worldMat, XMMatrixTranspose(GetTransform()->GetWorldMatrix()));
 
-				material->SetMatrix("g_WorldMatrix", worldMat);
+				material.second->SetMatrix("g_WorldMatrix", worldMat);
 			}
 		}
 		//=============================================================

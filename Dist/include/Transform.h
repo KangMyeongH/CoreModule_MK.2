@@ -133,8 +133,8 @@ namespace engine
 
 				_matrix localMat = XMMatrixMultiply(matWorld, XMMatrixInverse(nullptr, parentWorld));
 
-				_vector localScale, localRot;
-				XMMatrixDecompose(&localScale, &localRot, nullptr, localMat);
+				_vector localScale, localRot, localTrans;
+				XMMatrixDecompose(&localScale, &localRot, &localTrans, localMat);
 
 				SetLocalRotation(Quaternion::FromVector(localRot));
 				SetLocalScale(Vector3::FromVector(localScale));

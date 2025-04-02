@@ -213,6 +213,9 @@
     <ClInclude Include="include\MeshRenderer.h">
       <Filter>00. System\Graphic\Renderer</Filter>
     </ClInclude>
+    <ClInclude Include="include\SkinnedMeshRenderer.h">
+      <Filter>00. System\Graphic\Renderer</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\GameObject.cpp">
@@ -303,6 +306,9 @@
       <Filter>00. System\Graphic\Mesh</Filter>
     </ClCompile>
     <ClCompile Include="src\MeshRenderer.cpp">
+      <Filter>00. System\Graphic\Renderer</Filter>
+    </ClCompile>
+    <ClCompile Include="src\SkinnedMeshRenderer.cpp">
       <Filter>00. System\Graphic\Renderer</Filter>
     </ClCompile>
   </ItemGroup>

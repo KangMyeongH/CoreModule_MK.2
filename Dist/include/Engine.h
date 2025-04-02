@@ -25,3 +25,4 @@
 #include "LoadManager.h"
 #include "Mesh.h"
 #include "MeshRenderer.h"
+#include "SkinnedMeshRenderer.h"

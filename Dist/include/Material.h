@@ -39,6 +39,8 @@ namespace engine
         void SetColor(const _string& name, _float4 value);
         _float4 GetColor(const _string& name);
 
+        void SetValue(const std::vector<_float4X4>& value);
+
         void SetTexture(const _string& name, const ComPtr<ID3D11ShaderResourceView>& texture);
 
         void SetTexture(const _string& name, const _wstring& path);

@@ -1,7 +1,10 @@
 #include "LoadManager.h"
 #include <ShObjIdl.h>
+
+#include "EditorComponentManager.h"
 #include "Hierarchy.h"
 #include "Material.h"
+#include "MeshRenderer.h"
 #include "Renderer.h"
 #include "Scene.h"
 #include "TimeManager.h"
@@ -110,7 +113,7 @@ engine::_bool engine::LoadManager::SaveMaterialData(const SharedPtr<Material>& m
 	material->to_json(j);
 
 	auto renderer = std::static_pointer_cast<Renderer>(material->GetOwner());
-	_wstring materialName = StringToWString(renderer->GetGameObject().lock()->GetName());
+	_wstring materialName = StringToWString(material->GetName());
 	std::wstring fullPath = path + L"\\" + materialName + L".mat";
 
 	std::ofstream outFile(fullPath, std::ios::trunc);
@@ -202,6 +205,104 @@ engine::_wstring engine::LoadManager::BrowseFolderDialog()
 	}
 	CoUninitialize();
 	return L""; // 취소 시 빈 문자열 반환
+}
+
+engine::_bool engine::LoadManager::SaveStaticMesh(std::ofstream& ofs, const StaticMeshData& meshData)
+{
+	//std::ofstream ofs(path, std::ios::binary);
+	//if (!ofs.is_open())
+	//{
+	//	return false;
+	//}
+
+	//FileHeader fh;
+	//memcpy(fh.magic, "MESH", 4);
+	//fh.version = 1;
+	//ofs.write(reinterpret_cast<char*>(&fh), sizeof(fh));
+
+
+
+	MeshInfo md;
+	md.vertexCount = static_cast<uint32_t>(meshData.Vertices.size());
+	md.indexCount = static_cast<uint32_t>(meshData.Indices.size());
+	md.materialCount = static_cast<uint32_t>(meshData.Materials.size());
+	md.subMeshCount = static_cast<uint32_t>(meshData.SubMeshes.size());
+
+	ofs.write(reinterpret_cast<char*>(&md), sizeof(md));
+
+	if (!meshData.Vertices.empty())
+	{
+		ofs.write(reinterpret_cast<const char*>(!meshData.Vertices.data()), sizeof(VTX_MESH) * !meshData.Vertices.size());
+	}
+
+	if (!meshData.Indices.empty())
+	{
+		ofs.write(reinterpret_cast<const char*>(meshData.Indices.data()), sizeof(uint32_t) * meshData.Indices.size());
+	}
+
+	if (!meshData.Materials.empty())
+	{
+		SaveMaterial(ofs, meshData.Materials);
+	}
+
+	if (!meshData.SubMeshes.empty())
+	{
+		SaveSubMesh(ofs, meshData.SubMeshes);
+	}
+
+	return true;
+}
+
+engine::_bool engine::LoadManager::SaveMaterial(std::ofstream& ofs, const std::vector<MaterialData>& material)
+{
+	for (auto& md : material)
+	{
+		MaterialInfo mi;
+		mi.NameLength = static_cast<uint32_t>(md.name.size());
+		ofs.write(reinterpret_cast<const char*>(&mi), sizeof(mi));
+		ofs.write(md.name.c_str(), mi.NameLength);
+	}
+
+	return true;
+}
+
+engine::_bool engine::LoadManager::SaveSubMesh(std::ofstream& ofs, const std::vector<SubMeshData>& subMesh)
+{
+	for (auto& sd : subMesh)
+	{
+		SubMeshInfo si;
+		si.NameLength = static_cast<uint32_t>(sd.name.size());
+		si.IndexOffset = static_cast<uint32_t>(sd.indexOffset);
+		si.IndexCount = static_cast<uint32_t>(sd.indexCount);
+		si.MaterialIndex = static_cast<uint32_t>(sd.materialIndex);
+
+		ofs.write(reinterpret_cast<const char*>(&si), sizeof(si));
+		ofs.write(sd.name.c_str(), si.NameLength);
+	}
+
+	return true;
+}
+
+engine::_bool engine::LoadManager::LoadStaticMesh(std::ifstream& ifs, ApplicationMode mode)
+{
+	if (mode == EDITOR)
+	{
+		SharedPtr<MeshRenderer> meshRenderer = editor::EditorComponentManager::GetInstance().CreateComponent<MeshRenderer>(gameObject);
+
+	}
+
+	else if (mode == CLIENT)
+	{
+		
+	}
+}
+
+engine::_bool engine::LoadManager::LoadMaterial(std::ifstream& ifs, ApplicationMode mode)
+{
+}
+
+engine::_bool engine::LoadManager::LoadSubMesh(std::ifstream& ifs, ApplicationMode mode)
+{
 }
 
 IMPLEMENT_SINGLETON(engine::LoadManager)

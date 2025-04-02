@@ -5,6 +5,11 @@
 
 namespace engine
 {
+	class Transform;
+}
+
+namespace engine
+{
 	class Material;
 }
 
@@ -378,7 +383,6 @@ namespace engine
 		}
 	};
 
-
 	struct VTX_GRID
 	{
 		_float3 Position;
@@ -399,6 +403,56 @@ namespace engine
 		_float3 Tangent;
 	};
 
+	struct VTX_MESH_HASH
+	{
+		size_t operator()(const engine::VTX_MESH& v) const
+		{
+			using std::hash;
+
+			size_t result = 0;
+			auto h_float3 = [&](const DirectX::XMFLOAT3& f3)
+				{
+					size_t hx = std::hash<float>()(f3.x);
+					size_t hy = std::hash<float>()(f3.y);
+					size_t hz = std::hash<float>()(f3.z);
+					return (hx ^ (hy + 0x9e3779b97f4a7c15ULL + (hx << 6) + (hx >> 2))) ^ hz;
+				};
+
+			result ^= h_float3(v.Position);
+			result ^= h_float3(v.Normal);
+			result ^= h_float3(v.Tangent);
+
+			size_t huvx = std::hash<float>()(v.TexCoord0.x);
+			size_t huvy = std::hash<float>()(v.TexCoord0.y);
+			result ^= (huvx ^ (huvy + 0x9e3779b97f4a7c15ULL + (huvx << 6) + (huvx >> 2)));
+
+			return result;
+		}
+	};
+
+	struct VTX_MESH_EQUAL
+	{
+		bool operator()(const engine::VTX_MESH& a, const engine::VTX_MESH& b) const
+		{
+			if (a.Position.x != b.Position.x ||
+				a.Position.y != b.Position.y ||
+				a.Position.z != b.Position.z) return false;
+
+			if (a.Normal.x != b.Normal.x ||
+				a.Normal.y != b.Normal.y ||
+				a.Normal.z != b.Normal.z)   return false;
+
+			if (a.Tangent.x != b.Tangent.x ||
+				a.Tangent.y != b.Tangent.y ||
+				a.Tangent.z != b.Tangent.z)  return false;
+
+			if (a.TexCoord0.x != b.TexCoord0.x ||
+				a.TexCoord0.y != b.TexCoord0.y) return false;
+
+			return true;
+		}
+	};
+
 	struct VTX_SKINNED_MESH
 	{
 		_float3 			Position;
@@ -410,12 +464,88 @@ namespace engine
 		_float4 			BoneWeight;
 	};
 
+	struct VTX_SKINNED_MESH_HASH
+	{
+		size_t operator()(const VTX_SKINNED_MESH& v) const
+		{
+			using std::hash;
+
+			auto hashCombine = [](size_t seed, size_t value) {
+				return seed ^ (value + 0x9e3779b9 + (seed << 6) + (seed >> 2));
+				};
+
+			size_t h = 0;
+			std::hash<float>   hFloat;
+			std::hash<uint32_t> hUint;
+
+			h = hashCombine(h, hFloat(v.Position.x));
+			h = hashCombine(h, hFloat(v.Position.y));
+			h = hashCombine(h, hFloat(v.Position.z));
+
+			h = hashCombine(h, hFloat(v.Normal.x));
+			h = hashCombine(h, hFloat(v.Normal.y));
+			h = hashCombine(h, hFloat(v.Normal.z));
+
+			h = hashCombine(h, hFloat(v.TexCoord0.x));
+			h = hashCombine(h, hFloat(v.TexCoord0.y));
+
+			h = hashCombine(h, hFloat(v.Tangent.x));
+			h = hashCombine(h, hFloat(v.Tangent.y));
+			h = hashCombine(h, hFloat(v.Tangent.z));
+
+			h = hashCombine(h, hUint(v.BoneIndices.x));
+			h = hashCombine(h, hUint(v.BoneIndices.y));
+			h = hashCombine(h, hUint(v.BoneIndices.z));
+			h = hashCombine(h, hUint(v.BoneIndices.w));
+
+			h = hashCombine(h, hFloat(v.BoneWeight.x));
+			h = hashCombine(h, hFloat(v.BoneWeight.y));
+			h = hashCombine(h, hFloat(v.BoneWeight.z));
+			h = hashCombine(h, hFloat(v.BoneWeight.w));
+
+			return h;
+		}
+	};
+
+	struct VTX_SKINNED_MESH_EQUAL
+	{
+		bool operator()(const VTX_SKINNED_MESH& a, const VTX_SKINNED_MESH& b) const
+		{
+			if (a.Position.x != b.Position.x ||
+				a.Position.y != b.Position.y ||
+				a.Position.z != b.Position.z) return false;
+
+			if (a.Normal.x != b.Normal.x ||
+				a.Normal.y != b.Normal.y ||
+				a.Normal.z != b.Normal.z)   return false;
+
+			if (a.Tangent.x != b.Tangent.x ||
+				a.Tangent.y != b.Tangent.y ||
+				a.Tangent.z != b.Tangent.z)  return false;
+
+			if (a.TexCoord0.x != b.TexCoord0.x ||
+				a.TexCoord0.y != b.TexCoord0.y) return false;
+
+			if (a.BoneIndices.x != b.BoneIndices.x ||
+				a.BoneIndices.y != b.BoneIndices.y ||
+				a.BoneIndices.z != b.BoneIndices.z ||
+				a.BoneIndices.w != b.BoneIndices.w) return false;
+
+			if (a.BoneWeight.x != b.BoneWeight.x ||
+				a.BoneWeight.y != b.BoneWeight.y ||
+				a.BoneWeight.z != b.BoneWeight.z ||
+				a.BoneWeight.w != b.BoneWeight.w) return false;
+
+			return true;
+		}
+	};
+
 	struct Bone
 	{
 		_string Name;
 		_int 	ParentIndex;
-
-		_float4X4 BindPoseMatrix;
+		SharedPtr<Transform> Transform;
+		_float4X4 Offset;
 	};
 
 	struct Skeleton
@@ -424,4 +554,158 @@ namespace engine
 
 		std::unordered_map<_string, _int> BoneIndexMap;
 	};
+
+	struct Keyframe
+	{
+		double Time;
+
+		Vector3 Translation;
+		Quaternion Rotation;
+		Vector3 Scale;
+	};
+
+	struct BoneKeyFrames
+	{
+		int BoneIndex;
+		std::vector<Keyframe> Frames;
+	};
+
+	struct AnimationClip
+	{
+		_string Name;
+		double Duration;
+		std::vector<BoneKeyFrames> Tracks;
+	};
+
+	//======================================//
+	//				  binary				//
+	//======================================//
+#pragma pack(push,1)
+	struct FileHeader
+	{
+		char magic[4];
+		uint32_t version;
+
+		uint32_t meshCount;
+		uint32_t skeletonCount;
+		uint32_t animationCount;
+	};
+
+	struct MaterialData
+	{
+		std::string name;
+	};
+
+	struct SubMeshData
+	{
+		std::string name;
+
+		int indexOffset;
+		int indexCount;
+		int materialIndex;
+	};
+
+	struct MeshInfo
+	{
+		uint32_t nameLength;
+
+		uint32_t vertexCount;
+		uint32_t indexCount;
+		uint32_t materialCount;
+		uint32_t subMeshCount;
+	};
+
+	struct StaticMeshData
+	{
+		std::string Name;
+
+		std::vector<VTX_MESH> Vertices;
+		std::vector<_uint> Indices;
+
+		std::vector<MaterialData> Materials;
+		std::vector<SubMeshData> SubMeshes;
+	};
+
+	struct MaterialInfo
+	{
+		uint32_t NameLength;
+	};
+
+	struct SubMeshInfo
+	{
+		uint32_t NameLength;
+
+		uint32_t IndexOffset;
+		uint32_t IndexCount;
+		uint32_t MaterialIndex;
+	};
+
+	struct StaticVertex
+	{
+		float px, py, pz;	// position
+		float nx, ny, nz;	// normal
+		float u, v;			// texCoord(UV)
+		float tx, ty, tz; 	// tangent
+	};
+
+	//struct FileHeader
+	//{
+	//	char magic[4];
+	//	uint32_t version;
+
+	//	uint32_t meshCount;
+	//	uint32_t skeletonCount;
+	//	uint32_t animationCount;
+	//};
+
+	//struct NodeData
+	//{
+	//	uint32_t nameLength;
+	//	std::string nodeName;
+
+	//	int nodeType;
+	//	float localPos[3];
+	//	float localRot[4];
+	//	float localScale[3];
+
+	//	int parentIndex;
+	//	uint32_t childCount;
+	//};
+
+	//struct VertexData
+	//{
+	//	float px, py, pz;	// 
+	//	float nx, ny, nz;	// normal
+	//	float u, v;			// texCoord(UV)
+	//	float tx, ty, tz; 	// tangent
+
+	//	uint8_t boneIndices[4];
+	//	uint8_t boneWeights[4];
+	//};
+
+	//struct MeshData
+	//{
+	//	uint32_t vertexCount;
+	//	uint32_t indexCount;
+
+	//	VertexData vertexes[];
+	//};
+
+	//struct MeshInfo
+	//{
+	//	uint32_t vertexCount;
+	//	uint32_t indexCount;
+	//};
+
+	//struct BoneInfo
+	//{
+	//	int parentIndex;
+
+	//	float tx, ty, tz;
+	//	float rx, ry, rz, rw;
+	//	float sx, sy, sz;
+
+	//	float offsetMatrix[16];
+	//};
+#pragma pack(pop)
 }

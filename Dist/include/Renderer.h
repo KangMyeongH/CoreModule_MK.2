@@ -21,8 +21,11 @@ namespace engine
         //				 property				//
         //======================================//
 
-        void SetMaterial(const SharedPtr<Material>& material) { m_Material.push_back(material); }
-    	std::vector<SharedPtr<Material>>& GetMaterials() { return m_Material; }
+        void SetMaterial(const SharedPtr<Material>& material, int index)
+        {
+            m_Material.insert(std::make_pair(index, material));
+        }
+    	std::map<int, SharedPtr<Material>>& GetMaterials() { return m_Material; }
 
         //======================================//
         //				  method				//
@@ -48,6 +51,6 @@ namespace engine
         //				  fields				//
         //======================================//
     protected:
-        std::vector<SharedPtr<Material>> 	m_Material;
+        std::map<int, SharedPtr<Material>> 	m_Material;
     };
 }

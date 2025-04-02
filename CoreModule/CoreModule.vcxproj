@@ -45,6 +45,7 @@
     <ClCompile Include="src\Scene.cpp" />
     <ClCompile Include="src\ScriptBehaviour.cpp" />
     <ClCompile Include="src\ScriptBehaviourManager.cpp" />
+    <ClCompile Include="src\SkinnedMeshRenderer.cpp" />
     <ClCompile Include="src\TextureUI.cpp" />
     <ClCompile Include="src\TimeManager.cpp" />
     <ClCompile Include="src\Transform.cpp" />
@@ -89,6 +90,7 @@
     <ClInclude Include="include\Scene.h" />
     <ClInclude Include="include\ScriptBehaviour.h" />
     <ClInclude Include="include\ScriptBehaviourManager.h" />
+    <ClInclude Include="include\SkinnedMeshRenderer.h" />
     <ClInclude Include="include\TextureUI.h" />
     <ClInclude Include="include\TimeManager.h" />
     <ClInclude Include="include\Transform.h" />

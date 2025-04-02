@@ -374,6 +374,21 @@ engine::_float4 engine::Material::GetColor(const _string& name)
 	return GetFloat4(name);
 }
 
+void engine::Material::SetValue(const std::vector<_float4X4>& value)
+{
+	auto& cbr = m_Shader->CBuffers[VS]["Bones"];
+	auto& dataVec = cbr->LocalData;
+
+	if (dataVec.size() < sizeof(_float4X4) * value.size())
+	{
+		dataVec.resize(sizeof(_float4X4) * value.size(), 0);
+	}
+
+	memcpy(dataVec.data(), value.data(), sizeof(_float4X4) * value.size());
+
+	cbr->DirtyFlag = true;
+}
+
 void engine::Material::SetTexture(const _string& name, const ComPtr<ID3D11ShaderResourceView>& texture)
 {
 	for (_uint i = 0; i < ShaderTypeEnd; ++i)
@@ -486,6 +501,7 @@ void engine::Material::to_json(nlohmann::ordered_json& j)
 	std::string shaderPath = WStringToString(m_ShaderPath);
 
 	j = nlohmann::ordered_json{
+		{"name", GetName()},
 		{"shaderPath", shaderPath},
 		{"textureMaps", nlohmann::ordered_json::array() },
 		{"properties", nlohmann::ordered_json::array()}
@@ -591,6 +607,8 @@ void engine::Material::to_json(nlohmann::ordered_json& j)
 
 void engine::Material::from_json(const nlohmann::ordered_json& j)
 {
+	SetName(j.at("name").get<_string>());
+
 	_string shaderPath = j.value("shaderPath", "");
 	m_ShaderPath = StringToWString(shaderPath);
 	LoadShader(m_ShaderPath);
