@@ -3,9 +3,12 @@
 
 namespace engine
 {
-    using TextureMap = std::unordered_map<_wstring, ComPtr<ID3D11ShaderResourceView>>;
+	class Mesh;
+
+	using TextureMap = std::unordered_map<_wstring, ComPtr<ID3D11ShaderResourceView>>;
     using ShaderMap = std::unordered_map<_wstring, SharedPtr<Shader>>;
     using VIBufferMap = std::unordered_map<VIBufferType, SharedPtr<VIBuffer>>;
+    using MeshMap = std::unordered_map<_wstring, SharedPtr<Mesh>>;
 
     class COREMODULE_API D3D11Manager
     {
@@ -47,7 +50,7 @@ namespace engine
         HRESULT CreateShader(const _wstring& path);
         HRESULT CreateShader(const _wstring& path, SharedPtr<Shader>& shader);
         HRESULT CreateSampler(const D3D11_SAMPLER_DESC& desc, ComPtr<ID3D11SamplerState>& sampler) const;
-        HRESULT CreateMesh(const _wstring& path);
+        HRESULT CreateMesh(const _string& name);
 
     	void 	Release();
 
@@ -78,6 +81,7 @@ namespace engine
 
         TextureMap                      m_TextureMap;
         ShaderMap	 					m_ShaderMap;
+        MeshMap                         m_MeshMap;
 
         _uint                           m_WinSizeX;
         _uint                           m_WinSizeY;

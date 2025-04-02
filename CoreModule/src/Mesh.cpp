@@ -1,11 +1,15 @@
 #include "Mesh.h"
 
-engine::Mesh::Mesh()
-{
-}
+engine::Mesh::Mesh() = default;
 
-engine::Mesh::~Mesh()
+engine::Mesh::~Mesh() = default;
+
+engine::Mesh::Mesh(const Mesh& rhs)
+	: Object(rhs),
+	m_VIBuffer(rhs.m_VIBuffer),
+	m_SubMeshes(rhs.m_SubMeshes)
 {
+
 }
 
 engine::SharedPtr<engine::Mesh> engine::Mesh::Create(const SharedPtr<VIBuffer>& viBuffer)
@@ -14,6 +18,13 @@ engine::SharedPtr<engine::Mesh> engine::Mesh::Create(const SharedPtr<VIBuffer>& 
 	mesh->m_VIBuffer = viBuffer;
 
 	return mesh;
+}
+
+engine::SharedPtr<engine::Mesh> engine::Mesh::Clone() const
+{
+	SharedPtr<Mesh> clone(CLONE_SHARED_PTR(Mesh));
+
+	return clone;
 }
 
 void engine::Mesh::Destroy()

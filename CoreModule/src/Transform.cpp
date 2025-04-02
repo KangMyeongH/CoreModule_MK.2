@@ -3,8 +3,8 @@
 
 engine::Transform::Transform(const Transform& rhs)
 	: Component(rhs),
-	m_Parent(rhs.m_Parent),
-	m_ParentID(rhs.m_ParentID),
+	m_Parent(),
+	m_ParentID(-1),
 	m_WorldMatrix(),
 	m_LocalPosition(rhs.m_LocalPosition),
 	m_LocalRotation(rhs.m_LocalRotation),
@@ -73,6 +73,11 @@ std::vector<engine::SharedPtr<engine::Transform>>* engine::Transform::GetChildre
 engine::_int engine::Transform::GetParentID() const
 {
 	return m_ParentID;
+}
+
+void engine::Transform::SetParentID(const _int id)
+{
+	m_ParentID = id;
 }
 
 void engine::Transform::detachChild(const SharedPtr<Transform>& child)

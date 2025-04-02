@@ -206,5 +206,5 @@ void engine::Scene::registerGameObject(const SharedPtr<GameObject>& gameObject)
 {
 	m_GameObjects.push_back(gameObject);
 	m_GameObjectsTagMap[gameObject->GetTag()].insert(gameObject);
-	gameObject->m_Transform->SetOwner(gameObject);
+	//gameObject->m_Transform->SetOwner(gameObject);
 }

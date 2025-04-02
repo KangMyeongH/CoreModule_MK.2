@@ -1,8 +1,11 @@
 #include "GameObject.h"
 
+#include "Hierarchy.h"
+#include "PrefabManager.h"
 #include "Scene.h"
 
-engine::GameObject::GameObject() : Object("GameObject"), m_Transform(Transform::create()), m_bActiveSelf(true), m_bStatic(false)
+engine::GameObject::GameObject() : Object("GameObject"), m_Transform(Transform::create()), m_bActiveSelf(true),
+                                   m_bActiveInHierarchy(true), m_bStatic(false)
 {
 }
 
@@ -20,12 +23,14 @@ void engine::GameObject::SetActive(const bool active)
 	if (m_bActiveSelf != active)
 	{
 		m_bActiveSelf = active;
+
+		updateActiveHierarchy();
 	}
 }
 
 bool engine::GameObject::IsActive() const
 {
-	return m_bActiveSelf;
+	return m_bActiveSelf && m_bActiveInHierarchy;
 }
 
 void engine::GameObject::SetTag(const _string& tag)
@@ -34,20 +39,50 @@ void engine::GameObject::SetTag(const _string& tag)
 	m_Tag = tag;
 }
 
-engine::SharedPtr<engine::GameObject> engine::GameObject::Create(const _string& name)
+engine::SharedPtr<engine::GameObject> engine::GameObject::Create(const _string& name, ApplicationMode mode)
 {
 	SharedPtr<GameObject> newGameObject{
-		new GameObject(), [](const GameObject* ptr) {delete ptr; }
+		new GameObject(), [](const GameObject* ptr) { delete ptr; }
 	};
 
-	Scene::GetInstance().registerGameObject(newGameObject);
+	if (mode == CLIENT)
+	{
+		Scene::GetInstance().registerGameObject(newGameObject);
+	}
+
+	else if (mode == EDITOR)
+	{
+		editor::Hierarchy::GetInstance().AddGameObject(newGameObject);
+	}
+
+	else if (mode == PREFAB)
+	{
+		PrefabManager::GetInstance().AddTempGameObject(newGameObject);
+	}
+
+	newGameObject->m_Transform->SetOwner(newGameObject);
 
 	return newGameObject;
 }
 
-engine::SharedPtr<engine::GameObject> engine::GameObject::Clone() const
+engine::SharedPtr<engine::GameObject> engine::GameObject::Clone(const ApplicationMode mode) const
 {
 	SharedPtr<GameObject> clone(CLONE_SHARED_PTR(GameObject));
+
+	if (mode == CLIENT)
+	{
+		Scene::GetInstance().registerGameObject(clone);
+	}
+
+	else if (mode == EDITOR)
+	{
+		editor::Hierarchy::GetInstance().AddGameObject(clone);
+	}
+
+	else if (mode == PREFAB)
+	{
+		PrefabManager::GetInstance().AddTempGameObject(clone);
+	}
 
 	clone->m_Transform->SetOwner(clone);
 
@@ -56,6 +91,7 @@ engine::SharedPtr<engine::GameObject> engine::GameObject::Clone() const
 		for (const auto& component : pair.second)
 		{
 			component->SetOwner(clone);
+			component->registerComponent(mode);
 		}
 	}
 
@@ -63,8 +99,7 @@ engine::SharedPtr<engine::GameObject> engine::GameObject::Clone() const
 	{
 		if (const auto originChild = child->GetGameObject().lock())
 		{
-			SharedPtr<GameObject> newChild = originChild->Clone();
-			newChild->m_Transform->SetOwner(newChild);
+			SharedPtr<GameObject> newChild = originChild->Clone(mode);
 			newChild->m_Transform->SetParent(clone->GetTransform());
 		}
 	}
@@ -134,6 +169,5 @@ void engine::from_json(const nlohmann::ordered_json& j, const SharedPtr<GameObje
 		component->from_json(component_json);
 		component->SetOwner(obj);
 		obj->m_Components[typeid(*component)].push_back(component);
-		
 	}
 }

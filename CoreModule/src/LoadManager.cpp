@@ -5,6 +5,7 @@
 #include "Hierarchy.h"
 #include "Material.h"
 #include "MeshRenderer.h"
+#include "Prefab.h"
 #include "Renderer.h"
 #include "Scene.h"
 #include "TimeManager.h"
@@ -128,6 +129,49 @@ engine::_bool engine::LoadManager::SaveMaterialData(const SharedPtr<Material>& m
 	return true;
 }
 
+engine::_bool engine::LoadManager::LoadPrefab(Prefab& prefab, const _wstring& path)
+{
+	if (path.empty())
+	{
+		return false;
+	}
+
+	std::ifstream inFile(path);
+
+	if (!inFile.is_open())
+	{
+		return false;
+	}
+
+	nlohmann::ordered_json j;
+	inFile >> j;
+
+	prefab.from_json(j);
+
+	return true;
+}
+
+engine::_bool engine::LoadManager::SavePrefab(Prefab& prefab, const _wstring& path)
+{
+	nlohmann::ordered_json j;
+	prefab.to_json(j);
+
+	auto gameObject = prefab.GetRoot();
+	_wstring name = StringToWString(gameObject->GetName());
+	std::wstring fullPath = path + L"\\" + name + L".prefab";
+
+	std::ofstream outFile(fullPath, std::ios::trunc);
+	if (!outFile.is_open())
+	{
+		return false;;
+	}
+
+	outFile << j.dump(4);
+	outFile.close();
+
+	return true;
+}
+
 void engine::LoadManager::LoadHierarchyToScene()
 {
 	Scene::GetInstance().From_Json(editor::Hierarchy::GetInstance().ToJson());
@@ -207,7 +251,7 @@ engine::_wstring engine::LoadManager::BrowseFolderDialog()
 	return L""; // 취소 시 빈 문자열 반환
 }
 
-engine::_bool engine::LoadManager::SaveStaticMesh(std::ofstream& ofs, const StaticMeshData& meshData)
+engine::_bool engine::LoadManager::SaveStaticMesh(std::ofstream& ofs, const MeshData& meshData)
 {
 	//std::ofstream ofs(path, std::ios::binary);
 	//if (!ofs.is_open())
@@ -285,6 +329,8 @@ engine::_bool engine::LoadManager::SaveSubMesh(std::ofstream& ofs, const std::ve
 
 engine::_bool engine::LoadManager::LoadStaticMesh(std::ifstream& ifs, ApplicationMode mode)
 {
+	SharedPtr<GameObject> gameObject = GameObject::Create();
+
 	if (mode == EDITOR)
 	{
 		SharedPtr<MeshRenderer> meshRenderer = editor::EditorComponentManager::GetInstance().CreateComponent<MeshRenderer>(gameObject);
@@ -293,16 +339,20 @@ engine::_bool engine::LoadManager::LoadStaticMesh(std::ifstream& ifs, Applicatio
 
 	else if (mode == CLIENT)
 	{
-		
+		//SharedPtr<MeshRenderer> meshRenderer = ComponentFactory::GetInstance().CreateComponent()
 	}
+
+	return true;
 }
 
 engine::_bool engine::LoadManager::LoadMaterial(std::ifstream& ifs, ApplicationMode mode)
 {
+	return true;
 }
 
 engine::_bool engine::LoadManager::LoadSubMesh(std::ifstream& ifs, ApplicationMode mode)
 {
+	return true;
 }
 
 IMPLEMENT_SINGLETON(engine::LoadManager)

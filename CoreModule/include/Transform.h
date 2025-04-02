@@ -168,7 +168,8 @@ namespace engine
 			m_LocalEulerAngles = euler;
 		}
 
-		_int					GetParentID() const;
+		_int GetParentID() const;
+		void SetParentID(_int id);
 
 		//======================================//
 		//				  method				//

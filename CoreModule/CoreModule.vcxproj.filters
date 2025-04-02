@@ -94,6 +94,9 @@
     <Filter Include="00. System\Graphic\Mesh">
       <UniqueIdentifier>{9769851d-e8e4-4610-87f0-061f2db8f7c2}</UniqueIdentifier>
     </Filter>
+    <Filter Include="00. System\Prefab">
+      <UniqueIdentifier>{d784d5bb-b42c-4953-beb0-892875a4cc6b}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="include\core_defines.h">
@@ -216,6 +219,12 @@
     <ClInclude Include="include\SkinnedMeshRenderer.h">
       <Filter>00. System\Graphic\Renderer</Filter>
     </ClInclude>
+    <ClInclude Include="include\PrefabManager.h">
+      <Filter>00. System\Prefab</Filter>
+    </ClInclude>
+    <ClInclude Include="include\Prefab.h">
+      <Filter>00. System\Prefab</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\GameObject.cpp">
@@ -310,6 +319,12 @@
     </ClCompile>
     <ClCompile Include="src\SkinnedMeshRenderer.cpp">
       <Filter>00. System\Graphic\Renderer</Filter>
+    </ClCompile>
+    <ClCompile Include="src\PrefabManager.cpp">
+      <Filter>00. System\Prefab</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Prefab.cpp">
+      <Filter>00. System\Prefab</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

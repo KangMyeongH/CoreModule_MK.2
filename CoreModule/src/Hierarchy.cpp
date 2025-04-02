@@ -135,8 +135,8 @@ void engine::editor::Hierarchy::FromJson(const nlohmann::ordered_json& j)
 
 	for (const auto& objJson : j.at("GameObjects"))
 	{
-		auto gameObject = GameObject::Create();
-		m_GameObjects.push_back(objJson.get_to(gameObject));
+		auto gameObject = AddGameObject();
+		objJson.get_to(gameObject);
 	}
 
 	for (auto& gameObject : m_GameObjects)

@@ -34,6 +34,7 @@ namespace engine
 		GameObject(const GameObject& rhs)
 			: Object(rhs),
 			m_bActiveSelf(rhs.m_bActiveSelf),
+			m_bActiveInHierarchy(rhs.m_bActiveInHierarchy),
 			m_bStatic(rhs.m_bStatic)
 		{
 			m_Transform = std::static_pointer_cast<Transform>(rhs.m_Transform->Clone());
@@ -116,19 +117,42 @@ namespace engine
 		void 							SetActive(bool active);
 		_bool 							IsActive() const;
 
+		_bool							IsActiveSelf() const { return m_bActiveSelf; }
+		_bool 							IsActiveInHierarchy() const { return m_bActiveInHierarchy; }
+
 		void 							SetTag(const _string& tag);
 		_string 						GetTag() const { return m_Tag; }
 
-		static SharedPtr<GameObject> 	Create(const _string& name = "GameObject");
-		SharedPtr<GameObject> 			Clone() const;
+		static SharedPtr<GameObject> 	Create(const _string& name = "GameObject", ApplicationMode mode = CLIENT);
+		SharedPtr<GameObject> 			Clone(ApplicationMode mode = CLIENT) const;
 		void 							Destroy() override;
+
+	private:
+		void updateActiveHierarchy()
+		{
+			auto parent = m_Transform->GetParent();
+
+			bool newActive = m_bActiveSelf && (parent ? parent->GetGameObject().lock()->IsActiveInHierarchy() : true);
+
+			if (m_bActiveInHierarchy == newActive)
+			{
+				return;
+			}
+
+			m_bActiveInHierarchy = newActive;
+
+			for (const auto& child : *m_Transform->GetChildren())
+			{
+				child->GetGameObject().lock()->updateActiveHierarchy();
+			}
+		}
 
 		//======================================//
 		//				 serialize				//
 		//======================================//
 
-		friend void 					to_json(nlohmann::ordered_json& j, const SharedPtr<GameObject>& obj);
-		friend void 					from_json(const nlohmann::ordered_json& j, const SharedPtr<GameObject>& obj);
+		friend void to_json(nlohmann::ordered_json& j, const SharedPtr<GameObject>& obj);
+		friend void from_json(const nlohmann::ordered_json& j, const SharedPtr<GameObject>& obj);
 
 	private:
 		//======================================//
@@ -139,6 +163,7 @@ namespace engine
 		SharedPtr<Transform>			m_Transform;
 		_string							m_Tag;
 		_bool							m_bActiveSelf;
+		_bool							m_bActiveInHierarchy;
 		_bool							m_bStatic;
 	};
 }

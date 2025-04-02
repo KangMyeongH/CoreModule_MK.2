@@ -3,6 +3,11 @@
 
 namespace engine
 {
+	class Prefab;
+}
+
+namespace engine
+{
     class COREMODULE_API LoadManager
     {
         //======================================//
@@ -29,17 +34,22 @@ namespace engine
 
         _bool LoadMaterialData(const SharedPtr<Material>& material, const _wstring& path);
         _bool SaveMaterialData(const SharedPtr<Material>& material, const _wstring& path);
+        
+        _bool LoadPrefab(Prefab& prefab, const _wstring& path);
+        _bool SavePrefab(Prefab& prefab, const _wstring& path);
 
         void LoadHierarchyToScene();
 
         _wstring OpenFileDialog();
         _wstring BrowseFolderDialog();
 
-        _bool SaveAsBinary(_wstring path);
-        _bool SaveStaticMesh(std::ofstream& ofs, const StaticMeshData& meshData);
+        _bool SaveStaticMesh(std::ofstream& ofs, const MeshData& meshData);
         _bool SaveMaterial(std::ofstream& ofs, const std::vector<MaterialData>& material);
     	_bool SaveSubMesh(std::ofstream& ofs, const std::vector<SubMeshData>& subMesh);
 
+        _bool LoadStaticMesh(std::ifstream& ifs, ApplicationMode mode = CLIENT);
+        _bool LoadMaterial(std::ifstream& ifs, ApplicationMode mode);
+        _bool LoadSubMesh(std::ifstream& ifs, ApplicationMode mode);
 
         //======================================//
         //				 serialize				//

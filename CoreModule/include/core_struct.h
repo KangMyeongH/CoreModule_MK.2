@@ -615,7 +615,7 @@ namespace engine
 		uint32_t subMeshCount;
 	};
 
-	struct StaticMeshData
+	struct MeshData
 	{
 		std::string Name;
 

@@ -9,6 +9,7 @@ namespace engine
     protected:
         Mesh();
         ~Mesh() override;
+        Mesh(const Mesh& rhs);
 
     public:
         size_t GetMaterialCount() const { return m_SubMeshes.size(); }
@@ -17,6 +18,7 @@ namespace engine
         void SetSubMesh(const std::vector<SubMesh>& subMeshes);
 
         static SharedPtr<Mesh> Create(const SharedPtr<VIBuffer>& viBuffer);
+        SharedPtr<Mesh> Clone() const;
     	void Destroy() override;
 
         void Bind(const ComPtr<ID3D11DeviceContext>& context);
