@@ -4,8 +4,13 @@
 #include "PrefabManager.h"
 #include "Scene.h"
 
-engine::GameObject::GameObject() : Object("GameObject"), m_Transform(Transform::create()), m_bActiveSelf(true),
-                                   m_bActiveInHierarchy(true), m_bStatic(false)
+engine::GameObject::GameObject()
+	: Object("GameObject"),
+	m_Transform(Transform::create()),
+	m_AssetPath(),
+	m_bActiveSelf(true),
+	m_bActiveInHierarchy(true),
+	m_bStatic(false)
 {
 }
 
@@ -131,16 +136,19 @@ void engine::GameObject::Destroy()
 	}
 }
 
-void engine::to_json(nlohmann::ordered_json& j, const SharedPtr<GameObject>& obj)
+void engine::GameObject::ToJson(nlohmann::ordered_json& j, const SharedPtr<GameObject>& obj, ApplicationMode mode)
 {
+	_string assetPath = WStringToString(obj->m_AssetPath);
 	j = nlohmann::ordered_json
 	{
-		{"instanceID", obj->GetInstanceID()},
+		{"assetPath", assetPath},
 		{"name", obj->GetName()},
 		{"tag", obj->GetTag()},
-		{"active", obj->IsActive()},
+		{"active", obj->IsActiveSelf()},
+		{"activeInHierarchy", obj->m_bActiveInHierarchy},
 		{"transform", obj->m_Transform},
-		{"components", nlohmann::ordered_json::array()}
+		{"components", nlohmann::ordered_json::array()},
+		{"children", nlohmann::ordered_json::array()}
 	};
 
 	for (auto& component : obj->m_Components)
@@ -149,16 +157,31 @@ void engine::to_json(nlohmann::ordered_json& j, const SharedPtr<GameObject>& obj
 		component.second.front()->to_json(componentJson);
 		j["components"].push_back(componentJson);
 	}
+
+	_wstring ext = GetFileExtensionW(obj->m_AssetPath);
+
+	if (ext != L"prefab" || mode == PREFAB)
+	{
+		for (auto& child : *obj->m_Transform->GetChildren())
+		{
+			nlohmann::ordered_json childJson;
+			child->GetGameObject().lock()->ToJson(childJson, child->GetGameObject().lock(), mode);
+			j["children"].push_back(childJson);
+		}
+	}
 }
 
-void engine::from_json(const nlohmann::ordered_json& j, const SharedPtr<GameObject>& obj)
+void engine::GameObject::FromJson(const nlohmann::ordered_json& j, const SharedPtr<GameObject>& obj, const ApplicationMode mode)
 {
-	obj->SetInstanceID(j.at("instanceID").get<_int>());
+	_string assetPath;
+	j.at("assetPath").get_to(assetPath);
+	obj->SetAssetPath(StringToWString(assetPath));
 	_string name;
 	j.at("name").get_to(name);
 	obj->SetName(name);
 	obj->SetTag(j.at("tag").get<_string>());
 	obj->SetActive(j.at("active").get<_bool>());
+	obj->m_bActiveInHierarchy = j.at("activeInHierarchy").get<_bool>();
 	j.at("transform").get_to(obj->m_Transform);
 
 	for (const auto& component_json : j.at("components"))
@@ -169,5 +192,12 @@ void engine::from_json(const nlohmann::ordered_json& j, const SharedPtr<GameObje
 		component->from_json(component_json);
 		component->SetOwner(obj);
 		obj->m_Components[typeid(*component)].push_back(component);
+	}
+
+	for (const auto& child_json : j.at("children"))
+	{
+		SharedPtr<GameObject> child = Create("GameObject", mode);
+		FromJson(child_json, child, mode);
+		child->GetTransform()->SetParent(obj->GetTransform());
 	}
 }

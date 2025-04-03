@@ -12,10 +12,7 @@ engine::SkinnedMeshRenderer::SkinnedMeshRenderer(const SharedPtr<GameObject>& ow
 {
 }
 
-engine::SkinnedMeshRenderer::~SkinnedMeshRenderer()
-{
-
-}
+engine::SkinnedMeshRenderer::~SkinnedMeshRenderer() = default;
 
 engine::SkinnedMeshRenderer::SkinnedMeshRenderer(const SkinnedMeshRenderer& rhs)
 	: Renderer(rhs), m_CurrentTime(0)
@@ -195,12 +192,11 @@ void engine::SkinnedMeshRenderer::to_json(nlohmann::ordered_json& j)
 {
 	std::string type = "SkinnedMeshRenderer";
 	j = nlohmann::ordered_json{
-		{"type", type},
-		{"instanceID", GetInstanceID()}
+		{"type", type}
 	};
 }
 
 void engine::SkinnedMeshRenderer::from_json(const nlohmann::ordered_json& j)
 {
-	SetInstanceID(j.at("instanceID").get<int>());
+
 }

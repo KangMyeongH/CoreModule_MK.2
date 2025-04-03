@@ -251,108 +251,479 @@ engine::_wstring engine::LoadManager::BrowseFolderDialog()
 	return L""; // 취소 시 빈 문자열 반환
 }
 
-engine::_bool engine::LoadManager::SaveStaticMesh(std::ofstream& ofs, const MeshData& meshData)
+void engine::LoadManager::WriteString(std::ofstream& ofs, const std::string& str)
 {
-	//std::ofstream ofs(path, std::ios::binary);
-	//if (!ofs.is_open())
-	//{
-	//	return false;
-	//}
-
-	//FileHeader fh;
-	//memcpy(fh.magic, "MESH", 4);
-	//fh.version = 1;
-	//ofs.write(reinterpret_cast<char*>(&fh), sizeof(fh));
-
-
-
-	MeshInfo md;
-	md.vertexCount = static_cast<uint32_t>(meshData.Vertices.size());
-	md.indexCount = static_cast<uint32_t>(meshData.Indices.size());
-	md.materialCount = static_cast<uint32_t>(meshData.Materials.size());
-	md.subMeshCount = static_cast<uint32_t>(meshData.SubMeshes.size());
-
-	ofs.write(reinterpret_cast<char*>(&md), sizeof(md));
-
-	if (!meshData.Vertices.empty())
-	{
-		ofs.write(reinterpret_cast<const char*>(!meshData.Vertices.data()), sizeof(VTX_MESH) * !meshData.Vertices.size());
-	}
-
-	if (!meshData.Indices.empty())
-	{
-		ofs.write(reinterpret_cast<const char*>(meshData.Indices.data()), sizeof(uint32_t) * meshData.Indices.size());
-	}
-
-	if (!meshData.Materials.empty())
-	{
-		SaveMaterial(ofs, meshData.Materials);
-	}
-
-	if (!meshData.SubMeshes.empty())
-	{
-		SaveSubMesh(ofs, meshData.SubMeshes);
-	}
-
-	return true;
+	uint32_t len = static_cast<uint32_t>(str.length());
+	ofs.write(reinterpret_cast<const char*>(&len), sizeof(uint32_t));
+	ofs.write(str.c_str(), len);
 }
 
-engine::_bool engine::LoadManager::SaveMaterial(std::ofstream& ofs, const std::vector<MaterialData>& material)
+//=============================================================//
+//Version 1 .model File
+//[ModelHeader]
+//- ModelNameLength(uint32)
+//- ModelName(char[])
+//
+//- MeshCount(uint32)
+//
+//[MeshData N개]
+//[MeshHeader]
+//- MeshNameLength(uint32)
+//- MeshName(char[])
+//- isSkinned(bool)
+//- Transform(tx, ty, tz, rx, ry, rz, rw, sx, sy, sz) (float* 10)
+//
+//- VertexCount(uint32)
+//- IndexCount(uint32)
+//- MaterialCount(uint32)
+//- SubMeshCount(uint32)
+//- BoneCount(uint32)
+//
+//[Vertices]
+//- Vertex 구조 * VertexCount
+//
+//[Indices]
+//- uint32 * IndexCount
+//
+//[MaterialData * N]
+//- MaterialNameLength(uint32)
+//- MaterialName(char[])
+//- MaterialIndex(int32)
+//
+//[SubMeshData * N]
+//- SubMeshNameLength(uint32)
+//- SubMeshName(char[])
+//- indexOffset(int32)
+//- indexCount(int32)
+//- MaterialIndex(int32)
+//
+//[SkinnedData * VertexCount](only if isSkinned)
+//- BoneIndices[4](uint32)
+//- BoneWeights[4](float)
+//
+//[BoneData * N]
+//- BoneNameLength(uint32)
+//- BoneName(char[])
+//- Index(int32)
+//- parentIndex(int32)
+//- Transform(tx, ty, tz, rx, ry, rz, rw, sx, sy, sz) (float* 10)
+//- offsetMatrix[16](float[16])
+//=============================================================//
+
+void engine::LoadManager::WriteModelDataToFile(const ModelData& model, const std::wstring& path)
 {
-	for (auto& md : material)
+	std::wstring fileName = path + L"\\" + StringToWString(model.ModelName) + L".model";
+
+	std::ofstream ofs(fileName, std::ios::binary);
+	if (!ofs)
 	{
-		MaterialInfo mi;
-		mi.NameLength = static_cast<uint32_t>(md.name.size());
-		ofs.write(reinterpret_cast<const char*>(&mi), sizeof(mi));
-		ofs.write(md.name.c_str(), mi.NameLength);
+		throw std::runtime_error("ERROR : Failed to open file for writing.");
 	}
 
-	return true;
-}
+	// Magic Header
+	const char header[4] = { 'M', 'O', 'D', 'L' };
+	ofs.write(header, 4);
 
-engine::_bool engine::LoadManager::SaveSubMesh(std::ofstream& ofs, const std::vector<SubMeshData>& subMesh)
-{
-	for (auto& sd : subMesh)
+	// Version
+	uint32_t version = 1;
+	ofs.write(reinterpret_cast<const char*>(&version), sizeof(uint32_t));
+
+	WriteString(ofs, model.ModelName);
+
+	uint32_t meshCount = static_cast<uint32_t>(model.Meshes.size());
+	ofs.write(reinterpret_cast<const char*>(&meshCount), sizeof(uint32_t));
+
+	for (const auto& mesh : model.Meshes)
 	{
-		SubMeshInfo si;
-		si.NameLength = static_cast<uint32_t>(sd.name.size());
-		si.IndexOffset = static_cast<uint32_t>(sd.indexOffset);
-		si.IndexCount = static_cast<uint32_t>(sd.indexCount);
-		si.MaterialIndex = static_cast<uint32_t>(sd.materialIndex);
+		WriteString(ofs, mesh.MeshName);
 
-		ofs.write(reinterpret_cast<const char*>(&si), sizeof(si));
-		ofs.write(sd.name.c_str(), si.NameLength);
+		ofs.write(reinterpret_cast<const char*>(&mesh.IsSkinned), sizeof(bool));
+
+		ofs.write(reinterpret_cast<const char*>(&mesh.tx), sizeof(float) * 10); // tx~sz;
+
+		uint32_t vertexCount = static_cast<uint32_t>(mesh.Vertices.size());
+		uint32_t indexCount = static_cast<uint32_t>(mesh.Indices.size());
+		uint32_t materialCount = static_cast<uint32_t>(mesh.Materials.size());
+		uint32_t subMeshCount = static_cast<uint32_t>(mesh.SubMeshes.size());
+		uint32_t boneCount = static_cast<uint32_t>(mesh.Bones.size());
+
+		ofs.write(reinterpret_cast<const char*>(&vertexCount), sizeof(uint32_t));
+		ofs.write(reinterpret_cast<const char*>(&indexCount), sizeof(uint32_t));
+		ofs.write(reinterpret_cast<const char*>(&materialCount), sizeof(uint32_t));
+		ofs.write(reinterpret_cast<const char*>(&subMeshCount), sizeof(uint32_t));
+		ofs.write(reinterpret_cast<const char*>(&boneCount), sizeof(uint32_t));
+
+		ofs.write(reinterpret_cast<const char*>(mesh.Vertices.data()), sizeof(VTX_MESH) * vertexCount);
+		ofs.write(reinterpret_cast<const char*>(mesh.Indices.data()), sizeof(uint32_t) * indexCount);
+
+		for (const auto& mat : mesh.Materials)
+		{
+			WriteString(ofs, mat.MaterialName);
+			ofs.write(reinterpret_cast<const char*>(&mat.MaterialIndex), sizeof(int32_t));
+		}
+
+		for (const auto& sub : mesh.SubMeshes)
+		{
+			WriteString(ofs, sub.SubMeshName);
+			ofs.write(reinterpret_cast<const char*>(&sub.IndexOffset), sizeof(int32_t));
+			ofs.write(reinterpret_cast<const char*>(&sub.IndexCount), sizeof(int32_t));
+			ofs.write(reinterpret_cast<const char*>(&sub.MaterialIndex), sizeof(int32_t));
+		}
+
+		if (mesh.IsSkinned)
+		{
+			ofs.write(reinterpret_cast<const char*>(mesh.SkinnedData.data()), sizeof(SkinnedData) * vertexCount);
+
+			for (const auto& bone : mesh.Bones)
+			{
+				WriteString(ofs, bone.BoneName);
+				ofs.write(reinterpret_cast<const char*>(&bone.Index), sizeof(int32_t));
+				ofs.write(reinterpret_cast<const char*>(&bone.parentIndex), sizeof(int32_t));
+
+				ofs.write(reinterpret_cast<const char*>(&bone.tx), sizeof(float) * 10); // tx~sz
+				ofs.write(reinterpret_cast<const char*>(bone.offsetMatrix), sizeof(float) * 16);
+			}
+		}
 	}
 
-	return true;
+	ofs.close();
 }
 
-engine::_bool engine::LoadManager::LoadStaticMesh(std::ifstream& ifs, ApplicationMode mode)
+//=============================================================//
+//Version 1 .anim File
+//
+//[MagicHeader]     : "ANIM"
+//[Version] : uint32_t
+//
+//[NameLength] : uint32
+//[Name] : char[]
+//
+//[Duration] : double
+//
+//[TrackCount] : uint32
+//
+//[For each BoneKeyFrames]
+//[BoneIndex] : int32
+//[KeyframeCount] : uint32
+//
+//[For each Keyframe]
+//[Time] : double
+//[Translation] : float x, y, z
+//[Rotation] : float x, y, z, w
+//[Scale] : float x, y, z
+//=============================================================//
+
+void engine::LoadManager::WriteAnimationClipDataToFile(const AnimationClip& clip, const std::wstring& path)
 {
-	SharedPtr<GameObject> gameObject = GameObject::Create();
+	std::wstring fileName = path + L"\\" + StringToWString(clip.Name) + L".anim";
 
-	if (mode == EDITOR)
+	std::ofstream ofs(path, std::ios::binary);
+	if (!ofs)
 	{
-		SharedPtr<MeshRenderer> meshRenderer = editor::EditorComponentManager::GetInstance().CreateComponent<MeshRenderer>(gameObject);
-
+		throw std::runtime_error("Failed to open animation file for writing");
 	}
 
-	else if (mode == CLIENT)
+	// Magic Header + Version
+	ofs.write("ANIM", 4);
+	uint32_t version = 1;
+	ofs.write(reinterpret_cast<const char*>(&version), sizeof(uint32_t));
+
+	// Animation Name
+	WriteString(ofs, clip.Name);
+
+	// Duration
+	ofs.write(reinterpret_cast<const char*>(&clip.Duration), sizeof(double));
+
+	// Track count
+	uint32_t trackCount = static_cast<uint32_t>(clip.Tracks.size());
+	ofs.write(reinterpret_cast<const char*>(&trackCount), sizeof(uint32_t));
+
+	for (const BoneKeyFrames& track : clip.Tracks)
 	{
-		//SharedPtr<MeshRenderer> meshRenderer = ComponentFactory::GetInstance().CreateComponent()
+		ofs.write(reinterpret_cast<const char*>(&track.BoneIndex), sizeof(int32_t));
+
+		uint32_t keyframeCount = static_cast<uint32_t>(track.Frames.size());
+		ofs.write(reinterpret_cast<const char*>(&keyframeCount), sizeof(uint32_t));
+
+		for (const Keyframe& kf : track.Frames)
+		{
+			ofs.write(reinterpret_cast<const char*>(&kf.Time), sizeof(double));
+			ofs.write(reinterpret_cast<const char*>(&kf.Translation.Value), sizeof(float) * 3);
+			ofs.write(reinterpret_cast<const char*>(&kf.Rotation.Value), sizeof(float) * 4);
+			ofs.write(reinterpret_cast<const char*>(&kf.Scale.Value), sizeof(float) * 3);
+		}
 	}
 
-	return true;
+	ofs.close();
 }
 
-engine::_bool engine::LoadManager::LoadMaterial(std::ifstream& ifs, ApplicationMode mode)
+std::string engine::LoadManager::ReadString(std::ifstream& ifs)
 {
-	return true;
+	uint32_t len = 0;
+	ifs.read(reinterpret_cast<char*>(&len), sizeof(uint32_t));
+	std::string str(len, 0);
+	if (len > 0)
+	{
+		ifs.read(&str[0], len);
+	}
+
+	return str;
 }
 
-engine::_bool engine::LoadManager::LoadSubMesh(std::ifstream& ifs, ApplicationMode mode)
+engine::ModelData engine::LoadManager::ReadModelDataFromFile(const std::wstring& path)
 {
-	return true;
+	std::ifstream ifs(path, std::ios::binary);
+
+	if (!ifs)
+	{
+		throw std::runtime_error("ERROR : Failed to open model file : " + WStringToString(path));
+	}
+
+	// Magic Header
+	char header[4];
+	ifs.read(header, 4);
+	if (strncmp(header, "MODL", 4) != 0)
+	{
+		throw std::runtime_error("Invalid model file: wrong magic header");
+	}
+
+	// Version
+	uint32_t version = 0;
+	ifs.read(reinterpret_cast<char*>(&version), sizeof(uint32_t));
+
+	if (version != 1)
+	{
+		throw std::runtime_error("Unsupported model version: " + std::to_string(version));
+	}
+
+	ModelData model;
+	model.ModelName = ReadString(ifs);
+
+	uint32_t meshCount = 0;
+	ifs.read(reinterpret_cast<char*>(&meshCount), sizeof(uint32_t));
+	model.Meshes.resize(meshCount);
+
+	for (uint32_t i = 0; i < meshCount; ++i)
+	{
+		MeshData& mesh = model.Meshes[i];
+
+		mesh.MeshName = ReadString(ifs);
+
+		ifs.read(reinterpret_cast<char*>(&mesh.IsSkinned), sizeof(bool));
+
+		ifs.read(reinterpret_cast<char*>(&mesh.tx), sizeof(float) * 10); // tx~sz
+
+		uint32_t vertexCount, indexCount, materialCount, subMeshCount, boneCount;
+		ifs.read(reinterpret_cast<char*>(&vertexCount), sizeof(uint32_t));
+		ifs.read(reinterpret_cast<char*>(&indexCount), sizeof(uint32_t));
+		ifs.read(reinterpret_cast<char*>(&materialCount), sizeof(uint32_t));
+		ifs.read(reinterpret_cast<char*>(&subMeshCount), sizeof(uint32_t));
+		ifs.read(reinterpret_cast<char*>(&boneCount), sizeof(uint32_t));
+
+		mesh.Vertices.resize(vertexCount);
+		mesh.Indices.resize(indexCount);
+		mesh.Materials.resize(materialCount);
+		mesh.SubMeshes.resize(subMeshCount);
+		mesh.Bones.resize(boneCount);
+		if (mesh.IsSkinned)
+		{
+			mesh.SkinnedData.resize(vertexCount);
+		}
+
+		// Vertices, Indices
+		ifs.read(reinterpret_cast<char*>(mesh.Vertices.data()), sizeof(VTX_MESH) * vertexCount);
+		ifs.read(reinterpret_cast<char*>(mesh.Indices.data()), sizeof(uint32_t) * indexCount);
+
+		// Materials
+		for (auto& mat : mesh.Materials)
+		{
+			mat.MaterialName = ReadString(ifs);
+			ifs.read(reinterpret_cast<char*>(&mat.MaterialIndex), sizeof(int32_t));
+		}
+
+		// SubMeshes
+		for (auto& sub : mesh.SubMeshes)
+		{
+			sub.SubMeshName = ReadString(ifs);
+			ifs.read(reinterpret_cast<char*>(&sub.IndexOffset), sizeof(int32_t));
+			ifs.read(reinterpret_cast<char*>(&sub.IndexCount), sizeof(int32_t));
+			ifs.read(reinterpret_cast<char*>(&sub.MaterialIndex), sizeof(int32_t));
+		}
+
+		// SkinnedData
+		if (mesh.IsSkinned)
+		{
+			ifs.read(reinterpret_cast<char*>(mesh.SkinnedData.data()), sizeof(SkinnedData) * vertexCount);
+
+			// Bones
+			for (auto& bone : mesh.Bones)
+			{
+				bone.BoneName = ReadString(ifs);
+				ifs.read(reinterpret_cast<char*>(&bone.Index), sizeof(int32_t));
+				ifs.read(reinterpret_cast<char*>(&bone.parentIndex), sizeof(int32_t));
+
+				ifs.read(reinterpret_cast<char*>(&bone.tx), sizeof(float) * 10); // tx~sz
+				ifs.read(reinterpret_cast<char*>(bone.offsetMatrix), sizeof(float) * 16);
+			}
+		}
+	}
+
+	return model;
 }
+
+engine::AnimationClip engine::LoadManager::ReadAnimationClipDataFromFile(const std::wstring& path)
+{
+	std::ifstream ifs(path, std::ios::binary);
+	if (!ifs)
+	{
+		throw std::runtime_error("Failed to open animation file");
+	}
+
+	char header[4];
+	ifs.read(header, 4);
+	if (strncmp(header, "ANIM", 4) != 0)
+	{
+		throw std::runtime_error("Invalid animation file header");
+	}
+
+	uint32_t version = 0;
+	ifs.read(reinterpret_cast<char*>(&version), sizeof(uint32_t));
+	if (version != 1)
+	{
+		throw std::runtime_error("Unsupported animation file version");
+	}
+
+	AnimationClip clip;
+	clip.Name = ReadString(ifs);
+
+	ifs.read(reinterpret_cast<char*>(&clip.Duration), sizeof(double));
+
+	uint32_t trackCount = 0;
+	ifs.read(reinterpret_cast<char*>(&trackCount), sizeof(uint32_t));
+	clip.Tracks.resize(trackCount);
+
+	for (uint32_t i = 0; i < trackCount; ++i)
+	{
+		BoneKeyFrames& track = clip.Tracks[i];
+		ifs.read(reinterpret_cast<char*>(&track.BoneIndex), sizeof(int32_t));
+
+		uint32_t keyframeCount = 0;
+		ifs.read(reinterpret_cast<char*>(&keyframeCount), sizeof(uint32_t));
+		track.Frames.resize(keyframeCount);
+
+		for (uint32_t j = 0; j < keyframeCount; ++j)
+		{
+			Keyframe& kf = track.Frames[j];
+			ifs.read(reinterpret_cast<char*>(&kf.Time), sizeof(double));
+			ifs.read(reinterpret_cast<char*>(&kf.Translation.Value), sizeof(float) * 3);
+			ifs.read(reinterpret_cast<char*>(&kf.Rotation.Value), sizeof(float) * 4);
+			ifs.read(reinterpret_cast<char*>(&kf.Scale.Value), sizeof(float) * 3);
+		}
+	}
+
+	return clip;
+}
+
+//engine::_bool engine::LoadManager::SaveStaticMesh(std::ofstream& ofs, const MeshData& meshData)
+//{
+//	//std::ofstream ofs(path, std::ios::binary);
+//	//if (!ofs.is_open())
+//	//{
+//	//	return false;
+//	//}
+//
+//	//FileHeader fh;
+//	//memcpy(fh.magic, "MESH", 4);
+//	//fh.version = 1;
+//	//ofs.write(reinterpret_cast<char*>(&fh), sizeof(fh));
+//
+//	MeshInfo md;
+//	md.vertexCount = static_cast<uint32_t>(meshData.Vertices.size());
+//	md.indexCount = static_cast<uint32_t>(meshData.Indices.size());
+//	md.materialCount = static_cast<uint32_t>(meshData.Materials.size());
+//	md.subMeshCount = static_cast<uint32_t>(meshData.SubMeshes.size());
+//
+//	ofs.write(reinterpret_cast<char*>(&md), sizeof(md));
+//
+//	if (!meshData.Vertices.empty())
+//	{
+//		ofs.write(reinterpret_cast<const char*>(!meshData.Vertices.data()), sizeof(VTX_MESH) * !meshData.Vertices.size());
+//	}
+//
+//	if (!meshData.Indices.empty())
+//	{
+//		ofs.write(reinterpret_cast<const char*>(meshData.Indices.data()), sizeof(uint32_t) * meshData.Indices.size());
+//	}
+//
+//	if (!meshData.Materials.empty())
+//	{
+//		SaveMaterial(ofs, meshData.Materials);
+//	}
+//
+//	if (!meshData.SubMeshes.empty())
+//	{
+//		SaveSubMesh(ofs, meshData.SubMeshes);
+//	}
+//
+//	return true;
+//}
+
+//engine::_bool engine::LoadManager::SaveMaterial(std::ofstream& ofs, const std::vector<MaterialData>& material)
+//{
+//	for (auto& md : material)
+//	{
+//		MaterialInfo mi;
+//		mi.NameLength = static_cast<uint32_t>(md.name.size());
+//		ofs.write(reinterpret_cast<const char*>(&mi), sizeof(mi));
+//		ofs.write(md.name.c_str(), mi.NameLength);
+//	}
+//
+//	return true;
+//}
+//
+//engine::_bool engine::LoadManager::SaveSubMesh(std::ofstream& ofs, const std::vector<SubMeshData>& subMesh)
+//{
+//	for (auto& sd : subMesh)
+//	{
+//		SubMeshInfo si;
+//		si.NameLength = static_cast<uint32_t>(sd.name.size());
+//		si.IndexOffset = static_cast<uint32_t>(sd.indexOffset);
+//		si.IndexCount = static_cast<uint32_t>(sd.indexCount);
+//		si.MaterialIndex = static_cast<uint32_t>(sd.materialIndex);
+//
+//		ofs.write(reinterpret_cast<const char*>(&si), sizeof(si));
+//		ofs.write(sd.name.c_str(), si.NameLength);
+//	}
+//
+//	return true;
+//}
+//
+//engine::_bool engine::LoadManager::LoadStaticMesh(std::ifstream& ifs, ApplicationMode mode)
+//{
+//	SharedPtr<GameObject> gameObject = GameObject::Create();
+//
+//	if (mode == EDITOR)
+//	{
+//		SharedPtr<MeshRenderer> meshRenderer = editor::EditorComponentManager::GetInstance().CreateComponent<MeshRenderer>(gameObject);
+//
+//	}
+//
+//	else if (mode == CLIENT)
+//	{
+//		//SharedPtr<MeshRenderer> meshRenderer = ComponentFactory::GetInstance().CreateComponent()
+//	}
+//
+//	return true;
+//}
+//
+//engine::_bool engine::LoadManager::LoadMaterial(std::ifstream& ifs, ApplicationMode mode)
+//{
+//	return true;
+//}
+//
+//engine::_bool engine::LoadManager::LoadSubMesh(std::ifstream& ifs, ApplicationMode mode)
+//{
+//	return true;
+//}
 
 IMPLEMENT_SINGLETON(engine::LoadManager)

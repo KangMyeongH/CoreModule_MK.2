@@ -65,7 +65,6 @@ void engine::Camera::to_json(nlohmann::ordered_json& j)
 	std::string type = "Camera";
 	j = nlohmann::ordered_json{
 		{"type", type},
-		{"instanceID", GetInstanceID()},
 		{"fov", m_FiledOfView},
 		{"aspectRatio", m_AspectRatio},
 		{"nearPlane", m_NearPlane},
@@ -75,7 +74,6 @@ void engine::Camera::to_json(nlohmann::ordered_json& j)
 
 void engine::Camera::from_json(const nlohmann::ordered_json& j)
 {
-	SetInstanceID(j.at("instanceID").get<int>());
 	j.at("fov").get_to(m_FiledOfView);
 	j.at("aspectRatio").get_to(m_AspectRatio);
 	j.at("nearPlane").get_to(m_NearPlane);

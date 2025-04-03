@@ -205,7 +205,6 @@ void engine::TextureUI::to_json(nlohmann::ordered_json& j)
 	std::string type = "TextureUI";
 	j = nlohmann::ordered_json{
 		{"type", type},
-		{"instanceID", GetInstanceID()},
 		{"enable", m_bEnabled},
 		{"sortingOrder", m_SortingOrder},
 		{"path", m_TexturePath},
@@ -216,10 +215,6 @@ void engine::TextureUI::to_json(nlohmann::ordered_json& j)
 
 void engine::TextureUI::from_json(const nlohmann::ordered_json& j)
 {
-	if (j.contains("instanceID"))
-	{
-		SetInstanceID(j.at("instanceID").get<_int>());
-	}
 	if (j.contains("enable"))
 	{
 		j.at("enable").get_to(m_bEnabled);

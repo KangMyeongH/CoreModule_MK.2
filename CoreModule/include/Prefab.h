@@ -28,7 +28,6 @@ namespace engine
         //======================================//
         //				  method				//
         //======================================//
-        void RegenerateInstanceID(const SharedPtr<GameObject>& gameObject);
 
         //======================================//
         //				 serialize				//
@@ -40,8 +39,6 @@ namespace engine
         //				  fields				//
         //======================================//
     private:
-        std::atomic<_int> 		m_IdGenerator; // prefab 전용 로컬 id 생성기
         SharedPtr<GameObject> 	m_TemplateRoot;
-        GameObjects             m_GameObjects;
     };
 }

@@ -97,6 +97,9 @@
     <Filter Include="00. System\Prefab">
       <UniqueIdentifier>{d784d5bb-b42c-4953-beb0-892875a4cc6b}</UniqueIdentifier>
     </Filter>
+    <Filter Include="00. System\Prefab\Manager">
+      <UniqueIdentifier>{16f16a6e-c5e1-44d8-a506-dc40acd1d147}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="include\core_defines.h">
@@ -219,11 +222,11 @@
     <ClInclude Include="include\SkinnedMeshRenderer.h">
       <Filter>00. System\Graphic\Renderer</Filter>
     </ClInclude>
-    <ClInclude Include="include\PrefabManager.h">
-      <Filter>00. System\Prefab</Filter>
-    </ClInclude>
     <ClInclude Include="include\Prefab.h">
       <Filter>00. System\Prefab</Filter>
+    </ClInclude>
+    <ClInclude Include="include\PrefabManager.h">
+      <Filter>00. System\Prefab\Manager</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -320,11 +323,11 @@
     <ClCompile Include="src\SkinnedMeshRenderer.cpp">
       <Filter>00. System\Graphic\Renderer</Filter>
     </ClCompile>
-    <ClCompile Include="src\PrefabManager.cpp">
-      <Filter>00. System\Prefab</Filter>
-    </ClCompile>
     <ClCompile Include="src\Prefab.cpp">
       <Filter>00. System\Prefab</Filter>
+    </ClCompile>
+    <ClCompile Include="src\PrefabManager.cpp">
+      <Filter>00. System\Prefab\Manager</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

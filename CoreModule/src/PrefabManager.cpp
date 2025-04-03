@@ -1,5 +1,6 @@
 #include "PrefabManager.h"
 
+#include "GameObject.h"
 #include "LoadManager.h"
 #include "Prefab.h"
 
@@ -39,11 +40,13 @@ engine::Prefab& engine::PrefabManager::AddPrefab(const _wstring& path)
 
 void engine::PrefabManager::MakePrefab(const SharedPtr<GameObject>& gameObject, const _wstring& path)
 {
-	Prefab prefab(gameObject);
+	std::wstring fullPath = path + L"\\" + StringToWString(gameObject->GetName()) + L".prefab";
 
+	gameObject->SetAssetPath(fullPath);
+	Prefab prefab(gameObject);
 	LoadManager::GetInstance().SavePrefab(prefab, path);
 
-	m_PrefabMap.emplace(path, prefab);
+	m_PrefabMap[fullPath] = prefab;
 }
 
 void engine::PrefabManager::AddTempGameObject(const SharedPtr<GameObject>& gameObject)

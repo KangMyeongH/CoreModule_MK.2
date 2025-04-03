@@ -2,6 +2,8 @@
 
 #include "EditorComponentManager.h"
 #include "GameObject.h"
+#include "Prefab.h"
+#include "PrefabManager.h"
 #include "Renderer.h"
 #include "UI.h"
 
@@ -117,7 +119,14 @@ nlohmann::ordered_json engine::editor::Hierarchy::ToJson() const
 
 	for (const auto& obj : m_GameObjects)
 	{
-		j["GameObjects"].push_back(obj);
+		if (obj->GetTransform()->GetParentID() == -1)
+		{
+			nlohmann::ordered_json objJson;
+
+			GameObject::ToJson(objJson, obj, EDITOR);
+
+			j["GameObjects"].push_back(objJson);
+		}
 	}
 
 	return j;
@@ -135,8 +144,26 @@ void engine::editor::Hierarchy::FromJson(const nlohmann::ordered_json& j)
 
 	for (const auto& objJson : j.at("GameObjects"))
 	{
-		auto gameObject = AddGameObject();
-		objJson.get_to(gameObject);
+		_string assetPath;
+		objJson.at("assetPath").get_to(assetPath);
+
+		_wstring ext = GetFileExtensionW(StringToWString(assetPath));
+
+		if (ext != L"prefab")
+		{
+			auto gameObject = GameObject::Create("GameObject", EDITOR);
+			GameObject::FromJson(objJson, gameObject, EDITOR);
+		}
+
+		else
+		{
+			PrefabManager::GetInstance().GetPrefab(StringToWString(assetPath)).GetRoot()->Clone(EDITOR);
+
+			if (ext == L"model")
+			{
+				
+			}
+		}
 	}
 
 	for (auto& gameObject : m_GameObjects)
@@ -149,6 +176,4 @@ void engine::editor::Hierarchy::FromJson(const nlohmann::ordered_json& j)
 			}
 		}
 	}
-
-	setupTransformHierarchy();
 }

@@ -169,33 +169,17 @@ void engine::Transform::addChild(const SharedPtr<Transform>& child)
 
 void engine::Transform::to_json(nlohmann::ordered_json& j)
 {
-	j = nlohmann::ordered_json{
-		{"position", GetLocalPosition()},
-		{"rotation", GetLocalRotation()},
-		{"scale", GetLocalScale()},
-		{"euler", m_LocalEulerAngles}
-	};
+
 }
 
 void engine::Transform::from_json(const nlohmann::ordered_json& j)
 {
-	SetLocalPosition(j.at("position").get<Vector3>());
-	SetLocalRotation(j.at("rotation").get<Quaternion>());
-	SetLocalScale(j.at("scale").get<Vector3>());
+
 }
 
 void engine::to_json(nlohmann::ordered_json& j, const SharedPtr<Transform>& t)
 {
-	_int parentID = -1;
-
-	if (auto parent = t->m_Parent.lock())
-	{
-		parentID = parent->GetInstanceID();
-	}
-
 	j = nlohmann::ordered_json{
-		{"parentID", parentID},
-		{"instanceID", t->GetInstanceID()},
 		{"position", t->GetLocalPosition()},
 		{"rotation", t->GetLocalRotation()},
 		{"scale", t->GetLocalScale()}
@@ -204,10 +188,6 @@ void engine::to_json(nlohmann::ordered_json& j, const SharedPtr<Transform>& t)
 
 void engine::from_json(const nlohmann::ordered_json& j, const SharedPtr<Transform>& t)
 {
-	_int parentID;
-	j.at("parentID").get_to(parentID);
-	t->m_ParentID = parentID;
-	t->SetInstanceID(j.at("instanceID").get<_int>());
 	t->SetLocalPosition(j.at("position").get<Vector3>());
 	t->SetLocalRotation(j.at("rotation").get<Quaternion>());
 	t->SetLocalScale(j.at("scale").get<Vector3>());

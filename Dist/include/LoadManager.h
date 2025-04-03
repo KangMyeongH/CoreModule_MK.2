@@ -43,13 +43,21 @@ namespace engine
         _wstring OpenFileDialog();
         _wstring BrowseFolderDialog();
 
-        _bool SaveStaticMesh(std::ofstream& ofs, const MeshData& meshData);
-        _bool SaveMaterial(std::ofstream& ofs, const std::vector<MaterialData>& material);
-    	_bool SaveSubMesh(std::ofstream& ofs, const std::vector<SubMeshData>& subMesh);
+        void WriteString(std::ofstream& ofs, const std::string& str);
+        void WriteModelDataToFile(const ModelData& model, const std::wstring& path);
+        void WriteAnimationClipDataToFile(const AnimationClip& clip, const std::wstring& path);
 
-        _bool LoadStaticMesh(std::ifstream& ifs, ApplicationMode mode = CLIENT);
-        _bool LoadMaterial(std::ifstream& ifs, ApplicationMode mode);
-        _bool LoadSubMesh(std::ifstream& ifs, ApplicationMode mode);
+        std::string ReadString(std::ifstream& ifs);
+        ModelData ReadModelDataFromFile(const std::wstring& path);
+        AnimationClip ReadAnimationClipDataFromFile(const std::wstring& path);
+
+     //   _bool SaveStaticMesh(std::ofstream& ofs, const MeshData& meshData);
+     //   _bool SaveMaterial(std::ofstream& ofs, const std::vector<MaterialData>& material);
+    	//_bool SaveSubMesh(std::ofstream& ofs, const std::vector<SubMeshData>& subMesh);
+
+     //   _bool LoadStaticMesh(std::ifstream& ifs, ApplicationMode mode = CLIENT);
+     //   _bool LoadMaterial(std::ifstream& ifs, ApplicationMode mode);
+     //   _bool LoadSubMesh(std::ifstream& ifs, ApplicationMode mode);
 
         //======================================//
         //				 serialize				//

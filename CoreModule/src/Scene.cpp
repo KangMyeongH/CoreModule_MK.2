@@ -153,7 +153,12 @@ nlohmann::ordered_json engine::Scene::To_Json() const
 
 	for (const auto& obj : m_GameObjects)
 	{
-		j["GameObjects"].push_back(obj);
+		if (obj->GetTransform()->GetParentID() == -1)
+		{
+			nlohmann::ordered_json objJson;
+			GameObject::ToJson(objJson, obj, CLIENT);
+			j["GameObjects"].push_back(objJson);
+		}
 	}
 
 	return j;
@@ -165,10 +170,8 @@ void engine::Scene::From_Json(const nlohmann::ordered_json& j)
 	for (const auto& objJson : j.at("GameObjects"))
 	{
 		SharedPtr<GameObject> obj = GameObject::Create();
-		objJson.get_to(obj);
+		GameObject::FromJson(objJson, obj, CLIENT);
 	}
-
-	setupTransformHierarchy();
 }
 
 void engine::Scene::setupTransformHierarchy() const

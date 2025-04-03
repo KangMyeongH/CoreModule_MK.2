@@ -33,6 +33,7 @@ namespace engine
 
 		GameObject(const GameObject& rhs)
 			: Object(rhs),
+			m_AssetPath(rhs.m_AssetPath),
 			m_bActiveSelf(rhs.m_bActiveSelf),
 			m_bActiveInHierarchy(rhs.m_bActiveInHierarchy),
 			m_bStatic(rhs.m_bStatic)
@@ -123,6 +124,9 @@ namespace engine
 		void 							SetTag(const _string& tag);
 		_string 						GetTag() const { return m_Tag; }
 
+		void							SetAssetPath(const _wstring& path) { m_AssetPath = path; }
+		_wstring						GetAssetPath() const { return m_AssetPath; }
+
 		static SharedPtr<GameObject> 	Create(const _string& name = "GameObject", ApplicationMode mode = CLIENT);
 		SharedPtr<GameObject> 			Clone(ApplicationMode mode = CLIENT) const;
 		void 							Destroy() override;
@@ -150,9 +154,9 @@ namespace engine
 		//======================================//
 		//				 serialize				//
 		//======================================//
-
-		friend void to_json(nlohmann::ordered_json& j, const SharedPtr<GameObject>& obj);
-		friend void from_json(const nlohmann::ordered_json& j, const SharedPtr<GameObject>& obj);
+	public:
+		static void ToJson(nlohmann::ordered_json& j, const SharedPtr<GameObject>& obj, ApplicationMode mode);
+		static void FromJson(const nlohmann::ordered_json& j, const SharedPtr<GameObject>& obj, ApplicationMode mode);
 
 	private:
 		//======================================//
@@ -162,6 +166,7 @@ namespace engine
 		Components						m_Components;
 		SharedPtr<Transform>			m_Transform;
 		_string							m_Tag;
+		_wstring						m_AssetPath;
 		_bool							m_bActiveSelf;
 		_bool							m_bActiveInHierarchy;
 		_bool							m_bStatic;

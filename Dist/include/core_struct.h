@@ -572,8 +572,8 @@ namespace engine
 
 	struct AnimationClip
 	{
-		_string Name;
-		double Duration;
+		_string Name;	// 애니메이션 이름
+		double 	Duration; // 애니메이션 총 길이
 		std::vector<BoneKeyFrames> Tracks;
 	};
 
@@ -593,16 +593,17 @@ namespace engine
 
 	struct MaterialData
 	{
-		std::string name;
+		std::string MaterialName;
+		int MaterialIndex;
 	};
 
 	struct SubMeshData
 	{
-		std::string name;
+		std::string SubMeshName;
 
-		int indexOffset;
-		int indexCount;
-		int materialIndex;
+		int IndexOffset;
+		int IndexCount;
+		int MaterialIndex;
 	};
 
 	struct MeshInfo
@@ -615,15 +616,50 @@ namespace engine
 		uint32_t subMeshCount;
 	};
 
+	struct SkinnedData
+	{
+		uint32_t BoneIndices[4];
+		float BoneWeight[4];
+	};
+
+	struct BoneData
+	{
+		std::string BoneName;
+
+		int Index;
+		int parentIndex;
+
+		float tx, ty, tz;
+		float rx, ry, rz, rw;
+		float sx, sy, sz;
+
+		float offsetMatrix[16];
+	};
+
 	struct MeshData
 	{
-		std::string Name;
+		std::string MeshName;
+		bool IsSkinned;
+
+		float tx, ty, tz;
+		float rx, ry, rz, rw;
+		float sx, sy, sz;
 
 		std::vector<VTX_MESH> Vertices;
 		std::vector<_uint> Indices;
 
 		std::vector<MaterialData> Materials;
 		std::vector<SubMeshData> SubMeshes;
+
+		std::vector<SkinnedData> SkinnedData;
+		std::vector<BoneData> Bones;
+	};
+
+	struct ModelData
+	{
+		std::string ModelName;
+
+		std::vector<MeshData> Meshes;
 	};
 
 	struct MaterialInfo

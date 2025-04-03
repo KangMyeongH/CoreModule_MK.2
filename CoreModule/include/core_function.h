@@ -23,6 +23,11 @@ namespace engine
 
 	inline _string WStringToString(const _wstring& wstring)
 	{
+		if (wstring.empty())
+		{
+			return "";
+		}
+
 		int sizeNeeded = WideCharToMultiByte(CP_UTF8, 0, &wstring[0], static_cast<int>(wstring.size()), nullptr, 0, nullptr, nullptr);
 		std::string str(sizeNeeded, 0);
 		WideCharToMultiByte(CP_UTF8, 0, &wstring[0], static_cast<int>(wstring.size()), &str[0], sizeNeeded, nullptr, nullptr);
@@ -31,6 +36,11 @@ namespace engine
 
 	inline _wstring StringToWString(const _string& string)
 	{
+		if (string.empty())
+		{
+			return L"";
+		}
+
 		int sizeNeeded = MultiByteToWideChar(CP_UTF8, 0, &string[0], static_cast<int>(string.size()), nullptr, 0);
 		std::wstring wstr(sizeNeeded, 0);
 		MultiByteToWideChar(CP_UTF8, 0, &string[0], static_cast<int>(string.size()), &wstr[0], sizeNeeded);
@@ -41,6 +51,32 @@ namespace engine
 	{
 		std::ifstream File(filename);
 		return File.good();
+	}
+
+	inline std::wstring GetFileExtensionW(const std::wstring& fullPath)
+	{
+		size_t pos = fullPath.find_last_of(L"\\/");
+
+		if (pos == std::wstring::npos)
+			return fullPath;
+
+		std::wstring fileNameWithExt = fullPath.substr(pos + 1);
+
+		size_t dotPos = fileNameWithExt.find_last_of(L'.');
+
+		std::wstring extension;
+
+		if (dotPos != std::wstring::npos)
+		{
+			extension = fileNameWithExt.substr(dotPos + 1);
+		}
+
+		else
+		{
+			extension.clear();
+		}
+
+		return extension;
 	}
 
 	template<typename T>
