@@ -417,7 +417,7 @@ void engine::LoadManager::WriteAnimationClipDataToFile(const AnimationClip& clip
 {
 	std::wstring fileName = path + L"\\" + StringToWString(clip.Name) + L".anim";
 
-	std::ofstream ofs(path, std::ios::binary);
+	std::ofstream ofs(fileName, std::ios::binary);
 	if (!ofs)
 	{
 		throw std::runtime_error("Failed to open animation file for writing");
