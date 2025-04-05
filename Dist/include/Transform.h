@@ -62,6 +62,15 @@ namespace engine
 			}
 		}
 
+		_matrix GetLocalMatrix() const
+		{
+			const _matrix matScale = DirectX::XMMatrixScalingFromVector(m_LocalScale.ToVector());
+			const _matrix matRot = DirectX::XMMatrixRotationQuaternion(m_LocalRotation.ToVector());
+			const _matrix matTrans = DirectX::XMMatrixTranslationFromVector(m_LocalPosition.ToVector());
+
+			return matScale * matRot * matTrans;
+		}
+
 		Vector3 Position() const
 		{
 			updateMatrixIfNeeded();

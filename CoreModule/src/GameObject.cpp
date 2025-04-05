@@ -4,8 +4,8 @@
 #include "PrefabManager.h"
 #include "Scene.h"
 
-engine::GameObject::GameObject()
-	: Object("GameObject"),
+engine::GameObject::GameObject(const _string& name)
+	: Object(name),
 	m_Transform(Transform::create()),
 	m_AssetPath(),
 	m_bActiveSelf(true),
@@ -44,10 +44,31 @@ void engine::GameObject::SetTag(const _string& tag)
 	m_Tag = tag;
 }
 
+engine::SharedPtr<engine::GameObject> engine::GameObject::FindGameObject(const std::string& name) const
+{
+	for (auto& child : *m_Transform->GetChildren())
+	{
+		auto childGameObject = child->GetGameObject().lock();
+
+		if (childGameObject->GetName() == name)
+		{
+			return childGameObject;
+		}
+
+		auto result = childGameObject->FindGameObject(name);
+		if (result)
+		{
+			return result;
+		}
+	}
+
+	return nullptr;
+}
+
 engine::SharedPtr<engine::GameObject> engine::GameObject::Create(const _string& name, ApplicationMode mode)
 {
 	SharedPtr<GameObject> newGameObject{
-		new GameObject(), [](const GameObject* ptr) { delete ptr; }
+		new GameObject(name), [](const GameObject* ptr) { delete ptr; }
 	};
 
 	if (mode == CLIENT)

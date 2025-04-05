@@ -1,6 +1,7 @@
 #include "MeshRenderer.h"
 
 #include "D3D11Manager.h"
+#include "LoadManager.h"
 #include "Material.h"
 #include "Mesh.h"
 
@@ -96,10 +97,34 @@ void engine::MeshRenderer::Render(const ComPtr<ID3D11DeviceContext>& context)
 
 void engine::MeshRenderer::to_json(nlohmann::ordered_json& j)
 {
+	std::string type = "MeshRenderer";
+	j = nlohmann::ordered_json{
+		{"type", type},
+		{"materials", nlohmann::ordered_json::array() }
+	};
+
+	for (const auto& pair : m_Material)
+	{
+		nlohmann::ordered_json matJson;
+
+		int index = pair.first;
+		std::string path = WStringToString(pair.second->GetPath());
+		j["materials"].push_back({ {"index", index}, {"path", path} });
+	}
 }
 
 void engine::MeshRenderer::from_json(const nlohmann::ordered_json& j)
 {
+	for (const auto& matJson : j.at("materials"))
+	{
+		int index = matJson.at("index").get<_int>();
+		_wstring path = StringToWString(matJson.at("path").get<_string>());
+
+		SharedPtr<Material> material = Material::Create(shared_from_this());
+		LoadManager::GetInstance().LoadMaterialData(material, path);
+
+		SetMaterial(material, index);
+	}
 }
 
 void engine::MeshRenderer::Destroy()

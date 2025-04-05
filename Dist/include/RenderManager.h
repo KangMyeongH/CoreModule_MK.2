@@ -9,6 +9,7 @@ namespace engine
     using Renderers = std::vector<SharedPtr<Renderer>>;
     using RendererList = std::list<SharedPtr<Renderer>>;
     using Cameras = std::list<SharedPtr<Camera>>;
+    using Models = std::unordered_map<_wstring, ModelData>;
 
     class COREMODULE_API RenderManager
     {
@@ -58,6 +59,7 @@ namespace engine
 
     	WeakPtr<Camera> 	m_MainCamera;
         Cameras 			m_Cameras;
+        Models              m_Models;
 
         _float4X4           m_ViewMat;
         _float4X4           m_ProjMat;

@@ -20,6 +20,7 @@
   </ItemGroup>
   <ItemGroup>
     <!-- src 폴더의 모든 CPP 파일을 포함 -->
+    <ClCompile Include="src\AssetManager.cpp" />
     <ClCompile Include="src\Behaviour.cpp" />
     <ClCompile Include="src\Camera.cpp" />
     <ClCompile Include="src\Component.cpp" />
@@ -56,6 +57,7 @@
   </ItemGroup>
   <ItemGroup>
     <!-- include 폴더의 모든 헤더 파일을 포함 -->
+    <ClInclude Include="include\AssetManager.h" />
     <ClInclude Include="include\Behaviour.h" />
     <ClInclude Include="include\Camera.h" />
     <ClInclude Include="include\Component.h" />

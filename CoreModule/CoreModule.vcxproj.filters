@@ -228,6 +228,7 @@
     <ClInclude Include="include\PrefabManager.h">
       <Filter>00. System\Prefab\Manager</Filter>
     </ClInclude>
+    <ClInclude Include="include\AssetManager.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\GameObject.cpp">
@@ -329,6 +330,7 @@
     <ClCompile Include="src\PrefabManager.cpp">
       <Filter>00. System\Prefab\Manager</Filter>
     </ClCompile>
+    <ClCompile Include="src\AssetManager.cpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="cpp.hint" />

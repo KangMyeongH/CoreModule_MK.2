@@ -66,5 +66,8 @@ namespace engine
         //======================================//
         //				  fields				//
         //======================================//
+    private:
+        std::unordered_map<_wstring, ModelData> m_Models;
+        std::unordered_map<_wstring, AnimationClip> m_AnimationClips;
     };
 }

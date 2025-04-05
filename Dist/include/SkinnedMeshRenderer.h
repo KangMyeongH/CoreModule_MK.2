@@ -23,7 +23,12 @@ namespace engine
         SharedPtr<Mesh> GetMesh() { return m_Mesh; }
         void SetMesh(const SharedPtr<Mesh>& mesh) { m_Mesh = mesh; }
 
-        void SetAnimation(const std::unordered_map<_string, AnimationClip>& animationMap) { m_Animation = animationMap; }
+        std::unordered_map<_string, AnimationClip>* GetAnimations() { return &m_Animation; }
+
+        void SetAnimation(const std::unordered_map<_string, AnimationClip>& animationMap)
+        {
+	        m_Animation = animationMap;
+        }
         void SetSkeleton(const Skeleton& skeleton) { m_Skeleton = skeleton; }
 
         //======================================//
@@ -57,6 +62,7 @@ namespace engine
         Skeleton m_Skeleton;
         std::unordered_map<_string, AnimationClip> m_Animation;
         std::vector<_float4X4> m_BoneMatrix;
+        _string m_CurrentAnimation;
         double m_CurrentTime;
     };
 }

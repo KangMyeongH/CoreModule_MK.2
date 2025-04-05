@@ -1,6 +1,7 @@
 #include "SkinnedMeshRenderer.h"
 
 #include "D3D11Manager.h"
+#include "LoadManager.h"
 #include "Material.h"
 #include "Mesh.h"
 #include "TimeManager.h"
@@ -143,16 +144,40 @@ void engine::SkinnedMeshRenderer::UpdateAnimation(double deltaTime)
 {
 	m_CurrentTime += 0.002;
 
-	std::vector<_matrix> localMatrices(m_Skeleton.Bones.size());
+	//std::vector<_matrix> localMatrices(m_Skeleton.Bones.size());
+	m_BoneMatrix.resize(m_Skeleton.Bones.size());
 
-	for (auto& clip : m_Animation)
+	if (m_Animation.empty())
 	{
-		if (clip.second.Duration < m_CurrentTime)
+		_matrix rootMat = m_Skeleton.RootBone->GetParent()->GetWorldMatrix();
+		_matrix rootInv = XMMatrixInverse(nullptr, rootMat);
+
+		for (int i = 0; i < static_cast<int>(m_Skeleton.Bones.size()); ++i)
+		{
+			_matrix global = m_Skeleton.Bones[i].Transform->GetWorldMatrix() * rootInv;
+
+			_matrix inverse = XMLoadFloat4x4(&m_Skeleton.Bones[i].Offset);
+
+			_float4X4 finalMat;
+			XMStoreFloat4x4(&finalMat, XMMatrixTranspose(inverse * global));
+
+			m_BoneMatrix[i] = finalMat;
+		}
+	}
+
+	else
+	{
+		m_CurrentAnimation = m_Animation.begin()->first;
+
+		auto& currentClip = m_Animation[m_CurrentAnimation];
+
+
+		if (currentClip.Duration < m_CurrentTime)
 		{
 			m_CurrentTime = 0;
 		}
 
-		for (auto& track : clip.second.Tracks)
+		for (auto& track : currentClip.Tracks)
 		{
 			Keyframe kf = SampleBoneTrack(track, m_CurrentTime);
 
@@ -163,10 +188,13 @@ void engine::SkinnedMeshRenderer::UpdateAnimation(double deltaTime)
 
 		m_BoneMatrix.resize(m_Skeleton.Bones.size());
 
+		_matrix rootMat = m_Skeleton.RootBone->GetParent()->GetWorldMatrix();
+		_matrix rootInv = XMMatrixInverse(nullptr, rootMat);
+
 		for (int i = 0; i < static_cast<int>(m_Skeleton.Bones.size()); ++i)
 		{
-			_matrix global = m_Skeleton.Bones[i].Transform->GetWorldMatrix();
-
+			_matrix global = m_Skeleton.Bones[i].Transform->GetWorldMatrix() * rootInv;
+			//_matrix global = m_Skeleton.Bones[i].Transform->GetWorldMatrix();
 			_matrix inverse = XMLoadFloat4x4(&m_Skeleton.Bones[i].Offset);
 
 			_float4X4 finalMat;
@@ -176,7 +204,6 @@ void engine::SkinnedMeshRenderer::UpdateAnimation(double deltaTime)
 		}
 	}
 }
-
 
 void engine::SkinnedMeshRenderer::Destroy()
 {
@@ -192,11 +219,50 @@ void engine::SkinnedMeshRenderer::to_json(nlohmann::ordered_json& j)
 {
 	std::string type = "SkinnedMeshRenderer";
 	j = nlohmann::ordered_json{
-		{"type", type}
+		{"type", type},
+		{"materials", nlohmann::ordered_json::array()},
+		{"animationClips", nlohmann::ordered_json::array()}
 	};
+
+	for (const auto& pair : m_Material)
+	{
+		nlohmann::ordered_json matJson;
+
+		int index = pair.first;
+		std::string path = WStringToString(pair.second->GetPath());
+		j["materials"].push_back({ {"index", index}, {"path", path} });
+	}
+
+	for (const auto& pair : m_Animation)
+	{
+		nlohmann::ordered_json animJson;
+
+		std::string animName = pair.first;
+		std::string path = WStringToString(pair.second.Path);
+		j["animationClips"].push_back({ {"index", animName}, {"path", path} });
+	}
 }
 
 void engine::SkinnedMeshRenderer::from_json(const nlohmann::ordered_json& j)
 {
+	for (const auto& matJson : j.at("materials"))
+	{
+		int index = matJson.at("index").get<_int>();
+		_wstring path = StringToWString(matJson.at("path").get<_string>());
 
+		SharedPtr<Material> material = Material::Create(shared_from_this());
+		LoadManager::GetInstance().LoadMaterialData(material, path);
+
+		SetMaterial(material, index);
+	}
+
+	for (const auto& animJson : j.at("animationClips"))
+	{
+		_string index = animJson.at("index").get<_string>();
+		_wstring path = StringToWString(animJson.at("path").get<_string>());
+
+		auto animationClip = LoadManager::GetInstance().ReadAnimationClipDataFromFile(path);
+
+		m_Animation.emplace(index, animationClip);
+	}
 }

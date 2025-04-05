@@ -1,6 +1,7 @@
 #include "LoadManager.h"
 #include <ShObjIdl.h>
 
+#include "D3D11Manager.h"
 #include "EditorComponentManager.h"
 #include "Hierarchy.h"
 #include "Material.h"
@@ -472,6 +473,13 @@ std::string engine::LoadManager::ReadString(std::ifstream& ifs)
 
 engine::ModelData engine::LoadManager::ReadModelDataFromFile(const std::wstring& path)
 {
+	auto it = m_Models.find(path);
+
+	if (it != m_Models.end())
+	{
+		return it->second;
+	}
+
 	std::ifstream ifs(path, std::ios::binary);
 
 	if (!ifs)
@@ -555,6 +563,69 @@ engine::ModelData engine::LoadManager::ReadModelDataFromFile(const std::wstring&
 		{
 			ifs.read(reinterpret_cast<char*>(mesh.SkinnedData.data()), sizeof(SkinnedData) * vertexCount);
 
+			// VIBuffer
+			auto viBuffer = std::make_shared<VIBuffer>();
+			std::vector<VTX_SKINNED_MESH> vertices;
+			vertices.reserve(mesh.Vertices.size());
+			int vtxIdx = 0;
+
+			for (auto& skinnedData : mesh.SkinnedData)
+			{
+				VTX_SKINNED_MESH vtx;
+
+				vtx.Position = mesh.Vertices[vtxIdx].Position;
+				vtx.Normal = mesh.Vertices[vtxIdx].Normal;
+				vtx.TexCoord0 = mesh.Vertices[vtxIdx].TexCoord0;
+				vtx.Tangent = mesh.Vertices[vtxIdx].Tangent;
+				memcpy(&vtx.BoneIndices, skinnedData.BoneIndices, sizeof(skinnedData.BoneIndices));
+				memcpy(&vtx.BoneWeight, skinnedData.BoneWeight, sizeof(skinnedData.BoneWeight));
+
+				vertices.push_back(vtx);
+				++vtxIdx;
+			}
+
+			viBuffer->NumVertexBuffers = 1;
+			viBuffer->VertexStride = sizeof(engine::VTX_SKINNED_MESH);
+			viBuffer->NumVertices = vertices.size();
+			viBuffer->IndexStride = 4;
+			viBuffer->NumIndices = mesh.Indices.size();
+			viBuffer->IndexFormat = DXGI_FORMAT_R32_UINT;
+			viBuffer->PrimitiveTopology = D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST;
+
+			D3D11_BUFFER_DESC vbDesc = {};
+			vbDesc.ByteWidth = viBuffer->VertexStride * viBuffer->NumVertices;
+			vbDesc.Usage = D3D11_USAGE_DEFAULT;
+			vbDesc.BindFlags = D3D11_BIND_VERTEX_BUFFER;
+			vbDesc.StructureByteStride = viBuffer->VertexStride;
+			vbDesc.CPUAccessFlags = 0;
+			vbDesc.MiscFlags = 0;
+
+			D3D11_SUBRESOURCE_DATA vbData = {};
+			vbData.pSysMem = vertices.data();
+
+			if (FAILED(engine::D3D11Manager::GetInstance().GetDevice()->CreateBuffer(&vbDesc, &vbData, viBuffer->VertexBuffer.ReleaseAndGetAddressOf())))
+			{
+				std::cerr << "ERROR : Failed to create Mesh VBuffer ! \n";
+			}
+
+			D3D11_BUFFER_DESC ibDesc = {};
+			ibDesc.ByteWidth = viBuffer->IndexStride * viBuffer->NumIndices;
+			ibDesc.Usage = D3D11_USAGE_DEFAULT;
+			ibDesc.BindFlags = D3D11_BIND_INDEX_BUFFER;
+			ibDesc.StructureByteStride = viBuffer->IndexStride;
+			ibDesc.CPUAccessFlags = 0;
+			ibDesc.MiscFlags = 0;
+
+			D3D11_SUBRESOURCE_DATA ibData = {};
+			ibData.pSysMem = mesh.Indices.data();
+
+			if (FAILED(engine::D3D11Manager::GetInstance().GetDevice()->CreateBuffer(&ibDesc, &ibData, viBuffer->IndexBuffer.ReleaseAndGetAddressOf())))
+			{
+				std::cerr << "ERROR : Failed to create mesh IBuffer ! \n";
+			}
+
+			mesh.VIBuffer = viBuffer;
+
 			// Bones
 			for (auto& bone : mesh.Bones)
 			{
@@ -565,14 +636,28 @@ engine::ModelData engine::LoadManager::ReadModelDataFromFile(const std::wstring&
 				ifs.read(reinterpret_cast<char*>(&bone.tx), sizeof(float) * 10); // tx~sz
 				ifs.read(reinterpret_cast<char*>(bone.offsetMatrix), sizeof(float) * 16);
 			}
+
+			for (auto& bone : mesh.Bones)
+			{
+				mesh.BoneMap.emplace(bone.BoneName, bone.Index);
+			}
 		}
 	}
+
+	m_Models.emplace(path, model);
 
 	return model;
 }
 
 engine::AnimationClip engine::LoadManager::ReadAnimationClipDataFromFile(const std::wstring& path)
 {
+	auto it = m_AnimationClips.find(path);
+
+	if (it != m_AnimationClips.end())
+	{
+		return it->second;
+	}
+
 	std::ifstream ifs(path, std::ios::binary);
 	if (!ifs)
 	{
@@ -595,6 +680,7 @@ engine::AnimationClip engine::LoadManager::ReadAnimationClipDataFromFile(const s
 
 	AnimationClip clip;
 	clip.Name = ReadString(ifs);
+	clip.Path = path;
 
 	ifs.read(reinterpret_cast<char*>(&clip.Duration), sizeof(double));
 
@@ -620,6 +706,8 @@ engine::AnimationClip engine::LoadManager::ReadAnimationClipDataFromFile(const s
 			ifs.read(reinterpret_cast<char*>(&kf.Scale.Value), sizeof(float) * 3);
 		}
 	}
+
+	m_AnimationClips.emplace(path, clip);
 
 	return clip;
 }

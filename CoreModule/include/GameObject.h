@@ -28,7 +28,7 @@ namespace engine
 		//				constructor				//
 		//======================================//
 
-		GameObject();
+		GameObject(const _string& name = "GameObject");
 		~GameObject() override;
 
 		GameObject(const GameObject& rhs)
@@ -126,6 +126,8 @@ namespace engine
 
 		void							SetAssetPath(const _wstring& path) { m_AssetPath = path; }
 		_wstring						GetAssetPath() const { return m_AssetPath; }
+
+		SharedPtr<GameObject>			FindGameObject(const std::string& name) const;
 
 		static SharedPtr<GameObject> 	Create(const _string& name = "GameObject", ApplicationMode mode = CLIENT);
 		SharedPtr<GameObject> 			Clone(ApplicationMode mode = CLIENT) const;

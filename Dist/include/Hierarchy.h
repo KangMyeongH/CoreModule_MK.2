@@ -36,6 +36,8 @@ namespace engine
             void        RemoveGameObject(const SharedPtr<GameObject>& gameObject);
             void 		FlushDestroyGameObject();
 
+            void        AddModel(const ModelData& model, const _wstring& path);
+
             void        Release();
 
         private:

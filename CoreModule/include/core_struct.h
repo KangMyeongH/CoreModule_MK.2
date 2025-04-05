@@ -552,6 +552,8 @@ namespace engine
 	{
 		std::vector<Bone> Bones;
 
+		SharedPtr<Transform> RootBone;
+
 		std::unordered_map<_string, _int> BoneIndexMap;
 	};
 
@@ -573,6 +575,7 @@ namespace engine
 	struct AnimationClip
 	{
 		_string Name;	// 애니메이션 이름
+		_wstring Path;	// 애니메이션 경로
 		double 	Duration; // 애니메이션 총 길이
 		std::vector<BoneKeyFrames> Tracks;
 	};
@@ -595,6 +598,10 @@ namespace engine
 	{
 		std::string MaterialName;
 		int MaterialIndex;
+
+		MaterialData() = default;
+		MaterialData(const MaterialData& rhs) = default;
+		MaterialData& operator=(const MaterialData& rhs) = default;
 	};
 
 	struct SubMeshData
@@ -604,6 +611,10 @@ namespace engine
 		int IndexOffset;
 		int IndexCount;
 		int MaterialIndex;
+
+		SubMeshData() = default;
+		SubMeshData(const SubMeshData& rhs) = default;
+		SubMeshData& operator=(const SubMeshData& rhs) = default;
 	};
 
 	struct MeshInfo
@@ -620,6 +631,10 @@ namespace engine
 	{
 		uint32_t BoneIndices[4];
 		float BoneWeight[4];
+
+		SkinnedData() = default;
+		SkinnedData(const SkinnedData& rhs) = default;
+		SkinnedData& operator=(const SkinnedData& rhs) = default;
 	};
 
 	struct BoneData
@@ -634,6 +649,10 @@ namespace engine
 		float sx, sy, sz;
 
 		float offsetMatrix[16];
+
+		BoneData() = default;
+		BoneData(const BoneData& rhs) = default;
+		BoneData& operator=(const BoneData& rhs) = default;
 	};
 
 	struct MeshData
@@ -653,6 +672,15 @@ namespace engine
 
 		std::vector<SkinnedData> SkinnedData;
 		std::vector<BoneData> Bones;
+
+		// 아래의 데이터는 바이너리화 할 때 들어가면 안됨.
+		std::unordered_map<_string, int> BoneMap;
+
+		SharedPtr<VIBuffer> VIBuffer;
+
+		MeshData() = default;
+		MeshData(const MeshData& rhs) = default;
+		MeshData& operator=(const MeshData& rhs) = default;
 	};
 
 	struct ModelData
@@ -660,6 +688,10 @@ namespace engine
 		std::string ModelName;
 
 		std::vector<MeshData> Meshes;
+
+		ModelData() = default;
+		ModelData(const ModelData& rhs) = default;
+		ModelData& operator=(const ModelData& rhs) = default;
 	};
 
 	struct MaterialInfo
