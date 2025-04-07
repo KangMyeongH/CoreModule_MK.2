@@ -1,13 +1,14 @@
 #include "Rigidbody.h"
 
+#include "GameObject.h"
 #include "PhysicsManager.h"
 #include "RenderManager.h"
 
 DEFINE_REGISTER_COMPONENT(Rigidbody)
 
 engine::Rigidbody::Rigidbody(const SharedPtr<GameObject>& owner, const _string& name) : Component(owner, name),
-	m_Mass(0),
-	m_Drag(0),
+	m_Mass(1.f),
+	m_Drag(0.f),
 	m_UseGravity(false),
 	m_IsKinematic(false)
 {
@@ -36,10 +37,27 @@ void engine::Rigidbody::Destroy()
 
 void engine::Rigidbody::to_json(nlohmann::ordered_json& j)
 {
+	_string type = "Rigidbody";
+
+	j = nlohmann::ordered_json{
+		{"type", type},
+		{"mass", m_Mass},
+		{"drag", m_Drag},
+		{"useGravity", m_UseGravity},
+		{"isKinematic", m_IsKinematic}
+	};
 }
 
 void engine::Rigidbody::from_json(const nlohmann::ordered_json& j)
 {
+	if (j.contains("mass"))
+		SetMass(j.at("mass").get<float>());
+	if (j.contains("drag"))
+		SetDrag(j.at("drag").get<float>());
+	if (j.contains("useGravity"))
+		SetUseGravity(j.at("useGravity").get<bool>());
+	if (j.contains("isKinematic"))
+		SetIsKinematic(j.at("isKinematic").get<bool>());
 }
 
 void engine::Rigidbody::registerComponent(ApplicationMode mode)
@@ -52,19 +70,19 @@ void engine::Rigidbody::registerComponent(ApplicationMode mode)
 
 void engine::Rigidbody::rigidbodyUpdate(const float deltaTime)
 {
-	//if (m_UseGravity)
-	//{
-	//	m_Velocity.y -= 9.81f * _deltaTime;
-	//}
+	if (m_UseGravity)
+	{
+		m_Velocity.Value.y -= 9.81f * deltaTime * 2.5f;
+	}
 
-	//m_Velocity.x *= 1.0f / (1.0f + m_Drag * _deltaTime);
-	//m_Velocity.y *= 1.0f / (1.0f + m_Drag * _deltaTime);
-	//m_Velocity.z *= 1.0f / (1.0f + m_Drag * _deltaTime);
+	m_Velocity.Value.x *= 1.0f / (1.0f + m_Drag * deltaTime);
+	m_Velocity.Value.y *= 1.0f / (1.0f + m_Drag * deltaTime);
+	m_Velocity.Value.z *= 1.0f / (1.0f + m_Drag * deltaTime);
 
-	//Transform* transform = &m_Owner->Get_Transform();
+	auto transform = m_Owner.lock()->GetTransform();
 
-	//if (transform)
-	//{
-	//	transform->Translate(m_Velocity * _deltaTime);
-	//}
+	if (transform)
+	{
+		transform->Translate(m_Velocity * deltaTime);
+	}
 }

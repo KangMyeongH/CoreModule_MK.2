@@ -28,6 +28,7 @@ void engine::editor::EditorComponentManager::Render(const ComPtr<ID3D11DeviceCon
 			if (owner->IsActive())
 			{
 				auto materials = renderer->GetMaterials();
+
 				for (auto material : materials)
 				{
 					if (material.second->GetShader())
@@ -35,10 +36,10 @@ void engine::editor::EditorComponentManager::Render(const ComPtr<ID3D11DeviceCon
 						material.second->SetMatrix("g_ViewMatrix", viewMat);
 						material.second->SetMatrix("g_ProjMatrix", projMat);
 						material.second->SetFloat4("CameraPosition", finalCamPos);
-
-						renderer->Render(context);
 					}
 				}
+
+				renderer->Render(context);
 			}
 		}
 	}
@@ -82,6 +83,11 @@ void engine::editor::EditorComponentManager::AddComponent(const SharedPtr<GameOb
 
 	else if (auto camera = std::dynamic_pointer_cast<Camera>(component))
 	{
+		if (!m_MainCamera.lock())
+		{
+			m_MainCamera = camera;
+		}
+
 		m_Cameras.push_back(camera);
 	}
 

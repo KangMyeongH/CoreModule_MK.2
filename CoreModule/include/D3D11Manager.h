@@ -52,6 +52,10 @@ namespace engine
         HRESULT CreateSampler(const D3D11_SAMPLER_DESC& desc, ComPtr<ID3D11SamplerState>& sampler) const;
         HRESULT CreateMesh(const _string& name);
 
+        HRESULT ClearBackBufferView(_float4 clearColor);
+        HRESULT ClearDepthStencilView();
+        HRESULT Present();
+
     	void 	Release();
 
     private:

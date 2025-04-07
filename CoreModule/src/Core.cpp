@@ -30,6 +30,7 @@ void engine::Core::registerObjects()
 {
 	m_PhysicsManager->RegisterRigidbody();
 	m_UIManager->RegisterUI();
+	m_RenderManager->RegisterRenderer();
 }
 
 void engine::Core::start()
@@ -68,10 +69,14 @@ void engine::Core::lateUpdate()
 void engine::Core::renderScene()
 {
 	ComPtr<ID3D11DeviceContext> context = m_D3D11Manager->GetContext();
+	m_D3D11Manager->ClearBackBufferView(_float4(0.2f, 0.2f, 0.2f, 1.f));
+	m_D3D11Manager->ClearDepthStencilView();
 
 	m_RenderManager->UpdateMainCamera();
 	m_RenderManager->Render(context);
 	m_UIManager->Render(context);
+
+	m_D3D11Manager->Present();
 }
 
 void engine::Core::destroy()
@@ -97,6 +102,7 @@ HRESULT engine::Core::Initialize(const HWND hwnd)
 	m_UIManager					= &UIManager::GetInstance();
 
 	m_TimeManager->Initialize();
+	m_InputManager->LockMouse(true);
 
 	return S_OK;
 }

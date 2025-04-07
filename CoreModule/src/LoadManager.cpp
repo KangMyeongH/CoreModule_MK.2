@@ -642,6 +642,54 @@ engine::ModelData engine::LoadManager::ReadModelDataFromFile(const std::wstring&
 				mesh.BoneMap.emplace(bone.BoneName, bone.Index);
 			}
 		}
+
+		else
+		{
+			// VIBuffer
+			auto viBuffer = std::make_shared<VIBuffer>();
+
+			viBuffer->NumVertexBuffers = 1;
+			viBuffer->VertexStride = sizeof(engine::VTX_MESH);
+			viBuffer->NumVertices = mesh.Vertices.size();
+			viBuffer->IndexStride = 4;
+			viBuffer->NumIndices = mesh.Indices.size();
+			viBuffer->IndexFormat = DXGI_FORMAT_R32_UINT;
+			viBuffer->PrimitiveTopology = D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST;
+
+			D3D11_BUFFER_DESC vbDesc = {};
+			vbDesc.ByteWidth = viBuffer->VertexStride * viBuffer->NumVertices;
+			vbDesc.Usage = D3D11_USAGE_DEFAULT;
+			vbDesc.BindFlags = D3D11_BIND_VERTEX_BUFFER;
+			vbDesc.StructureByteStride = viBuffer->VertexStride;
+			vbDesc.CPUAccessFlags = 0;
+			vbDesc.MiscFlags = 0;
+
+			D3D11_SUBRESOURCE_DATA vbData = {};
+			vbData.pSysMem = mesh.Vertices.data();
+
+			if (FAILED(engine::D3D11Manager::GetInstance().GetDevice()->CreateBuffer(&vbDesc, &vbData, viBuffer->VertexBuffer.ReleaseAndGetAddressOf())))
+			{
+				std::cerr << "ERROR : Failed to create Mesh VBuffer ! \n";
+			}
+
+			D3D11_BUFFER_DESC ibDesc = {};
+			ibDesc.ByteWidth = viBuffer->IndexStride * viBuffer->NumIndices;
+			ibDesc.Usage = D3D11_USAGE_DEFAULT;
+			ibDesc.BindFlags = D3D11_BIND_INDEX_BUFFER;
+			ibDesc.StructureByteStride = viBuffer->IndexStride;
+			ibDesc.CPUAccessFlags = 0;
+			ibDesc.MiscFlags = 0;
+
+			D3D11_SUBRESOURCE_DATA ibData = {};
+			ibData.pSysMem = mesh.Indices.data();
+
+			if (FAILED(engine::D3D11Manager::GetInstance().GetDevice()->CreateBuffer(&ibDesc, &ibData, viBuffer->IndexBuffer.ReleaseAndGetAddressOf())))
+			{
+				std::cerr << "ERROR : Failed to create mesh IBuffer ! \n";
+			}
+
+			mesh.VIBuffer = viBuffer;
+		}
 	}
 
 	m_Models.emplace(path, model);

@@ -9,9 +9,8 @@ DEFINE_REGISTER_COMPONENT(Camera)
 engine::Camera::Camera(const SharedPtr<GameObject>& owner)
 	: Component(owner),
 	m_ViewMat(), m_ProjMat(),
-	m_Target(0.f, 0.f, -10.f), m_Up(0.f, 1.f, 0.f),
-    m_FiledOfView(90.f), m_AspectRatio(),
-    m_NearPlane(0), m_FarPlane(0)
+    m_FiledOfView(90.f), m_AspectRatio(16.f/9.f),
+    m_NearPlane(1), m_FarPlane(100)
 {
 
 }
@@ -19,8 +18,7 @@ engine::Camera::Camera(const SharedPtr<GameObject>& owner)
 engine::Camera::Camera(const Camera& rhs)
 	: Component(rhs),
 	m_ViewMat(rhs.m_ViewMat), m_ProjMat(rhs.m_ProjMat),
-	m_Target(rhs.m_Target), m_Up(rhs.m_Up),
-	m_FiledOfView(rhs.m_FiledOfView), m_AspectRatio(rhs.m_AspectRatio),
+	m_FiledOfView(rhs.m_FiledOfView), m_AspectRatio(16.f / 9.f),
 	m_NearPlane(rhs.m_NearPlane), m_FarPlane(rhs.m_FarPlane)
 {
 	
@@ -28,9 +26,9 @@ engine::Camera::Camera(const Camera& rhs)
 
 void engine::Camera::UpdateCamera(_float4X4& viewMat, _float4X4& projMat) const
 {
-	_matrix rotMat = DirectX::XMMatrixRotationQuaternion(GetTransform()->GetLocalRotation().ToVector());
+	_matrix rotMat = DirectX::XMMatrixRotationQuaternion(GetTransform()->Rotation().ToVector());
 
-	_vector eye = GetTransform()->GetLocalPosition().ToVector();
+	_vector eye = GetTransform()->Position().ToVector();
 	_vector defaultForward = DirectX::XMVectorSet(0.f, 0.f, 1.f, 0.f);
 	_vector defaultUp = DirectX::XMVectorSet(0.f, 1.f, 0.f, 0.f);
 

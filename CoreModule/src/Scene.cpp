@@ -3,6 +3,12 @@
 #include <fstream>
 
 #include "GameObject.h"
+#include "LoadManager.h"
+#include "Mesh.h"
+#include "MeshRenderer.h"
+#include "Prefab.h"
+#include "PrefabManager.h"
+#include "SkinnedMeshRenderer.h"
 
 IMPLEMENT_SINGLETON(engine::Scene)
 
@@ -167,10 +173,107 @@ nlohmann::ordered_json engine::Scene::To_Json() const
 void engine::Scene::From_Json(const nlohmann::ordered_json& j)
 {
 	m_SceneName = j.at("sceneName").get<_string>();
+
 	for (const auto& objJson : j.at("GameObjects"))
 	{
-		SharedPtr<GameObject> obj = GameObject::Create();
-		GameObject::FromJson(objJson, obj, CLIENT);
+		_string assetPath;
+		objJson.at("assetPath").get_to(assetPath);
+
+		_wstring ext = GetFileExtensionW(StringToWString(assetPath));
+
+		if (ext == L"prefab")
+		{
+			auto gameObject = PrefabManager::GetInstance().GetPrefab(StringToWString(assetPath));
+		}
+
+		else
+		{
+			auto gameObject = GameObject::Create("GameObject", CLIENT);
+			GameObject::FromJson(objJson, gameObject, CLIENT);
+		}
+	}
+
+	for (auto& gameObject : m_GameObjects)
+	{
+		std::wstring path = gameObject->GetAssetPath();
+
+		_wstring ext = GetFileExtensionW(path);
+
+		if (ext == L"model")
+		{
+			auto modelData = LoadManager::GetInstance().ReadModelDataFromFile(path);
+
+			for (auto& meshData : modelData.Meshes)
+			{
+				auto meshObj = gameObject->FindGameObject(meshData.MeshName);
+				SharedPtr<Mesh> mesh = Mesh::Create(meshData.VIBuffer);
+
+				if (meshData.IsSkinned)
+				{
+					auto skinnedComponent = meshObj->GetComponent<SkinnedMeshRenderer>();
+
+					Skeleton skeleton;
+
+					for (auto& boneData : meshData.Bones)
+					{
+						auto boneObj = gameObject->FindGameObject(boneData.BoneName);
+
+						Bone bone;
+						bone.Name = boneData.BoneName;
+						bone.ParentIndex = boneData.parentIndex;
+						bone.Transform = boneObj->GetTransform();
+						memcpy(&bone.Offset, boneData.offsetMatrix, sizeof(boneData.offsetMatrix));
+
+						if (bone.ParentIndex == -1)
+						{
+							skeleton.RootBone = bone.Transform;
+						}
+
+						skeleton.Bones.push_back(bone);
+					}
+
+					skinnedComponent->SetSkeleton(skeleton);
+
+					std::vector<SubMesh> subMeshes;
+
+					for (auto& subMeshData : meshData.SubMeshes)
+					{
+						SubMesh subMesh;
+
+						subMesh.IndexOffset = subMeshData.IndexOffset;
+						subMesh.IndexCount = subMeshData.IndexCount;
+						subMesh.MaterialIndex = subMeshData.MaterialIndex;
+
+						subMeshes.push_back(subMesh);
+					}
+
+					mesh->SetSubMesh(subMeshes);
+
+					skinnedComponent->SetMesh(mesh);
+				}
+
+				else
+				{
+					auto meshRendererComponent = meshObj->GetComponent<MeshRenderer>();
+
+					std::vector<SubMesh> subMeshes;
+
+					for (auto& subMeshData : meshData.SubMeshes)
+					{
+						SubMesh subMesh;
+						subMesh.IndexOffset = subMeshData.IndexOffset;
+						subMesh.IndexCount = subMeshData.IndexCount;
+						subMesh.MaterialIndex = subMeshData.MaterialIndex;
+
+						subMeshes.push_back(subMesh);
+					}
+
+					mesh->SetSubMesh(subMeshes);
+
+					meshRendererComponent->SetMesh(mesh);
+				}
+			}
+		}
 	}
 }
 

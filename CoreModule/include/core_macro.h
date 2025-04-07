@@ -24,11 +24,34 @@ private: 																										\
 																												\
 	static ComponentRegistrar registrar_##className;
 
+//=====================================================================================================================
+
+#define DECLARE_REGISTER_SCRIPTBEHAVIOUR(className) 															\
+public: 																										\
+	engine::SharedPtr<engine::Component> Clone() const override                                     			\
+	{                                                                               							\
+		engine::SharedPtr<className> clone(CLONE_SHARED_PTR(className));                    					\
+        return clone;                                                               							\
+	}																											\
+																												\
+private: 																										\
+	static std::shared_ptr<className> create()																	\
+	{																											\
+		return std::shared_ptr<className>(new className(nullptr), [](const className* ptr) { delete ptr; });	\
+	}																											\
+																												\
+	static ComponentRegistrar registrar_##className;
+
 #define DEFINE_REGISTER_COMPONENT(className) 																	\
 	ComponentRegistrar engine::className::registrar_##className(#className, &engine::className::create);
 
+#define DEFINE_REGISTER_SCRIPTBEHAVIOUR(className)																\
+	ComponentRegistrar className::registrar_##className(#className, &className::create);
 
 #define REGISTER_COMPONENT(className) \
+	static ComponentRegistrar registrar_##className(#className, []() { return std::make_shared<className>(nullptr); });
+
+#define REGISTER_SCRIPTBEHAVIOUR(className) \
 	static ComponentRegistrar registrar_##className(#className, []() { return std::make_shared<className>(nullptr); });
 
 #pragma region null_or_failed_check

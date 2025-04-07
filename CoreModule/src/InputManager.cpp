@@ -2,7 +2,7 @@
 
 IMPLEMENT_SINGLETON(engine::InputManager)
 
-engine::InputManager::InputManager()
+engine::InputManager::InputManager(): m_bLockMouse(false)
 {
 	memset(m_KeyState, KEY_IDLE, sizeof(m_KeyState));
 }
@@ -93,6 +93,33 @@ void engine::InputManager::UpdateInput(HWND hwnd)
 	POINT mouse;
 	GetCursorPos(&mouse);
 	ScreenToClient(hwnd, &mouse);
+	Vector3 prevMousePos = m_MousePos;
+
 	m_MousePos = Vector3{ static_cast<_float>(mouse.x), static_cast<_float>(mouse.y), 0.f };
+
+	m_MouseDelta = m_MousePos - prevMousePos;
+
+	if (m_bLockMouse)
+	{
+		RECT clientRect;
+		GetClientRect(hwnd, &clientRect);
+
+		int centerX = (clientRect.right - clientRect.left) / 2;
+		int centerY = (clientRect.bottom - clientRect.top) / 2;
+
+		POINT centerPoint = { centerX, centerY };
+		ClientToScreen(hwnd, &centerPoint);
+
+		SetCursorPos(centerPoint.x, centerPoint.y);
+
+		GetCursorPos(&mouse);
+		ScreenToClient(hwnd, &mouse);
+		m_MousePos = Vector3{ static_cast<_float>(mouse.x), static_cast<_float>(mouse.y), 0.f };
+	}
+
+	if (IsKeyPressed(VK_ESCAPE))
+	{
+		m_bLockMouse = !m_bLockMouse;
+	}
 }
 

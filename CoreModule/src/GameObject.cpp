@@ -213,6 +213,11 @@ void engine::GameObject::FromJson(const nlohmann::ordered_json& j, const SharedP
 		component->from_json(component_json);
 		component->SetOwner(obj);
 		obj->m_Components[typeid(*component)].push_back(component);
+
+		if (mode == CLIENT)
+		{
+			component->registerComponent();
+		}
 	}
 
 	for (const auto& child_json : j.at("children"))

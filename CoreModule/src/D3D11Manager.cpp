@@ -102,7 +102,7 @@ HRESULT engine::D3D11Manager::Initialize(HWND hwnd, _bool isWindowed, _uint winS
 		m_BackBufferRTV.Get()
 	};
 
-	m_DeviceContext->OMSetRenderTargets(0, RTVs, m_DepthStencilView.Get());
+	m_DeviceContext->OMSetRenderTargets(1, RTVs, m_DepthStencilView.Get());
 
 	D3D11_VIEWPORT		viewPortDesc;
 	ZeroMemory(&viewPortDesc, sizeof(D3D11_VIEWPORT));
@@ -513,6 +513,40 @@ HRESULT engine::D3D11Manager::CreateSampler(const D3D11_SAMPLER_DESC& desc, ComP
 	}
 
 	return S_OK;
+}
+
+HRESULT engine::D3D11Manager::ClearBackBufferView(_float4 clearColor)
+{
+	if (!m_DeviceContext)
+	{
+		return E_FAIL;
+	}
+
+	m_DeviceContext->ClearRenderTargetView(m_BackBufferRTV.Get(), reinterpret_cast<_float*>(&clearColor));
+
+	return S_OK;
+}
+
+HRESULT engine::D3D11Manager::ClearDepthStencilView()
+{
+	if (!m_DeviceContext)
+	{
+		return E_FAIL;
+	}
+
+	m_DeviceContext->ClearDepthStencilView(m_DepthStencilView.Get(), D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.f, 0);
+
+	return S_OK;
+}
+
+HRESULT engine::D3D11Manager::Present()
+{
+	if (!m_SwapChain)
+	{
+		return E_FAIL;
+	}
+
+	return m_SwapChain->Present(0, 0);
 }
 
 void engine::D3D11Manager::Release()

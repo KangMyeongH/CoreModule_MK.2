@@ -9,14 +9,14 @@
 DEFINE_REGISTER_COMPONENT(SkinnedMeshRenderer)
 
 engine::SkinnedMeshRenderer::SkinnedMeshRenderer(const SharedPtr<GameObject>& owner, const _string& name)
-	: Renderer(owner, name), m_CurrentTime(0)
+	: Renderer(owner, name)
 {
 }
 
 engine::SkinnedMeshRenderer::~SkinnedMeshRenderer() = default;
 
 engine::SkinnedMeshRenderer::SkinnedMeshRenderer(const SkinnedMeshRenderer& rhs)
-	: Renderer(rhs), m_CurrentTime(0)
+	: Renderer(rhs)
 {
 }
 
@@ -96,7 +96,7 @@ void engine::SkinnedMeshRenderer::Render(const ComPtr<ID3D11DeviceContext>& cont
 	}
 }
 
-engine::Keyframe engine::SkinnedMeshRenderer::SampleBoneTrack(const BoneKeyFrames& track, double currTime)
+engine::Keyframe engine::SkinnedMeshRenderer::SampleBoneTrack(const BoneKeyFrames& track, const _float currTime)
 {
 	const auto& frames = track.Frames;
 
@@ -105,12 +105,12 @@ engine::Keyframe engine::SkinnedMeshRenderer::SampleBoneTrack(const BoneKeyFrame
 		return {};
 	}
 
-	if (currTime <= frames.front().Time)
+	if (currTime <= static_cast<float>(frames.front().Time))
 	{
 		return frames.front();
 	}
 
-	if (currTime >= frames.back().Time)
+	if (currTime >= static_cast<float>(frames.back().Time))
 	{
 		return frames.back();
 	}
@@ -140,15 +140,58 @@ engine::Keyframe engine::SkinnedMeshRenderer::SampleBoneTrack(const BoneKeyFrame
 	return frames.back();
 }
 
-void engine::SkinnedMeshRenderer::UpdateAnimation(double deltaTime)
+void engine::SkinnedMeshRenderer::ChangeAnimation(const _string& animName, const _float fadeDuration, const _bool isLoop)
 {
-	m_CurrentTime += 0.002;
+	auto it = m_Animation.find(animName);
 
-	//std::vector<_matrix> localMatrices(m_Skeleton.Bones.size());
-	m_BoneMatrix.resize(m_Skeleton.Bones.size());
-
-	if (m_Animation.empty())
+	if (it != m_Animation.end())
 	{
+		if (!m_AnimState.CurrentClip.empty() && animName != m_AnimState.CurrentClip)
+		{
+			m_AnimState.IsCrossFading = true;
+			m_AnimState.IsLoop = isLoop;
+
+			m_AnimState.OldClip = m_AnimState.CurrentClip;
+			m_AnimState.OldClipTime = m_AnimState.CurrentTime;
+
+			m_AnimState.CurrentClip = animName;
+			m_AnimState.CurrentTime = 0.0f;
+
+			m_AnimState.FadeDuration = fadeDuration;
+			m_AnimState.FadeTimer = 0.0f;
+		}
+
+		else
+		{
+			m_AnimState.IsLoop = isLoop;
+
+			m_AnimState.IsCrossFading = false;
+			m_AnimState.CurrentClip = animName;
+			m_AnimState.CurrentTime = 0.0f;
+		}
+
+		m_AnimState.NextClip.clear();
+		m_AnimState.NextFadeDuration = 0.f;
+		m_AnimState.NextIsLoop = false;
+		m_AnimState.IsFinish = false;
+	}
+}
+
+void engine::SkinnedMeshRenderer::SetNextAnimation(const _string& animName, const _float fadeDuration, const _bool isLoop)
+{
+	m_AnimState.NextClip = animName;
+	m_AnimState.NextFadeDuration = fadeDuration;
+	m_AnimState.NextIsLoop = isLoop;
+}
+
+void engine::SkinnedMeshRenderer::UpdateAnimation(_float deltaTime)
+{
+	m_AnimState.CurrentTime += deltaTime;
+
+	if (m_Animation.empty() || m_AnimState.CurrentClip.empty())
+	{
+		m_BoneMatrix.resize(m_Skeleton.Bones.size());
+
 		_matrix rootMat = m_Skeleton.RootBone->GetParent()->GetWorldMatrix();
 		_matrix rootInv = XMMatrixInverse(nullptr, rootMat);
 
@@ -167,23 +210,91 @@ void engine::SkinnedMeshRenderer::UpdateAnimation(double deltaTime)
 
 	else
 	{
-		m_CurrentAnimation = m_Animation.begin()->first;
-
-		auto& currentClip = m_Animation[m_CurrentAnimation];
-
-
-		if (currentClip.Duration < m_CurrentTime)
+		if (m_AnimState.IsCrossFading)
 		{
-			m_CurrentTime = 0;
+			m_AnimState.OldClipTime += deltaTime;
+			m_AnimState.FadeTimer += deltaTime;
 		}
 
-		for (auto& track : currentClip.Tracks)
+		if (m_Animation.find(m_AnimState.CurrentClip) != m_Animation.end())
 		{
-			Keyframe kf = SampleBoneTrack(track, m_CurrentTime);
+			_float currClipDur = m_Animation[m_AnimState.CurrentClip].Duration;
 
-			m_Skeleton.Bones[track.BoneIndex].Transform->SetLocalPosition(kf.Translation);
-			m_Skeleton.Bones[track.BoneIndex].Transform->SetLocalRotation(kf.Rotation);
-			m_Skeleton.Bones[track.BoneIndex].Transform->SetLocalScale(kf.Scale);
+			if (m_AnimState.CurrentTime > currClipDur)
+			{
+				if (m_AnimState.IsLoop)
+				{
+					m_AnimState.CurrentTime = std::fmod(m_AnimState.CurrentTime, currClipDur);
+				}
+
+				else
+				{
+					m_AnimState.CurrentTime = currClipDur;
+					m_AnimState.IsFinish = true;
+
+					if (!m_AnimState.NextClip.empty())
+					{
+						ChangeAnimation(m_AnimState.NextClip, m_AnimState.NextFadeDuration, m_AnimState.NextIsLoop);
+					}
+				}
+			}
+		}
+
+		if (m_AnimState.IsCrossFading && m_Animation.find(m_AnimState.OldClip) != m_Animation.end())
+		{
+			_float oldClipDur = m_Animation[m_AnimState.OldClip].Duration;
+			if (m_AnimState.OldClipTime > oldClipDur)
+			{
+				m_AnimState.OldClipTime = oldClipDur;
+			}
+		}
+
+		if (m_AnimState.IsCrossFading && m_AnimState.FadeTimer >= m_AnimState.FadeDuration)
+		{
+			m_AnimState.IsCrossFading = false;
+		}
+
+		//std::vector<_matrix> localMatrices(m_Skeleton.Bones.size());
+		m_BoneMatrix.resize(m_Skeleton.Bones.size());
+
+		float alpha = 0.0f;
+
+		if (m_AnimState.IsCrossFading && m_AnimState.FadeDuration > 0.0f)
+		{
+			alpha = m_AnimState.FadeTimer / m_AnimState.FadeDuration;
+			if (alpha > 1.0f)
+			{
+				alpha = 1.0f;
+			}
+		}
+
+		//===============//
+		for (size_t i = 0; i < m_Skeleton.Bones.size(); ++i)
+		{
+			Keyframe finalKf;
+			if (m_AnimState.IsCrossFading)
+			{
+				const auto& oldTracks = m_Animation[m_AnimState.OldClip].Tracks;
+				const auto& newTracks = m_Animation[m_AnimState.CurrentClip].Tracks;
+
+				Keyframe oldKf;
+				Keyframe newKf;
+
+				oldKf = SampleBoneTrack(oldTracks[i], m_AnimState.OldClipTime);
+				newKf = SampleBoneTrack(newTracks[i], m_AnimState.CurrentTime);
+
+				finalKf = BlendKeyframe(oldKf, newKf, alpha);
+			}
+
+			else
+			{
+				const auto& currTracks = m_Animation[m_AnimState.CurrentClip].Tracks;
+				finalKf = SampleBoneTrack(currTracks[i], m_AnimState.CurrentTime);
+			}
+
+			m_Skeleton.Bones[i].Transform->SetLocalPosition(finalKf.Translation);
+			m_Skeleton.Bones[i].Transform->SetLocalRotation(finalKf.Rotation);
+			m_Skeleton.Bones[i].Transform->SetLocalScale(finalKf.Scale);
 		}
 
 		m_BoneMatrix.resize(m_Skeleton.Bones.size());
@@ -194,7 +305,6 @@ void engine::SkinnedMeshRenderer::UpdateAnimation(double deltaTime)
 		for (int i = 0; i < static_cast<int>(m_Skeleton.Bones.size()); ++i)
 		{
 			_matrix global = m_Skeleton.Bones[i].Transform->GetWorldMatrix() * rootInv;
-			//_matrix global = m_Skeleton.Bones[i].Transform->GetWorldMatrix();
 			_matrix inverse = XMLoadFloat4x4(&m_Skeleton.Bones[i].Offset);
 
 			_float4X4 finalMat;
@@ -203,6 +313,19 @@ void engine::SkinnedMeshRenderer::UpdateAnimation(double deltaTime)
 			m_BoneMatrix[i] = finalMat;
 		}
 	}
+}
+
+engine::Keyframe engine::SkinnedMeshRenderer::BlendKeyframe(const Keyframe& k0, const Keyframe& k1, _float alpha)
+{
+	Keyframe result;
+	result.Time = k0.Time * (1.0 - alpha) + k1.Time * alpha;
+
+	result.Translation = k0.Translation + (k1.Translation - k0.Translation) * alpha;
+	result.Scale = k0.Scale + (k1.Scale - k0.Scale) * alpha;
+
+	result.Rotation = Quaternion::Slerp(k0.Rotation, k1.Rotation, alpha);
+
+	return result;
 }
 
 void engine::SkinnedMeshRenderer::Destroy()

@@ -58,9 +58,6 @@ namespace engine
         _float4X4 	m_ViewMat;
         _float4X4 	m_ProjMat;
 
-        Vector3     m_Target;
-        Vector3     m_Up;
-
         _float 		m_FiledOfView;
         _float 		m_AspectRatio;
         _float 		m_NearPlane;

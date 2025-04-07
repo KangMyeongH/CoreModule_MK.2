@@ -44,7 +44,8 @@ void engine::Transform::SetParent(const SharedPtr<Transform>& parent)
 			_matrix parentInverseMatrix = XMMatrixInverse(nullptr, parentWorldMat);
 
 			//_matrix localMat = XMMatrixMultiply(GetWorldMatrix(), parentInverseMatrix);
-			_matrix localMat = GetWorldMatrix() * parentInverseMatrix;
+			_matrix worldMat = GetLocalMatrix() * parentWorldMat;
+			_matrix localMat = worldMat * parentInverseMatrix;
 
 			_vector localScale, localRot, localPosition;
 			XMMatrixDecompose(&localScale, &localRot, &localPosition, localMat);
@@ -109,6 +110,22 @@ engine::SharedPtr<engine::Transform> engine::Transform::create()
 		new Transform(nullptr),
 		[](const Transform* ptr) { delete ptr; }
 	};
+}
+
+void engine::Transform::LookAt(SharedPtr<Transform> target)
+{
+	Vector3 forward = (target->Position() - Position()).Normalized();
+	Vector3 up = Vector3::Up();
+
+	if (Vector3::Dot(forward, up) > 0.999f)
+	{
+		up = Vector3::Forward();
+	}
+
+	Vector3 right = Vector3::Cross(up, forward).Normalized();
+	Vector3 newUp = Vector3::Cross(forward, right);
+
+
 }
 
 void engine::Transform::Destroy()
@@ -191,4 +208,5 @@ void engine::from_json(const nlohmann::ordered_json& j, const SharedPtr<Transfor
 	t->SetLocalPosition(j.at("position").get<Vector3>());
 	t->SetLocalRotation(j.at("rotation").get<Quaternion>());
 	t->SetLocalScale(j.at("scale").get<Vector3>());
+	t->setDirty();
 }

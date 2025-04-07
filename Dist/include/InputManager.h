@@ -22,6 +22,10 @@ namespace engine
         Vector3 GetMousePos() const;
         void    SetMousePos(const Vector3& mousePos);
 
+        Vector3 GetMouseDelta() const { return m_MouseDelta; }
+
+        void LockMouse(const _bool lock) { m_bLockMouse = lock; }
+
         //======================================//
         //				  method				//
         //======================================//
@@ -47,5 +51,7 @@ namespace engine
 
         KEY_STATE   m_KeyState[VK_MAX];
         Vector3     m_MousePos;
+        Vector3     m_MouseDelta;
+        _bool       m_bLockMouse;
     };
 }

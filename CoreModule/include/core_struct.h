@@ -580,6 +580,26 @@ namespace engine
 		std::vector<BoneKeyFrames> Tracks;
 	};
 
+	struct AnimationState
+	{
+		std::string CurrentClip;
+		_float CurrentTime = 0.0f;
+
+		std::string NextClip;
+		_float NextFadeDuration = 0.0f;
+		_float NextIsLoop = false;
+
+		_bool IsCrossFading = false;
+		_bool IsLoop = false;
+		_bool IsFinish = true;
+
+		_string OldClip;
+		_float OldClipTime = 0.0f;
+
+		_float FadeTimer = 0.0f;
+		_float FadeDuration = 0.0f;
+	};
+
 	//======================================//
 	//				  binary				//
 	//======================================//

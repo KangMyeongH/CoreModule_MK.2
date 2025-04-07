@@ -659,6 +659,28 @@ namespace engine
 			}
 		}
 
+		static Quaternion LookRotation(const Vector3& forward, const Vector3& up = Vector3::Up())
+		{
+			if (forward.SqrMagnitude() < 1e-6f)
+			{
+				return Identity();
+			}
+
+			Vector3 zAxis = forward.Normalized();
+			Vector3 xAxis = Vector3::Cross(up, zAxis).Normalized();
+			Vector3 yAxis = Vector3::Cross(zAxis, xAxis);
+
+			_matrix rotationMatrix = {
+				xAxis.Value.x, yAxis.Value.x, zAxis.Value.x, 0.0f,
+				xAxis.Value.y, yAxis.Value.y, zAxis.Value.y, 0.0f,
+				xAxis.Value.z, yAxis.Value.z, zAxis.Value.z, 0.0f,
+				0.0f,          0.0f,          0.0f,          1.0f
+			};
+
+			_vector quat = DirectX::XMQuaternionRotationMatrix(rotationMatrix);
+			return FromVector(quat);
+		}
+
 		static Quaternion Slerp(const Quaternion& a, const Quaternion& b, _float t)
 		{
 			if (t < 0.f)

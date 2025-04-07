@@ -25,10 +25,7 @@ namespace engine
 
         std::unordered_map<_string, AnimationClip>* GetAnimations() { return &m_Animation; }
 
-        void SetAnimation(const std::unordered_map<_string, AnimationClip>& animationMap)
-        {
-	        m_Animation = animationMap;
-        }
+        void SetAnimation(const std::unordered_map<_string, AnimationClip>& animationMap) { m_Animation = animationMap; }
         void SetSkeleton(const Skeleton& skeleton) { m_Skeleton = skeleton; }
 
         //======================================//
@@ -38,9 +35,16 @@ namespace engine
         void Bind(const ComPtr<ID3D11DeviceContext>& context) override;
         void Render(const ComPtr<ID3D11DeviceContext>& context) override;
 
-        Keyframe SampleBoneTrack(const BoneKeyFrames& track, double currTime);
+        Keyframe SampleBoneTrack(const BoneKeyFrames& track, _float currTime);
 
-        void UpdateAnimation(double deltaTime);
+        void ChangeAnimation(const _string& animName, _float fadeDuration, _bool isLoop);
+        void SetNextAnimation(const _string& animName, _float fadeDuration, _bool isLoop);
+
+        _bool IsAnimFinish() const { return m_AnimState.IsFinish; }
+
+        void UpdateAnimation(_float deltaTime);
+
+        Keyframe BlendKeyframe(const Keyframe& k0, const Keyframe& k1, _float alpha);
 
         void Destroy() override;
 
@@ -60,9 +64,8 @@ namespace engine
     private:
         SharedPtr<Mesh> m_Mesh;
         Skeleton m_Skeleton;
+        AnimationState m_AnimState;
         std::unordered_map<_string, AnimationClip> m_Animation;
         std::vector<_float4X4> m_BoneMatrix;
-        _string m_CurrentAnimation;
-        double m_CurrentTime;
     };
 }

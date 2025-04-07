@@ -190,6 +190,18 @@ namespace engine
 			return Vector3(m_WorldMatrix._31, m_WorldMatrix._32, m_WorldMatrix._33).Normalized();
 		}
 
+		Vector3 Right() const
+		{
+			updateMatrixIfNeeded();
+			return Vector3(m_WorldMatrix._11, m_WorldMatrix._12, m_WorldMatrix._13).Normalized();
+		}
+
+		Vector3 Up() const
+		{
+			updateMatrixIfNeeded();
+			return Vector3(m_WorldMatrix._21, m_WorldMatrix._22, m_WorldMatrix._23).Normalized();
+		}
+
 		void Translate(const Vector3& value)
 		{
 			if (value != Vector3::Zero())
@@ -198,6 +210,8 @@ namespace engine
 				SetLocalPosition(position);
 			}
 		}
+
+		void LookAt(SharedPtr<Transform> target);
 
 		void Destroy() override;
 		SharedPtr<Component> Clone() const override;
