@@ -46,6 +46,29 @@ namespace engine
 
         Keyframe BlendKeyframe(const Keyframe& k0, const Keyframe& k1, _float alpha);
 
+        void Play() { m_bPlay = true; }
+        void Pause() { m_bPlay = false; }
+        void Stop()
+        {
+	        m_bPlay = false;
+            m_AnimState.CurrentClip.clear();
+            m_AnimState.CurrentTime = 0.0f;
+
+            m_AnimState.NextClip.clear();
+            m_AnimState.NextFadeDuration = 0.0f;
+            m_AnimState.NextIsLoop = false;
+
+            m_AnimState.IsCrossFading = false;
+            m_AnimState.IsLoop = false;
+            m_AnimState.IsFinish = true;
+
+            m_AnimState.OldClip.clear();
+            m_AnimState.OldClipTime = 0.0f;
+
+            m_AnimState.FadeTimer = 0.0f;
+            m_AnimState.FadeDuration = 0.0f;
+        }
+
         void Destroy() override;
 
 	protected:
@@ -67,5 +90,7 @@ namespace engine
         AnimationState m_AnimState;
         std::unordered_map<_string, AnimationClip> m_Animation;
         std::vector<_float4X4> m_BoneMatrix;
+
+        _bool m_bPlay;
     };
 }

@@ -56,6 +56,9 @@ namespace engine
         HRESULT ClearDepthStencilView();
         HRESULT Present();
 
+        void 	SetCCW();
+        void 	SetCW();
+
     	void 	Release();
 
     private:

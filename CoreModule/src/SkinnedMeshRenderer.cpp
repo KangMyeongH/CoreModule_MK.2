@@ -9,14 +9,14 @@
 DEFINE_REGISTER_COMPONENT(SkinnedMeshRenderer)
 
 engine::SkinnedMeshRenderer::SkinnedMeshRenderer(const SharedPtr<GameObject>& owner, const _string& name)
-	: Renderer(owner, name)
+	: Renderer(owner, name), m_bPlay(false)
 {
 }
 
 engine::SkinnedMeshRenderer::~SkinnedMeshRenderer() = default;
 
 engine::SkinnedMeshRenderer::SkinnedMeshRenderer(const SkinnedMeshRenderer& rhs)
-	: Renderer(rhs)
+	: Renderer(rhs), m_bPlay(false)
 {
 }
 
@@ -188,7 +188,7 @@ void engine::SkinnedMeshRenderer::UpdateAnimation(_float deltaTime)
 {
 	m_AnimState.CurrentTime += deltaTime;
 
-	if (m_Animation.empty() || m_AnimState.CurrentClip.empty())
+	if (m_Animation.empty() || m_AnimState.CurrentClip.empty() || !m_bPlay)
 	{
 		m_BoneMatrix.resize(m_Skeleton.Bones.size());
 

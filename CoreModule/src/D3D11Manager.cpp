@@ -123,6 +123,8 @@ HRESULT engine::D3D11Manager::Initialize(HWND hwnd, _bool isWindowed, _uint winS
 		return E_FAIL;
 	}
 
+	SetCW();
+
 	return S_OK;
 }
 
@@ -547,6 +549,36 @@ HRESULT engine::D3D11Manager::Present()
 	}
 
 	return m_SwapChain->Present(0, 0);
+}
+
+void engine::D3D11Manager::SetCCW()
+{
+	D3D11_RASTERIZER_DESC rasterDesc = {};
+	rasterDesc.FillMode = D3D11_FILL_SOLID;
+	rasterDesc.CullMode = D3D11_CULL_BACK;            // 백페이스 컬링
+	rasterDesc.FrontCounterClockwise = TRUE;          // CCW가 전면 (Unity와 동일)
+	rasterDesc.DepthClipEnable = TRUE;
+
+	ComPtr<ID3D11RasterizerState> pRasterState;
+	m_Device->CreateRasterizerState(&rasterDesc, pRasterState.GetAddressOf());
+
+	// 설정 적용
+	m_DeviceContext->RSSetState(pRasterState.Get());
+}
+
+void engine::D3D11Manager::SetCW()
+{
+	D3D11_RASTERIZER_DESC rasterDesc = {};
+	rasterDesc.FillMode = D3D11_FILL_SOLID;
+	rasterDesc.CullMode = D3D11_CULL_BACK;            // 백페이스 컬링
+	rasterDesc.FrontCounterClockwise = FALSE;         
+	rasterDesc.DepthClipEnable = TRUE;
+
+	ComPtr<ID3D11RasterizerState> pRasterState;
+	m_Device->CreateRasterizerState(&rasterDesc, pRasterState.GetAddressOf());
+
+	// 설정 적용
+	m_DeviceContext->RSSetState(pRasterState.Get());
 }
 
 void engine::D3D11Manager::Release()
