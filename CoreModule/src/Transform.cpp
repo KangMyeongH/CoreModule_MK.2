@@ -141,7 +141,6 @@ std::shared_ptr<engine::Component> engine::Transform::Clone() const
 
 void engine::Transform::updateMatrixIfNeeded() const
 {
-	// TODO : 하다 말았음 비정방형 스케일 + 회전을 섞어서 비틀림이 발생. 해?결
 
 	if (!m_bDirty)
 	{

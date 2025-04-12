@@ -9,14 +9,14 @@
 DEFINE_REGISTER_COMPONENT(SkinnedMeshRenderer)
 
 engine::SkinnedMeshRenderer::SkinnedMeshRenderer(const SharedPtr<GameObject>& owner, const _string& name)
-	: Renderer(owner, name), m_bPlay(false)
+	: Renderer(owner, name), m_bPlay(true)
 {
 }
 
 engine::SkinnedMeshRenderer::~SkinnedMeshRenderer() = default;
 
 engine::SkinnedMeshRenderer::SkinnedMeshRenderer(const SkinnedMeshRenderer& rhs)
-	: Renderer(rhs), m_bPlay(false)
+	: Renderer(rhs), m_bPlay(true)
 {
 }
 

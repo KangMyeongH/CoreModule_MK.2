@@ -39,7 +39,8 @@ enum TextureType
 enum VIBufferType
 {
 	VIBufferType_POSTEX_RECT = 0,
-	VIBufferType_END = 1
+	VIBufferType_POSCOLOR_CUBE = 1,
+	VIBufferType_END = 2
 };
 
 enum ApplicationMode

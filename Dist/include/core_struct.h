@@ -395,6 +395,12 @@ namespace engine
 		_float2 TexCoord0;
 	};
 
+	struct VTX_CUBE
+	{
+		_float3 Position;
+		_float4 Color;
+	};
+
 	struct VTX_MESH
 	{
 		_float3 Position;
