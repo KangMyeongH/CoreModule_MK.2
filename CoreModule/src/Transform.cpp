@@ -21,18 +21,25 @@ engine::SharedPtr<engine::Transform> engine::Transform::GetParent() const
 
 void engine::Transform::SetParent(const SharedPtr<Transform>& parent)
 {
+	if (parent.get() == this)
+	{
+		return;
+	}
+
 	auto oldParent = m_Parent.lock();
 
 	if (oldParent != parent)
 	{
+		_matrix worldMatrixBeforeChange = GetWorldMatrix();
+
 		if (oldParent != nullptr)
 		{
 			oldParent->detachChild(std::static_pointer_cast<Transform>(shared_from_this()));
 		}
 
-		m_LocalPosition = Position();
-		m_LocalRotation = Rotation();
-		m_LocalScale = Scale();
+		//m_LocalPosition = Position();
+		//m_LocalRotation = Rotation();
+		//m_LocalScale = Scale();
 
 		m_Parent = parent;
 
@@ -42,13 +49,10 @@ void engine::Transform::SetParent(const SharedPtr<Transform>& parent)
 
 			_matrix parentWorldMat = parent->GetWorldMatrix();
 			_matrix parentInverseMatrix = XMMatrixInverse(nullptr, parentWorldMat);
-
-			//_matrix localMat = XMMatrixMultiply(GetWorldMatrix(), parentInverseMatrix);
-			_matrix worldMat = GetLocalMatrix() * parentWorldMat;
-			_matrix localMat = worldMat * parentInverseMatrix;
+			_matrix newLocalMatrix = worldMatrixBeforeChange * parentInverseMatrix;
 
 			_vector localScale, localRot, localPosition;
-			XMMatrixDecompose(&localScale, &localRot, &localPosition, localMat);
+			XMMatrixDecompose(&localScale, &localRot, &localPosition, newLocalMatrix);
 
 			m_LocalScale = localScale;
 			m_LocalRotation = localRot;
@@ -60,6 +64,13 @@ void engine::Transform::SetParent(const SharedPtr<Transform>& parent)
 		else
 		{
 			m_ParentID = -1;
+
+			_vector scale, rot, pos;
+			XMMatrixDecompose(&scale, &rot, &pos, worldMatrixBeforeChange);
+
+			m_LocalScale = scale;
+			m_LocalRotation = rot;
+			m_LocalPosition = pos;
 		}
 
 		setDirty();

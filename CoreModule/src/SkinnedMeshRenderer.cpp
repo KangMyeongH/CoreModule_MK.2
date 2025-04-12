@@ -192,7 +192,8 @@ void engine::SkinnedMeshRenderer::UpdateAnimation(_float deltaTime)
 	{
 		m_BoneMatrix.resize(m_Skeleton.Bones.size());
 
-		_matrix rootMat = m_Skeleton.RootBone->GetParent()->GetWorldMatrix();
+		//_matrix rootMat = m_Skeleton.RootBone->GetParent()->GetWorldMatrix();
+		_matrix rootMat = m_Skeleton.RootBone->GetWorldMatrix();
 		_matrix rootInv = XMMatrixInverse(nullptr, rootMat);
 
 		for (int i = 0; i < static_cast<int>(m_Skeleton.Bones.size()); ++i)
@@ -299,7 +300,8 @@ void engine::SkinnedMeshRenderer::UpdateAnimation(_float deltaTime)
 
 		m_BoneMatrix.resize(m_Skeleton.Bones.size());
 
-		_matrix rootMat = m_Skeleton.RootBone->GetParent()->GetWorldMatrix();
+		//_matrix rootMat = m_Skeleton.RootBone->GetParent()->GetWorldMatrix();
+		_matrix rootMat = m_Skeleton.RootBone->GetWorldMatrix();
 		_matrix rootInv = XMMatrixInverse(nullptr, rootMat);
 
 		for (int i = 0; i < static_cast<int>(m_Skeleton.Bones.size()); ++i)
