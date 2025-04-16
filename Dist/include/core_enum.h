@@ -45,6 +45,7 @@ enum VIBufferType
 
 enum ApplicationMode
 {
+	NONE,
 	EDITOR,
 	CLIENT,
 	PREFAB

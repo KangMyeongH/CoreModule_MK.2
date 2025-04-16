@@ -412,6 +412,12 @@ void engine::LoadManager::WriteModelDataToFile(const ModelData& model, const std
 //[Translation] : float x, y, z
 //[Rotation] : float x, y, z, w
 //[Scale] : float x, y, z
+//
+//Version 2 .anim File
+//
+//[For each AnimEvent]
+//[Time] : float
+//[EventName] : char[]
 //=============================================================//
 
 void engine::LoadManager::WriteAnimationClipDataToFile(const AnimationClip& clip, const std::wstring& path)
@@ -426,7 +432,7 @@ void engine::LoadManager::WriteAnimationClipDataToFile(const AnimationClip& clip
 
 	// Magic Header + Version
 	ofs.write("ANIM", 4);
-	uint32_t version = 1;
+	uint32_t version = 2;
 	ofs.write(reinterpret_cast<const char*>(&version), sizeof(uint32_t));
 
 	// Animation Name
@@ -453,6 +459,16 @@ void engine::LoadManager::WriteAnimationClipDataToFile(const AnimationClip& clip
 			ofs.write(reinterpret_cast<const char*>(&kf.Rotation.Value), sizeof(float) * 4);
 			ofs.write(reinterpret_cast<const char*>(&kf.Scale.Value), sizeof(float) * 3);
 		}
+	}
+
+	// ver 2
+	uint32_t eventCount = static_cast<uint32_t>(clip.Events.size());
+	ofs.write(reinterpret_cast<const char*>(&eventCount), sizeof(uint32_t));
+
+	for (const AnimationEvent& event : clip.Events)
+	{
+		ofs.write(reinterpret_cast<const char*>(&event.Time), sizeof(float));
+		WriteString(ofs, event.EventName);
 	}
 
 	ofs.close();
@@ -721,7 +737,8 @@ engine::AnimationClip engine::LoadManager::ReadAnimationClipDataFromFile(const s
 
 	uint32_t version = 0;
 	ifs.read(reinterpret_cast<char*>(&version), sizeof(uint32_t));
-	if (version != 1)
+
+	if (version > 2)
 	{
 		throw std::runtime_error("Unsupported animation file version");
 	}
@@ -752,6 +769,22 @@ engine::AnimationClip engine::LoadManager::ReadAnimationClipDataFromFile(const s
 			ifs.read(reinterpret_cast<char*>(&kf.Translation.Value), sizeof(float) * 3);
 			ifs.read(reinterpret_cast<char*>(&kf.Rotation.Value), sizeof(float) * 4);
 			ifs.read(reinterpret_cast<char*>(&kf.Scale.Value), sizeof(float) * 3);
+		}
+	}
+
+	// ver 2.
+	if (version > 1)
+	{
+		uint32_t eventCount = 0;
+		ifs.read(reinterpret_cast<char*>(&eventCount), sizeof(uint32_t));
+
+		clip.Events.resize(eventCount);
+
+		for (uint32_t i = 0; i < eventCount; ++i)
+		{
+			AnimationEvent& event = clip.Events[i];
+			ifs.read(reinterpret_cast<char*>(&event.Time), sizeof(float));
+			event.EventName = ReadString(ifs);
 		}
 	}
 

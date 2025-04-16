@@ -190,16 +190,31 @@ namespace engine
 			return Vector3(m_WorldMatrix._31, m_WorldMatrix._32, m_WorldMatrix._33).Normalized();
 		}
 
+		Vector3 BackWard() const
+		{
+			return -Forward();
+		}
+
 		Vector3 Right() const
 		{
 			updateMatrixIfNeeded();
 			return Vector3(m_WorldMatrix._11, m_WorldMatrix._12, m_WorldMatrix._13).Normalized();
 		}
 
+		Vector3 Left() const
+		{
+			return -Right();
+		}
+
 		Vector3 Up() const
 		{
 			updateMatrixIfNeeded();
 			return Vector3(m_WorldMatrix._21, m_WorldMatrix._22, m_WorldMatrix._23).Normalized();
+		}
+
+		Vector3 Down() const
+		{
+			return -Up();
 		}
 
 		void Translate(const Vector3& value)

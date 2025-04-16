@@ -86,13 +86,14 @@ void engine::editor::EditorCore::RenderScene(const ComPtr<ID3D11DeviceContext>& 
 			context->ClearRenderTargetView(m_SceneTargetView.Get(), mainClearColor);
 			context->ClearDepthStencilView(m_SceneDepthStencilView.Get(), D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.0f, 0);
 
-			m_Grid->UpdateGridVertices(context, m_EditorCamera.GetCameraPos(), 1.0f, 100);
-			m_Grid->Bind(context, m_EditorCamera);
-			m_Grid->RenderGird(context);
-
 			_float4X4 viewMat, projMat;
 			XMStoreFloat4x4(&viewMat, XMMatrixTranspose(m_EditorCamera.GetViewMatrix()));
 			XMStoreFloat4x4(&projMat, XMMatrixTranspose(m_EditorCamera.GetProjectMatrix()));
+
+			m_Grid->UpdateGridVertices(context, m_EditorCamera.GetCameraPos(), 1.0f, 100);
+			m_Grid->Bind(context, viewMat, projMat);
+			m_Grid->RenderGird(context);
+
 
 
 			m_EditorComponentManager->Render(context, viewMat, projMat);

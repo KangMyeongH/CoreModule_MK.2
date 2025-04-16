@@ -159,6 +159,7 @@ void engine::SkinnedMeshRenderer::ChangeAnimation(const _string& animName, const
 
 			m_AnimState.FadeDuration = fadeDuration;
 			m_AnimState.FadeTimer = 0.0f;
+
 		}
 
 		else
@@ -174,6 +175,12 @@ void engine::SkinnedMeshRenderer::ChangeAnimation(const _string& animName, const
 		m_AnimState.NextFadeDuration = 0.f;
 		m_AnimState.NextIsLoop = false;
 		m_AnimState.IsFinish = false;
+
+		// 이벤트 활성화 초기화.
+		for (auto& event : m_Animation[animName].Events)
+		{
+			event.IsActive = false;
+		}
 	}
 }
 
@@ -184,21 +191,40 @@ void engine::SkinnedMeshRenderer::SetNextAnimation(const _string& animName, cons
 	m_AnimState.NextIsLoop = isLoop;
 }
 
+void engine::SkinnedMeshRenderer::SetAnimationTime(const _float time)
+{
+	if (!m_AnimState.CurrentClip.empty())
+	{
+		if (time > m_Animation[m_AnimState.CurrentClip].Duration)
+		{
+			m_AnimState.CurrentTime = m_Animation[m_AnimState.CurrentClip].Duration;
+		}
+
+		else
+		{
+			m_AnimState.CurrentTime = time;
+		}
+	}
+}
+
 void engine::SkinnedMeshRenderer::UpdateAnimation(_float deltaTime)
 {
-	m_AnimState.CurrentTime += deltaTime;
-
-	if (m_Animation.empty() || m_AnimState.CurrentClip.empty() || !m_bPlay)
+	if (m_bPlay)
+	{
+		m_AnimState.CurrentTime += deltaTime;
+	}
+	
+	if (m_Animation.empty() || m_AnimState.CurrentClip.empty())
 	{
 		m_BoneMatrix.resize(m_Skeleton.Bones.size());
 
-		_matrix rootMat = m_Skeleton.RootBone->GetParent()->GetWorldMatrix();
+		_matrix rootMat = m_Skeleton.RootBone->GetWorldMatrix();
 		_matrix rootInv = XMMatrixInverse(nullptr, rootMat);
 
 		for (int i = 0; i < static_cast<int>(m_Skeleton.Bones.size()); ++i)
 		{
 			_matrix global = m_Skeleton.Bones[i].Transform->GetWorldMatrix() * rootInv;
-
+			global *= DirectX::XMMatrixScaling(-1.f, 1.f, 1.f);
 			_matrix inverse = XMLoadFloat4x4(&m_Skeleton.Bones[i].Offset);
 
 			_float4X4 finalMat;
@@ -220,11 +246,41 @@ void engine::SkinnedMeshRenderer::UpdateAnimation(_float deltaTime)
 		{
 			_float currClipDur = m_Animation[m_AnimState.CurrentClip].Duration;
 
+			bool isEventActive = false;
+
+			// 애니메이션 이벤트 처리
+			for (auto& event : m_Animation[m_AnimState.CurrentClip].Events)
+			{
+				if (event.IsActive)
+				{
+					continue;
+				}
+
+				if (event.Time <= m_AnimState.CurrentTime)
+				{
+					m_AnimState.EventString = event.EventName;
+					event.IsActive = true;
+					isEventActive = true;
+					break;
+				}
+			}
+
+			if (!isEventActive)
+			{
+				m_AnimState.EventString = "";
+			}
+
+			// 애니메이션이 끝났을 때 처리
 			if (m_AnimState.CurrentTime > currClipDur)
 			{
 				if (m_AnimState.IsLoop)
 				{
 					m_AnimState.CurrentTime = std::fmod(m_AnimState.CurrentTime, currClipDur);
+
+					for (auto&  event : m_Animation[m_AnimState.CurrentClip].Events)
+					{
+						event.IsActive = false;
+					}
 				}
 
 				else
@@ -254,7 +310,6 @@ void engine::SkinnedMeshRenderer::UpdateAnimation(_float deltaTime)
 			m_AnimState.IsCrossFading = false;
 		}
 
-		//std::vector<_matrix> localMatrices(m_Skeleton.Bones.size());
 		m_BoneMatrix.resize(m_Skeleton.Bones.size());
 
 		float alpha = 0.0f;
@@ -299,12 +354,14 @@ void engine::SkinnedMeshRenderer::UpdateAnimation(_float deltaTime)
 
 		m_BoneMatrix.resize(m_Skeleton.Bones.size());
 
-		_matrix rootMat = m_Skeleton.RootBone->GetParent()->GetWorldMatrix();
+		_matrix rootMat = m_Skeleton.RootBone->GetWorldMatrix();
 		_matrix rootInv = XMMatrixInverse(nullptr, rootMat);
+
 
 		for (int i = 0; i < static_cast<int>(m_Skeleton.Bones.size()); ++i)
 		{
 			_matrix global = m_Skeleton.Bones[i].Transform->GetWorldMatrix() * rootInv;
+			global *= DirectX::XMMatrixScaling(-1.f, 1.f, 1.f);
 			_matrix inverse = XMLoadFloat4x4(&m_Skeleton.Bones[i].Offset);
 
 			_float4X4 finalMat;
