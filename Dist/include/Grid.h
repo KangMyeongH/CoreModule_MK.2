@@ -35,7 +35,7 @@ namespace engine
         public:
             void InitGrid(const ComPtr<ID3D11Device>& device, int maxGridRange);
             void UpdateGridVertices(ComPtr<ID3D11DeviceContext> context, Vector3 cameraPos, _float gridStep, _int gridRange);
-            void Bind(const ComPtr<ID3D11DeviceContext>& context, const EditorCamera& camera);
+            void Bind(const ComPtr<ID3D11DeviceContext>& context, const _float4X4& viewMat, const _float4X4& projMat);
         	void RenderGird(const ComPtr<ID3D11DeviceContext>& context);
 
             //======================================//

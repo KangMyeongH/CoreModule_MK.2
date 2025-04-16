@@ -108,9 +108,9 @@ void engine::editor::Hierarchy::AddModel(const ModelData& model, const _wstring&
 			{
 				auto boneObj = GameObject::Create(boneData.BoneName, EDITOR);
 
-				boneObj->GetTransform()->SetLocalPosition({ boneData.tx, boneData.ty, boneData.tz });
+				/*boneObj->GetTransform()->SetLocalPosition({ boneData.tx, boneData.ty, boneData.tz });
 				boneObj->GetTransform()->SetLocalRotation({ boneData.rx, boneData.ry, boneData.rz, boneData.rw });
-				boneObj->GetTransform()->SetLocalScale({ boneData.sx, boneData.sy, boneData.sz });
+				boneObj->GetTransform()->SetLocalScale({ boneData.sx, boneData.sy, boneData.sz });*/
 
 				Bone bone;
 				bone.Name = boneData.BoneName;
@@ -135,6 +135,15 @@ void engine::editor::Hierarchy::AddModel(const ModelData& model, const _wstring&
 					bone.Transform->SetParent(rootObj->GetTransform());
 					skeleton.RootBone = bone.Transform;
 				}
+			}
+
+			for (auto i = 0; i < meshData.Bones.size(); ++i)
+			{
+				auto& boneData = meshData.Bones[i];
+
+				skeleton.Bones[i].Transform->SetLocalPosition({ boneData.tx, boneData.ty, boneData.tz });
+				skeleton.Bones[i].Transform->SetLocalRotation({ boneData.rx, boneData.ry, boneData.rz, boneData.rw });
+				skeleton.Bones[i].Transform->SetLocalScale({ boneData.sx, boneData.sy, boneData.sz });
 			}
 
 			std::static_pointer_cast<SkinnedMeshRenderer>(component)->SetSkeleton(skeleton);

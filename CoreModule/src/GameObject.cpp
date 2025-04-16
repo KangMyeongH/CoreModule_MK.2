@@ -203,7 +203,6 @@ void engine::GameObject::FromJson(const nlohmann::ordered_json& j, const SharedP
 	obj->SetTag(j.at("tag").get<_string>());
 	obj->SetActive(j.at("active").get<_bool>());
 	obj->m_bActiveInHierarchy = j.at("activeInHierarchy").get<_bool>();
-	j.at("transform").get_to(obj->m_Transform);
 
 	for (const auto& component_json : j.at("components"))
 	{
@@ -226,4 +225,6 @@ void engine::GameObject::FromJson(const nlohmann::ordered_json& j, const SharedP
 		FromJson(child_json, child, mode);
 		child->GetTransform()->SetParent(obj->GetTransform());
 	}
+
+	j.at("transform").get_to(obj->m_Transform);
 }

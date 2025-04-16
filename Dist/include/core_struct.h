@@ -578,12 +578,20 @@ namespace engine
 		std::vector<Keyframe> Frames;
 	};
 
+	struct AnimationEvent
+	{
+		float Time;
+		_string EventName;
+		_bool	IsActive;
+	};
+
 	struct AnimationClip
 	{
 		_string Name;	// 애니메이션 이름
 		_wstring Path;	// 애니메이션 경로
 		double 	Duration; // 애니메이션 총 길이
 		std::vector<BoneKeyFrames> Tracks;
+		std::vector<AnimationEvent> Events;
 	};
 
 	struct AnimationState
@@ -604,6 +612,9 @@ namespace engine
 
 		_float FadeTimer = 0.0f;
 		_float FadeDuration = 0.0f;
+
+		_string EventString = "";
+
 	};
 
 	//======================================//

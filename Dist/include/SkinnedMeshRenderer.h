@@ -27,6 +27,7 @@ namespace engine
 
         void SetAnimation(const std::unordered_map<_string, AnimationClip>& animationMap) { m_Animation = animationMap; }
         void SetSkeleton(const Skeleton& skeleton) { m_Skeleton = skeleton; }
+        _string GetEvent() { return m_AnimState.EventString; }
 
         //======================================//
         //				  method				//
@@ -39,6 +40,7 @@ namespace engine
 
         void ChangeAnimation(const _string& animName, _float fadeDuration, _bool isLoop);
         void SetNextAnimation(const _string& animName, _float fadeDuration, _bool isLoop);
+        void SetAnimationTime(_float time);
 
         _bool IsAnimFinish() const { return m_AnimState.IsFinish; }
 
