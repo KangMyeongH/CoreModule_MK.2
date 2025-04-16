@@ -127,6 +127,8 @@ namespace engine
 		void							SetAssetPath(const _wstring& path) { m_AssetPath = path; }
 		_wstring						GetAssetPath() const { return m_AssetPath; }
 
+		_bool							IsStatic() const { return m_bStatic; }
+
 		SharedPtr<GameObject>			FindGameObject(const std::string& name) const;
 
 		static SharedPtr<GameObject> 	Create(const _string& name = "GameObject", ApplicationMode mode = CLIENT);

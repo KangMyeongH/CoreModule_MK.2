@@ -50,3 +50,11 @@ enum ApplicationMode
 	CLIENT,
 	PREFAB
 };
+
+enum ColliderType
+{
+	ColliderType_Sphere,
+	ColliderType_Box,
+	ColliderType_Capsule,
+	ColliderType_Mesh
+};

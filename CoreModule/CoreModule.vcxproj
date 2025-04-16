@@ -22,7 +22,12 @@
     <!-- src 폴더의 모든 CPP 파일을 포함 -->
     <ClCompile Include="src\AssetManager.cpp" />
     <ClCompile Include="src\Behaviour.cpp" />
+    <ClCompile Include="src\BoxCollier.cpp" />
     <ClCompile Include="src\Camera.cpp" />
+    <ClCompile Include="src\CapsuleCollider.cpp" />
+    <ClCompile Include="src\Collider.cpp" />
+    <ClCompile Include="src\Collision.cpp" />
+    <ClCompile Include="src\CollisionManager.cpp" />
     <ClCompile Include="src\Component.cpp" />
     <ClCompile Include="src\ComponentFactory.cpp" />
     <ClCompile Include="src\Core.cpp" />
@@ -37,6 +42,7 @@
     <ClCompile Include="src\LoadManager.cpp" />
     <ClCompile Include="src\Material.cpp" />
     <ClCompile Include="src\Mesh.cpp" />
+    <ClCompile Include="src\MeshCollider.cpp" />
     <ClCompile Include="src\MeshRenderer.cpp" />
     <ClCompile Include="src\Object.cpp" />
     <ClCompile Include="src\PhysicsManager.cpp" />
@@ -49,6 +55,7 @@
     <ClCompile Include="src\ScriptBehaviour.cpp" />
     <ClCompile Include="src\ScriptBehaviourManager.cpp" />
     <ClCompile Include="src\SkinnedMeshRenderer.cpp" />
+    <ClCompile Include="src\SphereCollider.cpp" />
     <ClCompile Include="src\TextureUI.cpp" />
     <ClCompile Include="src\TimeManager.cpp" />
     <ClCompile Include="src\Transform.cpp" />
@@ -59,7 +66,12 @@
     <!-- include 폴더의 모든 헤더 파일을 포함 -->
     <ClInclude Include="include\AssetManager.h" />
     <ClInclude Include="include\Behaviour.h" />
+    <ClInclude Include="include\BoxCollier.h" />
     <ClInclude Include="include\Camera.h" />
+    <ClInclude Include="include\CapsuleCollider.h" />
+    <ClInclude Include="include\Collider.h" />
+    <ClInclude Include="include\Collision.h" />
+    <ClInclude Include="include\CollisionManager.h" />
     <ClInclude Include="include\Component.h" />
     <ClInclude Include="include\ComponentFactory.h" />
     <ClInclude Include="include\ComponentRegistrar.h" />
@@ -85,6 +97,7 @@
     <ClInclude Include="include\LoadManager.h" />
     <ClInclude Include="include\Material.h" />
     <ClInclude Include="include\Mesh.h" />
+    <ClInclude Include="include\MeshCollider.h" />
     <ClInclude Include="include\MeshRenderer.h" />
     <ClInclude Include="include\Object.h" />
     <ClInclude Include="include\PhysicsManager.h" />
@@ -97,6 +110,7 @@
     <ClInclude Include="include\ScriptBehaviour.h" />
     <ClInclude Include="include\ScriptBehaviourManager.h" />
     <ClInclude Include="include\SkinnedMeshRenderer.h" />
+    <ClInclude Include="include\SphereCollider.h" />
     <ClInclude Include="include\TextureUI.h" />
     <ClInclude Include="include\TimeManager.h" />
     <ClInclude Include="include\Transform.h" />

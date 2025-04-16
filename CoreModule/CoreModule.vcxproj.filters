@@ -100,6 +100,21 @@
     <Filter Include="00. System\Prefab\Manager">
       <UniqueIdentifier>{16f16a6e-c5e1-44d8-a506-dc40acd1d147}</UniqueIdentifier>
     </Filter>
+    <Filter Include="00. System\Collision">
+      <UniqueIdentifier>{ce481c58-dd89-4eae-94bc-067287315f4e}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="00. System\Collision\BoxCollider">
+      <UniqueIdentifier>{0ba4fb3a-a144-472c-a850-32d2206ed0ff}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="00. System\Collision\SphereCollider">
+      <UniqueIdentifier>{a3cf7c28-7e43-4b94-b91e-bb14b83ffeb7}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="00. System\Collision\CapsuleCollider">
+      <UniqueIdentifier>{3e8f68d1-3042-412b-b56c-9417af201c61}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="00. System\Collision\MeshCollider">
+      <UniqueIdentifier>{a0ad9a29-6cf8-496a-95be-9fed111addce}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="include\core_defines.h">
@@ -229,6 +244,25 @@
       <Filter>00. System\Prefab\Manager</Filter>
     </ClInclude>
     <ClInclude Include="include\AssetManager.h" />
+    <ClInclude Include="include\Collider.h">
+      <Filter>00. System\Collision</Filter>
+    </ClInclude>
+    <ClInclude Include="include\Collision.h">
+      <Filter>00. System\Collision</Filter>
+    </ClInclude>
+    <ClInclude Include="include\BoxCollier.h">
+      <Filter>00. System\Collision\BoxCollider</Filter>
+    </ClInclude>
+    <ClInclude Include="include\CollisionManager.h">
+      <Filter>00. System\Collision</Filter>
+    </ClInclude>
+    <ClInclude Include="include\SphereCollider.h">
+      <Filter>00. System\Collision\SphereCollider</Filter>
+    </ClInclude>
+    <ClInclude Include="include\CapsuleCollider.h">
+      <Filter>00. System\Collision\CapsuleCollider</Filter>
+    </ClInclude>
+    <ClInclude Include="include\MeshCollider.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\GameObject.cpp">
@@ -331,6 +365,25 @@
       <Filter>00. System\Prefab\Manager</Filter>
     </ClCompile>
     <ClCompile Include="src\AssetManager.cpp" />
+    <ClCompile Include="src\Collider.cpp">
+      <Filter>00. System\Collision</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Collision.cpp">
+      <Filter>00. System\Collision</Filter>
+    </ClCompile>
+    <ClCompile Include="src\BoxCollier.cpp">
+      <Filter>00. System\Collision\BoxCollider</Filter>
+    </ClCompile>
+    <ClCompile Include="src\CollisionManager.cpp">
+      <Filter>00. System\Collision</Filter>
+    </ClCompile>
+    <ClCompile Include="src\SphereCollider.cpp">
+      <Filter>00. System\Collision\SphereCollider</Filter>
+    </ClCompile>
+    <ClCompile Include="src\CapsuleCollider.cpp">
+      <Filter>00. System\Collision\CapsuleCollider</Filter>
+    </ClCompile>
+    <ClCompile Include="src\MeshCollider.cpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="cpp.hint" />

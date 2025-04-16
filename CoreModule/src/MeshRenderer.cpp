@@ -100,6 +100,7 @@ void engine::MeshRenderer::to_json(nlohmann::ordered_json& j)
 	std::string type = "MeshRenderer";
 	j = nlohmann::ordered_json{
 		{"type", type},
+		{"enable", m_bEnabled},
 		{"materials", nlohmann::ordered_json::array() }
 	};
 
@@ -115,6 +116,11 @@ void engine::MeshRenderer::to_json(nlohmann::ordered_json& j)
 
 void engine::MeshRenderer::from_json(const nlohmann::ordered_json& j)
 {
+	if (j.contains("enable"))
+	{
+		j.at("enable").get_to(m_bEnabled);
+	}
+
 	for (const auto& matJson : j.at("materials"))
 	{
 		int index = matJson.at("index").get<_int>();

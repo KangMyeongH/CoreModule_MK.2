@@ -5,6 +5,7 @@
 
 namespace engine
 {
+	class Collider;
 	class Transform;
 }
 
@@ -813,4 +814,53 @@ namespace engine
 	//	float offsetMatrix[16];
 	//};
 #pragma pack(pop)
+
+	struct AABB
+	{
+		Vector3 Min;
+		Vector3 Max;
+
+		_bool Intersects(const AABB& other) const
+		{
+			return 	(Min.Value.x <= other.Max.Value.x && Max.Value.x >= other.Min.Value.x) &&
+					(Min.Value.y <= other.Max.Value.y && Max.Value.y >= other.Min.Value.y) &&
+					(Min.Value.z <= other.Max.Value.z && Max.Value.z >= other.Min.Value.z);
+		}
+	};
+
+	struct OBB
+	{
+		Vector3 Center;
+		Vector3 AxisX;
+		Vector3 AxisY;
+		Vector3 AxisZ;
+		Vector3 Extents;
+	};
+	
+	struct Sphere
+	{
+		Vector3 Center;
+		_float	Radius = 0.f;
+	};
+
+	struct Capsule
+	{
+		Vector3 Center;
+		Vector3 Direction;
+		Vector3 TopCenter;
+		Vector3 BottomCenter;
+		_float Radius = 0.5f;
+		_float Height = 2.f;
+	};
+
+	struct BVHNode
+	{
+		AABB Bounds;
+		std::unique_ptr<BVHNode> Left;
+		std::unique_ptr<BVHNode> Right;
+
+		std::vector<SharedPtr<Collider>> Colliders;
+
+		_bool IsLeaf() const { return Left == nullptr && Right == nullptr; }
+	};
 }
