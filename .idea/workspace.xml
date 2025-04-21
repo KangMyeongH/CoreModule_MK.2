@@ -1,0 +1,89 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="AutoImportSettings">
+    <option name="autoReloadType" value="SELECTIVE" />
+  </component>
+  <component name="CMakeProjectFlavorService">
+    <option name="flavorId" value="CMakePlainProjectFlavor" />
+  </component>
+  <component name="CMakeSettings">
+    <configurations>
+      <configuration PROFILE_NAME="Debug" ENABLED="true" CONFIG_NAME="Debug" />
+    </configurations>
+  </component>
+  <component name="ChangeListManager">
+    <list default="true" id="7bad093e-0e4d-4f60-a73e-e34a45eaa671" name="Changes" comment="">
+      <change beforePath="$PROJECT_DIR$/CoreModule/CoreModule.vcxproj.filters" beforeDir="false" afterPath="$PROJECT_DIR$/CoreModule/CoreModule.vcxproj.filters" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/CoreModule/include/LoadManager.h" beforeDir="false" afterPath="$PROJECT_DIR$/CoreModule/include/LoadManager.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/CoreModule/include/MeshCollider.h" beforeDir="false" afterPath="$PROJECT_DIR$/CoreModule/include/MeshCollider.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/CoreModule/include/core_function.h" beforeDir="false" afterPath="$PROJECT_DIR$/CoreModule/include/core_function.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/CoreModule/include/core_struct.h" beforeDir="false" afterPath="$PROJECT_DIR$/CoreModule/include/core_struct.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/CoreModule/src/LoadManager.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/CoreModule/src/LoadManager.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Dist/bin/CoreModule.dll" beforeDir="false" afterPath="$PROJECT_DIR$/Dist/bin/CoreModule.dll" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Dist/bin/CoreModule.lib" beforeDir="false" afterPath="$PROJECT_DIR$/Dist/bin/CoreModule.lib" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Dist/include/BoxCollier.h" beforeDir="false" afterPath="$PROJECT_DIR$/Dist/include/BoxCollier.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Dist/include/CapsuleCollider.h" beforeDir="false" afterPath="$PROJECT_DIR$/Dist/include/CapsuleCollider.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Dist/include/LoadManager.h" beforeDir="false" afterPath="$PROJECT_DIR$/Dist/include/LoadManager.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Dist/include/core_function.h" beforeDir="false" afterPath="$PROJECT_DIR$/Dist/include/core_function.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Dist/include/core_struct.h" beforeDir="false" afterPath="$PROJECT_DIR$/Dist/include/core_struct.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/bin/Debug/CoreModule.dll" beforeDir="false" afterPath="$PROJECT_DIR$/bin/Debug/CoreModule.dll" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/bin/Debug/CoreModule.exp" beforeDir="false" afterPath="$PROJECT_DIR$/bin/Debug/CoreModule.exp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/bin/Debug/CoreModule.lib" beforeDir="false" afterPath="$PROJECT_DIR$/bin/Debug/CoreModule.lib" afterDir="false" />
+    </list>
+    <option name="SHOW_DIALOG" value="false" />
+    <option name="HIGHLIGHT_CONFLICTS" value="true" />
+    <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
+    <option name="LAST_RESOLUTION" value="IGNORE" />
+  </component>
+  <component name="ClangdSettings">
+    <option name="formatViaClangd" value="false" />
+  </component>
+  <component name="Git.Settings">
+    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
+  </component>
+  <component name="ProjectColorInfo">{
+  &quot;associatedIndex&quot;: 4
+}</component>
+  <component name="ProjectId" id="2vqSLwwCI9c8Xd43rdZsBZoXW7I" />
+  <component name="ProjectViewState">
+    <option name="hideEmptyMiddlePackages" value="true" />
+    <option name="showLibraryContents" value="true" />
+  </component>
+  <component name="PropertiesComponent">{
+  &quot;keyToString&quot;: {
+    &quot;ModuleVcsDetector.initialDetectionPerformed&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.RadMigrateCodeStyle&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.cidr.known.project.marker&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.git.unshallow&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.readMode.enableVisualFormatting&quot;: &quot;true&quot;,
+    &quot;cf.first.check.clang-format&quot;: &quot;false&quot;,
+    &quot;cidr.known.project.marker&quot;: &quot;true&quot;,
+    &quot;git-widget-placeholder&quot;: &quot;Collision__Manager&quot;,
+    &quot;ignore.virus.scanning.warn.message&quot;: &quot;true&quot;,
+    &quot;last_opened_file_path&quot;: &quot;D:/CoreModule_MK.2&quot;,
+    &quot;node.js.detected.package.eslint&quot;: &quot;true&quot;,
+    &quot;node.js.detected.package.tslint&quot;: &quot;true&quot;,
+    &quot;node.js.selected.package.eslint&quot;: &quot;(autodetect)&quot;,
+    &quot;node.js.selected.package.tslint&quot;: &quot;(autodetect)&quot;,
+    &quot;nodejs_package_manager_path&quot;: &quot;npm&quot;,
+    &quot;settings.editor.selected.configurable&quot;: &quot;CPPToolchains&quot;,
+    &quot;vue.rearranger.settings.migration&quot;: &quot;true&quot;
+  }
+}</component>
+  <component name="TaskManager">
+    <task active="true" id="Default" summary="Default task">
+      <changelist id="7bad093e-0e4d-4f60-a73e-e34a45eaa671" name="Changes" comment="" />
+      <created>1744871059070</created>
+      <option name="number" value="Default" />
+      <option name="presentableId" value="Default" />
+      <updated>1744871059070</updated>
+      <workItem from="1744871060579" duration="369000" />
+      <workItem from="1744871442197" duration="159000" />
+    </task>
+    <servers />
+  </component>
+  <component name="TypeScriptGeneratedFilesManager">
+    <option name="version" value="3" />
+  </component>
+</project>
