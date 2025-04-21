@@ -123,20 +123,39 @@ engine::SharedPtr<engine::Transform> engine::Transform::create()
 	};
 }
 
-void engine::Transform::LookAt(SharedPtr<Transform> target)
+void engine::Transform::LookAt(const SharedPtr<Transform>& target, const Vector3& up)
 {
-	Vector3 forward = (target->Position() - Position()).Normalized();
-	Vector3 up = Vector3::Up();
+	Vector3 dir = Vector3::Direction(Position(), target->Position());
+	Vector3 right = Vector3::Cross(up, dir);
+	right.Normalize();
+	Vector3 newUp = Vector3::Cross(dir, right);
 
-	if (Vector3::Dot(forward, up) > 0.999f)
-	{
-		up = Vector3::Forward();
-	}
+	_matrix r;
+	r.r[0] = right.ToVector();
+	r.r[1] = newUp.ToVector();
+	r.r[2] = dir.ToVector();
+	r.r[3] = DirectX::XMVectorSet(0.f, 0.f, 0.f, 1.f);
 
-	Vector3 right = Vector3::Cross(up, forward).Normalized();
-	Vector3 newUp = Vector3::Cross(forward, right);
+	_vector q = DirectX::XMQuaternionRotationMatrix(r);
 
+	SetRotation(Quaternion::FromVector(q));
+}
 
+void engine::Transform::LookAtDirection(const Vector3& dir, const Vector3& up)
+{
+	Vector3 right = Vector3::Cross(up, dir);
+	right.Normalize();
+	Vector3 newUp = Vector3::Cross(dir, right);
+
+	_matrix r;
+	r.r[0] = right.ToVector();
+	r.r[1] = newUp.ToVector();
+	r.r[2] = dir.ToVector();
+	r.r[3] = DirectX::XMVectorSet(0.f, 0.f, 0.f, 1.f);
+
+	_vector q = DirectX::XMQuaternionRotationMatrix(r);
+
+	SetRotation(Quaternion::FromVector(q));
 }
 
 void engine::Transform::Destroy()

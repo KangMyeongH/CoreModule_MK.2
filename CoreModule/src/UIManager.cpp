@@ -26,8 +26,8 @@ void engine::UIManager::Render(const ComPtr<ID3D11DeviceContext>& context)
 	const _float winSizeY = static_cast<_float>(D3D11Manager::GetInstance().GetWinSizeY());
 
 	_float4X4 viewMat, projMat;
-	XMStoreFloat4x4(&viewMat, XMMatrixTranspose(DirectX::XMMatrixIdentity()));
-	XMStoreFloat4x4(&projMat, XMMatrixTranspose(DirectX::XMMatrixOrthographicLH(winSizeX, winSizeY, -1.f, 1.f)));
+	XMStoreFloat4x4(&viewMat, DirectX::XMMatrixIdentity());
+	XMStoreFloat4x4(&projMat,DirectX::XMMatrixOrthographicLH(winSizeX, winSizeY, -1.f, 1.f));
 
 	// TODO : Render Option에 맞게 렌더링 순서 조절 (Alpha Blend)
 	// TODO : Sorting Num에 맞게 UI들 Sorting 후 렌더링

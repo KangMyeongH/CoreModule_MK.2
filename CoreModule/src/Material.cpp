@@ -1,6 +1,7 @@
 #include "Material.h"
 
 #include "D3D11Manager.h"
+#include "LoadManager.h"
 
 engine::Material::Material(const SharedPtr<Object>& owner, const _string& name)
 	: Object(name), m_Owner(owner)
@@ -11,9 +12,8 @@ engine::Material::Material(const SharedPtr<Object>& owner, const _string& name)
 engine::Material::~Material() = default;
 
 engine::Material::Material(const Material& rhs)
-	: Object(rhs), m_ShaderPath(rhs.m_ShaderPath)
+	: Object(rhs), m_ShaderPath(rhs.m_ShaderPath), m_MaterialPath(rhs.m_MaterialPath)
 {
-
 }
 
 void engine::Material::SetFloat(const std::string& name, const _float value)
@@ -333,6 +333,13 @@ void engine::Material::SetMatrix(const std::string& name, const _float4X4& value
 	}
 }
 
+void engine::Material::SetMatrix(const _string& name, const _matrix& matrix)
+{
+	_float4X4 mat;
+	XMStoreFloat4x4(&mat, matrix);
+	SetMatrix(name, mat);
+}
+
 engine::_float4X4 engine::Material::GetMatrix(const std::string& name)
 {
 	_float4X4 mat;
@@ -488,6 +495,7 @@ engine::SharedPtr<engine::Material> engine::Material::Clone(const SharedPtr<Obje
 	SharedPtr<Material> clone(CLONE_SHARED_PTR(Material));
 	clone->SetOwner(renderer);
 	clone->LoadShader(clone->m_ShaderPath);
+	LoadManager::GetInstance().LoadMaterialData(clone, m_MaterialPath);
 
 	return clone;
 }

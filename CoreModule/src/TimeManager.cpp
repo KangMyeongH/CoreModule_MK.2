@@ -39,6 +39,7 @@ void engine::TimeManager::TimeUpdate()
 
 	if (m_AccTime >= 1.0f)
 	{
+		m_CurrentFPS = m_FPS;
 		m_FPS = 0;
 		m_AccTime = 0;
 	}
@@ -72,4 +73,10 @@ void engine::TimeManager::SlowMotion(const float timeScale, const float slowMoti
 {
     m_TimeScale = timeScale;
     m_SlowMotionTime = slowMotionTime;
+}
+
+void engine::TimeManager::TitleFPS(HWND hwnd)
+{
+	std::wstring newTitle = L"FPS : " + std::to_wstring(m_CurrentFPS);
+	SetWindowTextW(hwnd, newTitle.c_str());
 }

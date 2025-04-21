@@ -153,7 +153,7 @@ void engine::editor::Grid::UpdateGridVertices(ComPtr<ID3D11DeviceContext> contex
 void engine::editor::Grid::Bind(const ComPtr<ID3D11DeviceContext>& context, const _float4X4& viewMat, const _float4X4& projMat)
 {
 	_float4X4 identity;
-	XMStoreFloat4x4(&identity, XMMatrixTranspose(DirectX::XMMatrixIdentity()));
+	XMStoreFloat4x4(&identity, DirectX::XMMatrixIdentity());
 
 	m_Material->SetMatrix("g_WorldMatrix", identity);
 	m_Material->SetMatrix("g_ViewMatrix", viewMat);

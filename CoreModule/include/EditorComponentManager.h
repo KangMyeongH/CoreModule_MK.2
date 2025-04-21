@@ -19,6 +19,8 @@ namespace engine
         using Renderers = std::vector<SharedPtr<Renderer>>;
         using UIs = std::vector<SharedPtr<UI>>;
 
+        using Colliders = std::vector<SharedPtr<Collider>>;
+
         class COREMODULE_API EditorComponentManager
         {
         //======================================//
@@ -42,10 +44,11 @@ namespace engine
         //				  method				//
         //======================================//
         public:
-            void Render(const ComPtr<ID3D11DeviceContext>& context, _float4X4 viewMat, _float4X4 projMat);
+            void Render(const ComPtr<ID3D11DeviceContext>& context, const _float4X4& viewMat, const _float4X4& projMat);
             void RenderUIComponent(const ComPtr<ID3D11DeviceContext>& context);
+            void RenderCollider(const ComPtr<ID3D11DeviceContext>& context, const _float4X4& viewMat, const _float4X4& projMat) const;
             void AddComponent(const SharedPtr<GameObject>& owner, const SharedPtr<Component>& component);
-
+            void AddComponent(const SharedPtr<Component>& component);
             template <typename T>
             SharedPtr<T> CreateComponent(const SharedPtr<GameObject>& owner)
             {
@@ -75,6 +78,8 @@ namespace engine
             Renderers 			m_Renderers;
             UIs                 m_UIs;
             Cameras 			m_Cameras;
+
+            Colliders           m_Colliders;
 
             WeakPtr<Camera> 	m_MainCamera;
 

@@ -34,6 +34,8 @@ namespace engine
         void	TimeUpdate();
         void	FrameLimit();
         void	SlowMotion(float timeScale, float slowMotionTime);
+        void    TitleFPS(HWND hwnd);
+
 
     private:
         //======================================//
@@ -52,5 +54,6 @@ namespace engine
         _float			m_SlowMotionTime;
         _float			m_SlowTime;
         _int			m_FPS;
+        _int            m_CurrentFPS;
     };
 }

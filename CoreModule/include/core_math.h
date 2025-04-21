@@ -346,7 +346,7 @@ namespace engine
 	public:
 		_float3 Value;
 	};
-
+	
 	struct Quaternion
 	{
 	public:
@@ -671,13 +671,13 @@ namespace engine
 			Vector3 yAxis = Vector3::Cross(zAxis, xAxis);
 
 			_matrix rotationMatrix = {
-				xAxis.Value.x, yAxis.Value.x, zAxis.Value.x, 0.0f,
-				xAxis.Value.y, yAxis.Value.y, zAxis.Value.y, 0.0f,
-				xAxis.Value.z, yAxis.Value.z, zAxis.Value.z, 0.0f,
-				0.0f,          0.0f,          0.0f,          1.0f
+				xAxis.Value.x, xAxis.Value.y, xAxis.Value.z, 0.f,
+				yAxis.Value.x, yAxis.Value.y, yAxis.Value.z, 0.f,
+				zAxis.Value.x, zAxis.Value.y, zAxis.Value.z, 0.f,
+				0.f,      0.f,      0.f,    1.f
 			};
 
-			_vector quat = DirectX::XMQuaternionRotationMatrix(rotationMatrix);
+			_vector quat = XMQuaternionRotationMatrix(rotationMatrix);
 			return FromVector(quat);
 		}
 

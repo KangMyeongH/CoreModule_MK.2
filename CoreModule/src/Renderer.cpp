@@ -1,5 +1,6 @@
 #include "Renderer.h"
 
+#include "EditorComponentManager.h"
 #include "Material.h"
 #include "RenderManager.h"
 
@@ -18,5 +19,10 @@ void engine::Renderer::registerComponent(ApplicationMode mode)
 	if (mode == CLIENT)
 	{
 		RenderManager::GetInstance().AddRenderer(std::static_pointer_cast<Renderer>(shared_from_this()));
+	}
+
+	if (mode == EDITOR)
+	{
+		editor::EditorComponentManager::GetInstance().AddComponent(std::static_pointer_cast<Renderer>(shared_from_this()));
 	}
 }

@@ -66,20 +66,17 @@ void engine::SkinnedMeshRenderer::Render(const ComPtr<ID3D11DeviceContext>& cont
 			material.second->SetColor("DirLight_Diffuse", _float4(1.f, 1.f, 1.f, 1.f));
 			material.second->SetColor("DirLight_Ambient", _float4(1.f, 1.f, 1.f, 1.f));
 			material.second->SetColor("DirLight_Specular", _float4(1.f, 1.f, 1.f, 1.f));
-			//material->SetFloat4("CameraPosition", _float4(0.f, 10.f, -6.f, 1.f));
 
 			material.second->SetColor("Ambient", _float4(0.8f, 0.8f, 0.8f, 0.8f));
 			material.second->SetColor("Specular", _float4(1.f, 1.f, 1.f, 1.f));
-			_float4X4 worldMat;
-			XMStoreFloat4x4(&worldMat, XMMatrixTranspose(GetTransform()->GetWorldMatrix()));
 
-			material.second->SetMatrix("g_WorldMatrix", worldMat);
+			material.second->SetMatrix("g_WorldMatrix", GetTransform()->GetWorldMatrix());
 		}
 	}
 	//=============================================================
 
-	_float4X4 worldMat;
-	XMStoreFloat4x4(&worldMat, XMMatrixTranspose(GetTransform()->GetWorldMatrix()));
+	//_float4X4 worldMat;
+	//XMStoreFloat4x4(&worldMat, XMMatrixTranspose(GetTransform()->GetWorldMatrix()));
 
 	Bind(context);
 
@@ -214,7 +211,7 @@ void engine::SkinnedMeshRenderer::UpdateAnimation(_float deltaTime)
 		m_AnimState.CurrentTime += deltaTime;
 	}
 	
-	if (m_Animation.empty() || m_AnimState.CurrentClip.empty())
+	if (m_Animation.empty() || (m_AnimState.CurrentClip.empty() && m_AnimState.NextClip.empty()))
 	{
 		m_BoneMatrix.resize(m_Skeleton.Bones.size());
 
@@ -236,6 +233,11 @@ void engine::SkinnedMeshRenderer::UpdateAnimation(_float deltaTime)
 
 	else
 	{
+		if (m_AnimState.CurrentClip.empty())
+		{
+			ChangeAnimation(m_AnimState.NextClip, m_AnimState.NextFadeDuration, m_AnimState.NextIsLoop);
+		}
+
 		if (m_AnimState.IsCrossFading)
 		{
 			m_AnimState.OldClipTime += deltaTime;

@@ -37,6 +37,8 @@ namespace engine
     	void    UpdateCamera(_float4X4& viewMat, _float4X4& projMat) const;
     	void    SetMainCamera();
 
+        Vector3 WorldToViewportPoint(const Vector3& worldPos) const;
+
         void 	Destroy() override;
 
     protected:
