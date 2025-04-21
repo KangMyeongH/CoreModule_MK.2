@@ -54,6 +54,7 @@ namespace engine
 
         HRESULT ClearBackBufferView(_float4 clearColor);
         HRESULT ClearDepthStencilView();
+
         HRESULT Present();
 
         void 	SetCCW();

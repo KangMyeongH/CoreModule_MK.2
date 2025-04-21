@@ -226,7 +226,8 @@ namespace engine
 			}
 		}
 
-		void LookAt(SharedPtr<Transform> target);
+		void LookAt(const SharedPtr<Transform>& target, const Vector3& up = Vector3::Up());
+		void LookAtDirection(const Vector3& dir, const Vector3& up = Vector3::Up());
 
 		void Destroy() override;
 		SharedPtr<Component> Clone() const override;

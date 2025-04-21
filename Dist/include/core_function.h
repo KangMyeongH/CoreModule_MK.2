@@ -153,4 +153,6 @@ namespace engine
 		j.at("z").get_to(v.w);
 	}
 
+	//void BuildSAH(uint32_t first, uint32_t count, std::vector<TriangleAABB>& tris, std::vector<BVHBuildNode>
+
 }

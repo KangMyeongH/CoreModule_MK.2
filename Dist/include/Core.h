@@ -3,6 +3,11 @@
 
 namespace engine
 {
+	class CollisionManager;
+}
+
+namespace engine
+{
 	class InputManager;
 	class TimeManager;
 	class PhysicsManager;
@@ -70,6 +75,7 @@ namespace engine
 		PhysicsManager* 			m_PhysicsManager;
 		RenderManager*				m_RenderManager;
 		UIManager*					m_UIManager;
+		CollisionManager* 			m_CollisionManager;
 
 		_uint						m_WindowWidth;
 		_uint						m_WindowHeight;

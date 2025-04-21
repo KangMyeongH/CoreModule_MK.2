@@ -7,6 +7,8 @@
 
 namespace engine
 {
+	class Collision;
+
 	namespace editor
 	{
 		class EditorComponentManager;
@@ -22,6 +24,7 @@ namespace engine
 		friend class Scene;
 		friend class editor::Hierarchy;
 		friend class editor::EditorComponentManager;
+		friend class CollisionManager;
 
 	protected:
 		//======================================//
@@ -127,6 +130,8 @@ namespace engine
 		void							SetAssetPath(const _wstring& path) { m_AssetPath = path; }
 		_wstring						GetAssetPath() const { return m_AssetPath; }
 
+		_bool							IsStatic() const { return m_bStatic; }
+
 		SharedPtr<GameObject>			FindGameObject(const std::string& name) const;
 
 		static SharedPtr<GameObject> 	Create(const _string& name = "GameObject", ApplicationMode mode = CLIENT);
@@ -153,6 +158,10 @@ namespace engine
 			}
 		}
 
+
+		void onCollisionEnter(const Collision& other);
+		void onCollisionStay(const Collision& other);
+		void onCollisionExit(const Collision& other);
 		//======================================//
 		//				 serialize				//
 		//======================================//

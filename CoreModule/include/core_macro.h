@@ -104,3 +104,5 @@ private: 																										\
 		}
 
 #pragma endregion Singleton
+
+#define LOG_FAIL(msg)  do{ std::cout << "VALIDATE ERROR: " << msg << '\n'; }while(0)

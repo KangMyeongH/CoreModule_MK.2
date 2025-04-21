@@ -1,7 +1,9 @@
 #include "EditorComponentManager.h"
 
 #include "Camera.h"
+#include "Collider.h"
 #include "D3D11Manager.h"
+#include "DebugRenderManager.h"
 #include "EditorCore.h"
 #include "GameObject.h"
 #include "Material.h"
@@ -17,7 +19,7 @@ engine::editor::EditorComponentManager::~EditorComponentManager()
 
 IMPLEMENT_SINGLETON(engine::editor::EditorComponentManager)
 
-void engine::editor::EditorComponentManager::Render(const ComPtr<ID3D11DeviceContext>& context, _float4X4 viewMat, _float4X4 projMat)
+void engine::editor::EditorComponentManager::Render(const ComPtr<ID3D11DeviceContext>& context, const _float4X4& viewMat, const _float4X4& projMat)
 {
 	Vector3 camPos = EditorCore::GetInstance().GetEditorCamera().GetCameraPos();
 	_float4 finalCamPos = { camPos.Value.x, camPos.Value.y, camPos.Value.z, 1.f };
@@ -44,7 +46,10 @@ void engine::editor::EditorComponentManager::Render(const ComPtr<ID3D11DeviceCon
 		}
 	}
 
+	RenderCollider(context, viewMat, projMat);
+
 	RenderUIComponent(context);
+
 }
 
 void engine::editor::EditorComponentManager::RenderUIComponent(const ComPtr<ID3D11DeviceContext>& context)
@@ -53,8 +58,8 @@ void engine::editor::EditorComponentManager::RenderUIComponent(const ComPtr<ID3D
 	const _float winSizeY = static_cast<_float>(D3D11Manager::GetInstance().GetWinSizeY());
 
 	_float4X4 viewMat, projMat;
-	XMStoreFloat4x4(&viewMat, XMMatrixTranspose(DirectX::XMMatrixIdentity()));
-	XMStoreFloat4x4(&projMat, XMMatrixTranspose(DirectX::XMMatrixOrthographicLH(winSizeX, winSizeY, -1.f, 1.f)));
+	XMStoreFloat4x4(&viewMat, DirectX::XMMatrixIdentity());
+	XMStoreFloat4x4(&projMat,DirectX::XMMatrixOrthographicLH(winSizeX, winSizeY, -1.f, 1.f));
 
 	for (const auto& ui : m_UIs)
 	{
@@ -67,6 +72,12 @@ void engine::editor::EditorComponentManager::RenderUIComponent(const ComPtr<ID3D
 			ui->RenderUI(context);
 		}
 	}
+}
+
+void engine::editor::EditorComponentManager::RenderCollider(const ComPtr<ID3D11DeviceContext>& context,
+	const _float4X4& viewMat, const _float4X4& projMat) const
+{
+	DebugRenderManager::GetInstance().RenderCollider(m_Colliders, context, viewMat, projMat);
 }
 
 void engine::editor::EditorComponentManager::AddComponent(const SharedPtr<GameObject>& owner, const SharedPtr<Component>& component)
@@ -91,6 +102,11 @@ void engine::editor::EditorComponentManager::AddComponent(const SharedPtr<GameOb
 		m_Cameras.push_back(camera);
 	}
 
+	else if (auto collider = std::dynamic_pointer_cast<Collider>(component))
+	{
+		m_Colliders.push_back(collider);
+	}
+
 	else
 	{
 		m_Components.push_back(component);
@@ -103,6 +119,39 @@ void engine::editor::EditorComponentManager::AddComponent(const SharedPtr<GameOb
 		components[typeid(*component)].push_back(component);
 	}
 	component->registerComponent(EDITOR);
+}
+
+void engine::editor::EditorComponentManager::AddComponent(const SharedPtr<Component>& component)
+{
+	if (auto ui = std::dynamic_pointer_cast<UI>(component))
+	{
+		m_UIs.push_back(ui);
+	}
+
+	else if (auto renderer = std::dynamic_pointer_cast<Renderer>(component))
+	{
+		m_Renderers.push_back(renderer);
+	}
+
+	else if (auto camera = std::dynamic_pointer_cast<Camera>(component))
+	{
+		if (!m_MainCamera.lock())
+		{
+			m_MainCamera = camera;
+		}
+
+		m_Cameras.push_back(camera);
+	}
+
+	else if (auto collider = std::dynamic_pointer_cast<Collider>(component))
+	{
+		m_Colliders.push_back(collider);
+	}
+
+	else
+	{
+		m_Components.push_back(component);
+	}
 }
 
 void engine::editor::EditorComponentManager::FlushDestroyComponent()

@@ -57,7 +57,6 @@ void engine::TextureUI::SetTexture(const _wstring& path)
 
 engine::ComPtr<ID3D11ShaderResourceView> engine::TextureUI::GetTexture() const
 {
-
 	return D3D11Manager::GetInstance().GetTexture(m_TexturePath);
 }
 
@@ -145,7 +144,7 @@ void engine::TextureUI::RenderUI(const ComPtr<ID3D11DeviceContext>& context)
 	if (m_Material != nullptr)
 	{
 		_float4X4 worldMat;
-		XMStoreFloat4x4(&worldMat, XMMatrixTranspose(XMMatrixMultiply(XMLoadFloat4x4(&m_TextureScaleMatrix), GetTransform()->GetWorldMatrix())));
+		XMStoreFloat4x4(&worldMat, XMMatrixMultiply(XMLoadFloat4x4(&m_TextureScaleMatrix), GetTransform()->GetWorldMatrix()));
 
 		m_Material->SetMatrix("g_WorldMatrix", worldMat);
 

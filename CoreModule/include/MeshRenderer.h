@@ -1,5 +1,6 @@
 #pragma once
 #include "core_defines.h"
+#include "Material.h"
 #include "Renderer.h"
 
 namespace engine
@@ -11,7 +12,7 @@ namespace engine
 {
     class COREMODULE_API MeshRenderer : public Renderer
     {
-	    DECLARE_REGISTER_COMPONENT(MeshRenderer)
+	    //DECLARE_REGISTER_COMPONENT(MeshRenderer)
 	    //======================================//
         //				constructor				//
         //======================================//
@@ -36,8 +37,27 @@ namespace engine
 
         void Destroy() override;
 
+        SharedPtr<Component> Clone() const override
+        {
+            SharedPtr<MeshRenderer> clone(CLONE_SHARED_PTR(MeshRenderer));
+
+            for (auto& pair : m_Material)
+            {
+                clone->m_Material.emplace(pair.first, pair.second->Clone(clone));
+            }
+
+            return clone;
+        }
+
     protected:
         void registerComponent(ApplicationMode mode = CLIENT) override;
+
+    private:
+        static SharedPtr<MeshRenderer> create()
+        {
+            return SharedPtr<MeshRenderer>(new MeshRenderer(nullptr), []
+            (const MeshRenderer* ptr) {delete ptr; });
+        }
 
         //======================================//
         //				 serialize				//
@@ -51,5 +71,7 @@ namespace engine
         //======================================//
     private:
         SharedPtr<Mesh> m_Mesh;
+
+        static ComponentRegistrar registrar_MeshRenderer;
     };
 }
