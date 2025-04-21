@@ -20,13 +20,19 @@ namespace engine
     public:
         ColliderType GetColliderType() const override { return ColliderType_Sphere; }
 
+    	Vector3 	GetCenter() const { return m_Center; }
+        void 		SetCenter(const Vector3& center) { m_Center = center; }
+
+        _float 		GetRadius() const { return m_Radius; }
+        void 		SetRadius(const _float radius) { m_Radius = radius; }
+
         //======================================//
         //				  method				//
         //======================================//
     public:
         void UpdateCollider() override;
 
-        void Render(ComPtr<ID3D11DeviceContext> context) override;
+        void Render(ComPtr<ID3D11DeviceContext> context, const SharedPtr<VIBuffer>& buffer) override;
         void Destroy() override;
 
     private:

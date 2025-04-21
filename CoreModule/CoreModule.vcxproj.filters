@@ -115,6 +115,9 @@
     <Filter Include="00. System\Collision\MeshCollider">
       <UniqueIdentifier>{a0ad9a29-6cf8-496a-95be-9fed111addce}</UniqueIdentifier>
     </Filter>
+    <Filter Include="00. System\Graphic\Debug">
+      <UniqueIdentifier>{22002d12-2e78-44d7-870e-3da0a211dedc}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="include\core_defines.h">
@@ -250,7 +253,7 @@
     <ClInclude Include="include\Collision.h">
       <Filter>00. System\Collision</Filter>
     </ClInclude>
-    <ClInclude Include="include\BoxCollier.h">
+    <ClInclude Include="include\BoxCollider.h">
       <Filter>00. System\Collision\BoxCollider</Filter>
     </ClInclude>
     <ClInclude Include="include\CollisionManager.h">
@@ -262,7 +265,16 @@
     <ClInclude Include="include\CapsuleCollider.h">
       <Filter>00. System\Collision\CapsuleCollider</Filter>
     </ClInclude>
-    <ClInclude Include="include\MeshCollider.h" />
+    <ClInclude Include="include\MeshCollider.h">
+      <Filter>00. System\Collision\MeshCollider</Filter>
+    </ClInclude>
+    <ClInclude Include="include\core_utility.h">
+      <Filter>99. Defines</Filter>
+    </ClInclude>
+    <ClInclude Include="include\CapsuleRenderer.h" />
+    <ClInclude Include="include\DebugRenderManager.h">
+      <Filter>00. System\Graphic</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\GameObject.cpp">
@@ -371,7 +383,7 @@
     <ClCompile Include="src\Collision.cpp">
       <Filter>00. System\Collision</Filter>
     </ClCompile>
-    <ClCompile Include="src\BoxCollier.cpp">
+    <ClCompile Include="src\BoxCollider.cpp">
       <Filter>00. System\Collision\BoxCollider</Filter>
     </ClCompile>
     <ClCompile Include="src\CollisionManager.cpp">
@@ -383,7 +395,16 @@
     <ClCompile Include="src\CapsuleCollider.cpp">
       <Filter>00. System\Collision\CapsuleCollider</Filter>
     </ClCompile>
-    <ClCompile Include="src\MeshCollider.cpp" />
+    <ClCompile Include="src\MeshCollider.cpp">
+      <Filter>00. System\Collision\MeshCollider</Filter>
+    </ClCompile>
+    <ClCompile Include="src\core_utility.cpp">
+      <Filter>99. Defines</Filter>
+    </ClCompile>
+    <ClCompile Include="src\CapsuleRenderer.cpp" />
+    <ClCompile Include="src\DebugRenderManager.cpp">
+      <Filter>00. System\Graphic</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="cpp.hint" />

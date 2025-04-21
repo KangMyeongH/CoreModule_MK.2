@@ -7,6 +7,8 @@
 
 namespace engine
 {
+	class Collision;
+
 	namespace editor
 	{
 		class EditorComponentManager;
@@ -22,6 +24,7 @@ namespace engine
 		friend class Scene;
 		friend class editor::Hierarchy;
 		friend class editor::EditorComponentManager;
+		friend class CollisionManager;
 
 	protected:
 		//======================================//
@@ -155,6 +158,10 @@ namespace engine
 			}
 		}
 
+
+		void onCollisionEnter(const Collision& other);
+		void onCollisionStay(const Collision& other);
+		void onCollisionExit(const Collision& other);
 		//======================================//
 		//				 serialize				//
 		//======================================//

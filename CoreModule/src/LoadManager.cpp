@@ -793,106 +793,36 @@ engine::AnimationClip engine::LoadManager::ReadAnimationClipDataFromFile(const s
 	return clip;
 }
 
-//engine::_bool engine::LoadManager::SaveStaticMesh(std::ofstream& ofs, const MeshData& meshData)
-//{
-//	//std::ofstream ofs(path, std::ios::binary);
-//	//if (!ofs.is_open())
-//	//{
-//	//	return false;
-//	//}
-//
-//	//FileHeader fh;
-//	//memcpy(fh.magic, "MESH", 4);
-//	//fh.version = 1;
-//	//ofs.write(reinterpret_cast<char*>(&fh), sizeof(fh));
-//
-//	MeshInfo md;
-//	md.vertexCount = static_cast<uint32_t>(meshData.Vertices.size());
-//	md.indexCount = static_cast<uint32_t>(meshData.Indices.size());
-//	md.materialCount = static_cast<uint32_t>(meshData.Materials.size());
-//	md.subMeshCount = static_cast<uint32_t>(meshData.SubMeshes.size());
-//
-//	ofs.write(reinterpret_cast<char*>(&md), sizeof(md));
-//
-//	if (!meshData.Vertices.empty())
-//	{
-//		ofs.write(reinterpret_cast<const char*>(!meshData.Vertices.data()), sizeof(VTX_MESH) * !meshData.Vertices.size());
-//	}
-//
-//	if (!meshData.Indices.empty())
-//	{
-//		ofs.write(reinterpret_cast<const char*>(meshData.Indices.data()), sizeof(uint32_t) * meshData.Indices.size());
-//	}
-//
-//	if (!meshData.Materials.empty())
-//	{
-//		SaveMaterial(ofs, meshData.Materials);
-//	}
-//
-//	if (!meshData.SubMeshes.empty())
-//	{
-//		SaveSubMesh(ofs, meshData.SubMeshes);
-//	}
-//
-//	return true;
-//}
+void engine::LoadManager::BuildTriangleAABBs(const std::vector<_float3>& vertices, const std::vector<uint32_t>& indices,
+	std::vector<TriangleAABB>& out)
+{
+	size_t triCnt = indices.size() / 3;
+	out.resize(triCnt);
 
-//engine::_bool engine::LoadManager::SaveMaterial(std::ofstream& ofs, const std::vector<MaterialData>& material)
-//{
-//	for (auto& md : material)
-//	{
-//		MaterialInfo mi;
-//		mi.NameLength = static_cast<uint32_t>(md.name.size());
-//		ofs.write(reinterpret_cast<const char*>(&mi), sizeof(mi));
-//		ofs.write(md.name.c_str(), mi.NameLength);
-//	}
-//
-//	return true;
-//}
-//
-//engine::_bool engine::LoadManager::SaveSubMesh(std::ofstream& ofs, const std::vector<SubMeshData>& subMesh)
-//{
-//	for (auto& sd : subMesh)
-//	{
-//		SubMeshInfo si;
-//		si.NameLength = static_cast<uint32_t>(sd.name.size());
-//		si.IndexOffset = static_cast<uint32_t>(sd.indexOffset);
-//		si.IndexCount = static_cast<uint32_t>(sd.indexCount);
-//		si.MaterialIndex = static_cast<uint32_t>(sd.materialIndex);
-//
-//		ofs.write(reinterpret_cast<const char*>(&si), sizeof(si));
-//		ofs.write(sd.name.c_str(), si.NameLength);
-//	}
-//
-//	return true;
-//}
-//
-//engine::_bool engine::LoadManager::LoadStaticMesh(std::ifstream& ifs, ApplicationMode mode)
-//{
-//	SharedPtr<GameObject> gameObject = GameObject::Create();
-//
-//	if (mode == EDITOR)
-//	{
-//		SharedPtr<MeshRenderer> meshRenderer = editor::EditorComponentManager::GetInstance().CreateComponent<MeshRenderer>(gameObject);
-//
-//	}
-//
-//	else if (mode == CLIENT)
-//	{
-//		//SharedPtr<MeshRenderer> meshRenderer = ComponentFactory::GetInstance().CreateComponent()
-//	}
-//
-//	return true;
-//}
-//
-//engine::_bool engine::LoadManager::LoadMaterial(std::ifstream& ifs, ApplicationMode mode)
-//{
-//	return true;
-//}
-//
-//engine::_bool engine::LoadManager::LoadSubMesh(std::ifstream& ifs, ApplicationMode mode)
-//{
-//	return true;
-//}
+	for (size_t t = 0; t < triCnt; ++t)
+	{
+		uint32_t i0 = indices[t * 3 + 0];
+		uint32_t i1 = indices[t * 3 + 1];
+		uint32_t i2 = indices[t * 3 + 2];
+
+		const _float3& v0 = vertices[i0];
+		const _float3& v1 = vertices[i1];
+		const _float3& v2 = vertices[i2];
+
+		AABB box;
+		box.Min = Vector3{ (std::min)({ v0.x, v1.x, v2.x }),
+					(std::min)({ v0.y, v1.y, v2.y }),
+					(std::min)({ v0.z, v1.z, v2.z }) };
+
+		box.Max = Vector3{ (std::max)({ v0.x, v1.x, v2.x }),
+					(std::max)({ v0.y, v1.y, v2.y }),
+					(std::max)({ v0.z, v1.z, v2.z }) };
+
+		out[t] = { box,
+				   { (v0.x + v1.x + v2.x) * (1.0f / 3.0f),
+					 (v0.y + v1.y + v2.y) * (1.0f / 3.0f),
+					 (v0.z + v1.z + v2.z) * (1.0f / 3.0f) } };
+	}
+}
 
 IMPLEMENT_SINGLETON(engine::LoadManager)

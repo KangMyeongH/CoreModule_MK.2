@@ -20,7 +20,7 @@ void engine::CapsuleCollider::UpdateCollider()
 	calcWorldABB();
 }
 
-void engine::CapsuleCollider::Render(ComPtr<ID3D11DeviceContext> context)
+void engine::CapsuleCollider::Render(ComPtr<ID3D11DeviceContext> context, const SharedPtr<VIBuffer>& buffer)
 {
 
 }

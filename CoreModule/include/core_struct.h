@@ -16,6 +16,8 @@ namespace engine
 
 namespace engine
 {
+	struct TriangleAABB;
+
 	struct Ray
 	{
 		Vector3 Origin;			// Ray의 시작점 		(월드 좌표)
@@ -100,6 +102,7 @@ namespace engine
 	// CBufferRuntime의 LocalData. TextureRuntime, SamplerRuntime은
 	// 각각의 객체가 고유한 값을 가지고 있어야함.
 	// 그 외의 정보는 다 공유해서 가지고 있음.
+	// TODO : 최적화 해야함
 
 	struct Shader
 	{
@@ -155,7 +158,6 @@ namespace engine
 							context->Unmap(cbr->Buffer.Get(), 0);
 							cbr->DirtyFlag = false;
 						}
-						//context->UpdateSubresource(cbr->Buffer.Get(), 0, nullptr, cbr->LocalData.data(), 0, 0);
 					}
 				}
 			}
@@ -168,30 +170,30 @@ namespace engine
 				context->VSSetConstantBuffers(cb.second->BindPoint, 1, cb.second->Buffer.GetAddressOf());
 			}
 
-			for (const auto& cb : CBuffers[HS])
-			{
-				context->HSSetConstantBuffers(cb.second->BindPoint, 1, cb.second->Buffer.GetAddressOf());
-			}
+			//for (const auto& cb : CBuffers[HS])
+			//{
+			//	context->HSSetConstantBuffers(cb.second->BindPoint, 1, cb.second->Buffer.GetAddressOf());
+			//}
 
-			for (const auto& cb : CBuffers[DS])
-			{
-				context->DSSetConstantBuffers(cb.second->BindPoint, 1, cb.second->Buffer.GetAddressOf());
-			}
+			//for (const auto& cb : CBuffers[DS])
+			//{
+			//	context->DSSetConstantBuffers(cb.second->BindPoint, 1, cb.second->Buffer.GetAddressOf());
+			//}
 
-			for (const auto& cb : CBuffers[GS])
-			{
-				context->GSSetConstantBuffers(cb.second->BindPoint, 1, cb.second->Buffer.GetAddressOf());
-			}
+			//for (const auto& cb : CBuffers[GS])
+			//{
+			//	context->GSSetConstantBuffers(cb.second->BindPoint, 1, cb.second->Buffer.GetAddressOf());
+			//}
 
 			for (const auto& cb : CBuffers[PS])
 			{
 				context->PSSetConstantBuffers(cb.second->BindPoint, 1, cb.second->Buffer.GetAddressOf());
 			}
 
-			for (const auto& cb : CBuffers[CS])
-			{
-				context->CSSetConstantBuffers(cb.second->BindPoint, 1, cb.second->Buffer.GetAddressOf());
-			}
+			//for (const auto& cb : CBuffers[CS])
+			//{
+			//	context->CSSetConstantBuffers(cb.second->BindPoint, 1, cb.second->Buffer.GetAddressOf());
+			//}
 		}
 
 		void BindTextures(ID3D11DeviceContext* context) const
@@ -204,29 +206,29 @@ namespace engine
 				context->VSSetShaderResources(bindPoint, 1, srv.GetAddressOf());
 			}
 
-			for (const auto& pair : Textures[HS])
-			{
-				const auto& bindPoint = pair.second->BindPoint;
-				auto srv = pair.second->Texture;
+			//for (const auto& pair : Textures[HS])
+			//{
+			//	const auto& bindPoint = pair.second->BindPoint;
+			//	auto srv = pair.second->Texture;
 
-				context->HSSetShaderResources(bindPoint, 1, srv.GetAddressOf());
-			}
+			//	context->HSSetShaderResources(bindPoint, 1, srv.GetAddressOf());
+			//}
 
-			for (const auto& pair : Textures[DS])
-			{
-				const auto& bindPoint = pair.second->BindPoint;
-				auto srv = pair.second->Texture;
+			//for (const auto& pair : Textures[DS])
+			//{
+			//	const auto& bindPoint = pair.second->BindPoint;
+			//	auto srv = pair.second->Texture;
 
-				context->DSSetShaderResources(bindPoint, 1, srv.GetAddressOf());
-			}
+			//	context->DSSetShaderResources(bindPoint, 1, srv.GetAddressOf());
+			//}
 
-			for (const auto& pair : Textures[GS])
-			{
-				const auto& bindPoint = pair.second->BindPoint;
-				auto srv = pair.second->Texture;
+			//for (const auto& pair : Textures[GS])
+			//{
+			//	const auto& bindPoint = pair.second->BindPoint;
+			//	auto srv = pair.second->Texture;
 
-				context->GSSetShaderResources(bindPoint, 1, srv.GetAddressOf());
-			}
+			//	context->GSSetShaderResources(bindPoint, 1, srv.GetAddressOf());
+			//}
 
 			for (const auto& pair : Textures[PS])
 			{
@@ -236,13 +238,13 @@ namespace engine
 				context->PSSetShaderResources(bindPoint, 1, srv.GetAddressOf());
 			}
 
-			for (const auto& pair : Textures[CS])
-			{
-				const auto& bindPoint = pair.second->BindPoint;
-				auto srv = pair.second->Texture;
+			//for (const auto& pair : Textures[CS])
+			//{
+			//	const auto& bindPoint = pair.second->BindPoint;
+			//	auto srv = pair.second->Texture;
 
-				context->CSSetShaderResources(bindPoint, 1, srv.GetAddressOf());
-			}
+			//	context->CSSetShaderResources(bindPoint, 1, srv.GetAddressOf());
+			//}
 		}
 
 		void BindSamplers(ID3D11DeviceContext* context) const
@@ -255,29 +257,29 @@ namespace engine
 				context->VSSetSamplers(bindPoint, 1, sampler.GetAddressOf());
 			}
 
-			for (const auto& pair : Samplers[HS])
-			{
-				const auto& bindPoint = pair.second->BindPoint;
-				auto sampler = pair.second->Sampler;
+			//for (const auto& pair : Samplers[HS])
+			//{
+			//	const auto& bindPoint = pair.second->BindPoint;
+			//	auto sampler = pair.second->Sampler;
 
-				context->HSSetSamplers(bindPoint, 1, sampler.GetAddressOf());
-			}
+			//	context->HSSetSamplers(bindPoint, 1, sampler.GetAddressOf());
+			//}
 
-			for (const auto& pair : Samplers[DS])
-			{
-				const auto& bindPoint = pair.second->BindPoint;
-				auto sampler = pair.second->Sampler;
+			//for (const auto& pair : Samplers[DS])
+			//{
+			//	const auto& bindPoint = pair.second->BindPoint;
+			//	auto sampler = pair.second->Sampler;
 
-				context->DSSetSamplers(bindPoint, 1, sampler.GetAddressOf());
-			}
+			//	context->DSSetSamplers(bindPoint, 1, sampler.GetAddressOf());
+			//}
 
-			for (const auto& pair : Samplers[GS])
-			{
-				const auto& bindPoint = pair.second->BindPoint;
-				auto sampler = pair.second->Sampler;
+			//for (const auto& pair : Samplers[GS])
+			//{
+			//	const auto& bindPoint = pair.second->BindPoint;
+			//	auto sampler = pair.second->Sampler;
 
-				context->GSSetSamplers(bindPoint, 1, sampler.GetAddressOf());
-			}
+			//	context->GSSetSamplers(bindPoint, 1, sampler.GetAddressOf());
+			//}
 
 			for (const auto& pair : Samplers[PS])
 			{
@@ -287,13 +289,13 @@ namespace engine
 				context->PSSetSamplers(bindPoint, 1, sampler.GetAddressOf());
 			}
 
-			for (const auto& pair : Samplers[CS])
-			{
-				const auto& bindPoint = pair.second->BindPoint;
-				auto sampler = pair.second->Sampler;
+			//for (const auto& pair : Samplers[CS])
+			//{
+			//	const auto& bindPoint = pair.second->BindPoint;
+			//	auto sampler = pair.second->Sampler;
 
-				context->CSSetSamplers(bindPoint, 1, sampler.GetAddressOf());
-			}
+			//	context->CSSetSamplers(bindPoint, 1, sampler.GetAddressOf());
+			//}
 		}
 
 		void Bind(ID3D11DeviceContext* context)
@@ -303,11 +305,11 @@ namespace engine
 			context->IASetInputLayout(InputLayout.Get());
 
 			context->VSSetShader(VertexShader.Get(), nullptr, 0);
-			context->HSSetShader(HullShader.Get(), nullptr, 0);
-			context->DSSetShader(DomainShader.Get(), nullptr, 0);
-			context->GSSetShader(GeometryShader.Get(), nullptr,0);
+			//context->HSSetShader(HullShader.Get(), nullptr, 0);
+			//context->DSSetShader(DomainShader.Get(), nullptr, 0);
+			//context->GSSetShader(GeometryShader.Get(), nullptr,0);
 			context->PSSetShader(PixelShader.Get(), nullptr, 0);
-			context->CSSetShader(ComputeShader.Get(), nullptr, 0);
+			//context->CSSetShader(ComputeShader.Get(), nullptr, 0);
 
 			BindConstantBuffers(context);
 			BindTextures(context);
@@ -615,13 +617,11 @@ namespace engine
 		_float FadeDuration = 0.0f;
 
 		_string EventString = "";
-
 	};
 
 	//======================================//
 	//				  binary				//
 	//======================================//
-#pragma pack(push,1)
 	struct FileHeader
 	{
 		char magic[4];
@@ -711,6 +711,7 @@ namespace engine
 		std::vector<SkinnedData> SkinnedData;
 		std::vector<BoneData> Bones;
 
+		std::vector<TriangleAABB> AABBs;
 		// 아래의 데이터는 바이너리화 할 때 들어가면 안됨.
 		std::unordered_map<_string, int> BoneMap;
 
@@ -754,77 +755,48 @@ namespace engine
 		float tx, ty, tz; 	// tangent
 	};
 
-	//struct FileHeader
-	//{
-	//	char magic[4];
-	//	uint32_t version;
-
-	//	uint32_t meshCount;
-	//	uint32_t skeletonCount;
-	//	uint32_t animationCount;
-	//};
-
-	//struct NodeData
-	//{
-	//	uint32_t nameLength;
-	//	std::string nodeName;
-
-	//	int nodeType;
-	//	float localPos[3];
-	//	float localRot[4];
-	//	float localScale[3];
-
-	//	int parentIndex;
-	//	uint32_t childCount;
-	//};
-
-	//struct VertexData
-	//{
-	//	float px, py, pz;	// 
-	//	float nx, ny, nz;	// normal
-	//	float u, v;			// texCoord(UV)
-	//	float tx, ty, tz; 	// tangent
-
-	//	uint8_t boneIndices[4];
-	//	uint8_t boneWeights[4];
-	//};
-
-	//struct MeshData
-	//{
-	//	uint32_t vertexCount;
-	//	uint32_t indexCount;
-
-	//	VertexData vertexes[];
-	//};
-
-	//struct MeshInfo
-	//{
-	//	uint32_t vertexCount;
-	//	uint32_t indexCount;
-	//};
-
-	//struct BoneInfo
-	//{
-	//	int parentIndex;
-
-	//	float tx, ty, tz;
-	//	float rx, ry, rz, rw;
-	//	float sx, sy, sz;
-
-	//	float offsetMatrix[16];
-	//};
-#pragma pack(pop)
-
 	struct AABB
 	{
 		Vector3 Min;
 		Vector3 Max;
+
+		AABB()
+		{
+			const float inf = std::numeric_limits<float>::infinity();
+			Min = Vector3{ inf,  inf,  inf };
+			Max = Vector3{ -inf, -inf, -inf };
+		}
+		explicit AABB(const _float3& mn, const _float3& mx) : Min(mn), Max(mx)
+		{
+			
+		}
 
 		_bool Intersects(const AABB& other) const
 		{
 			return 	(Min.Value.x <= other.Max.Value.x && Max.Value.x >= other.Min.Value.x) &&
 					(Min.Value.y <= other.Max.Value.y && Max.Value.y >= other.Min.Value.y) &&
 					(Min.Value.z <= other.Max.Value.z && Max.Value.z >= other.Min.Value.z);
+		}
+
+		_float SurfaceArea() const
+		{
+			_float3 d{ Max.Value.x - Min.Value.x, Max.Value.y - Min.Value.y, Max.Value.z - Min.Value.z };
+			return 2.f * (d.x * d.y + d.y * d.z + d.z * d.x);
+		}
+
+		AABB Union(const AABB& rhs) const
+		{
+			return AABB{
+				{ (std::min)(Min.Value.x, rhs.Min.Value.x), (std::min)(Min.Value.y, rhs.Min.Value.y), (std::min)(Min.Value.z, rhs.Min.Value.z) },
+				{ (std::max)(Max.Value.x, rhs.Max.Value.x), (std::max)(Max.Value.y, rhs.Max.Value.y), (std::max)(Max.Value.z, rhs.Max.Value.z) }
+			};
+		}
+
+		void Expand(const _float3& p)
+		{
+			Min.Value.x = (p.x < Min.Value.x) ? p.x : Min.Value.x;  Max.Value.x = (p.x > Max.Value.x) ? p.x : Max.Value.x;
+			Min.Value.y = (p.y < Min.Value.y) ? p.y : Min.Value.y;  Max.Value.y = (p.y > Max.Value.y) ? p.y : Max.Value.y;
+			Min.Value.z = (p.z < Min.Value.z) ? p.z : Min.Value.z;  Max.Value.z = (p.z > Max.Value.z) ? p.z : Max.Value.z;
 		}
 	};
 
@@ -840,7 +812,7 @@ namespace engine
 	struct Sphere
 	{
 		Vector3 Center;
-		_float	Radius = 0.f;
+		_float	Radius = 0.5f;
 	};
 
 	struct Capsule
@@ -855,12 +827,44 @@ namespace engine
 
 	struct BVHNode
 	{
-		AABB Bounds;
-		std::unique_ptr<BVHNode> Left;
-		std::unique_ptr<BVHNode> Right;
+		AABB 		Box;			
+		uint32_t 	First;   	// leaf : primitive 시작 인덱스		
+		uint16_t 	Count;   	// leaf : 개수 + interior: 0
+		int32_t		Right;   	// interior: 우측 자식 인덱스
+	};
 
-		std::vector<SharedPtr<Collider>> Colliders;
+	struct TriangleAABB
+	{
+		AABB 		Box;
+		_float3 	Center;		// (v0 + v1 + v2) * 1/3
+		_float3 	V0, V1, V2;
+		uint32_t    TriIndex;
+	};
 
-		_bool IsLeaf() const { return Left == nullptr && Right == nullptr; }
+	struct HitResult
+	{
+		float    T = std::numeric_limits<float>::max();
+		uint32_t Tri = 0;
+	};
+
+	struct DebugVertex
+	{
+		_float3 Position;
+	};
+
+	struct CB_ViewProjMat
+	{
+		_float4X4 View;
+		_float4X4 Proj;
+	};
+
+	struct CB_World
+	{
+		_float4X4 World;
+	};
+
+	struct CB_Color
+	{
+		_float4 Color;
 	};
 }

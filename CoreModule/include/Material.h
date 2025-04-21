@@ -34,6 +34,7 @@ namespace engine
         _float4 GetFloat4(const _string& name);
 
         void SetMatrix(const _string& name, const _float4X4& value);
+        void SetMatrix(const _string& name, const _matrix& matrix);
         _float4X4 GetMatrix(const _string& name);
 
         void SetColor(const _string& name, _float4 value);

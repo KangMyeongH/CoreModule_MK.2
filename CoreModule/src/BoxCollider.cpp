@@ -1,36 +1,36 @@
-#include "BoxCollier.h"
+#include "BoxCollider.h"
 
-DEFINE_REGISTER_COMPONENT(BoxCollier)
+DEFINE_REGISTER_COMPONENT(BoxCollider)
 
-engine::BoxCollier::BoxCollier(const SharedPtr<GameObject>& owner, const _string& name)
+engine::BoxCollider::BoxCollider(const SharedPtr<GameObject>& owner, const _string& name)
 	: Collider(owner, name), m_Size(1.f, 1.f, 1.f)
 {
 
 }
 
-engine::BoxCollier::BoxCollier(const BoxCollier& rhs)
+engine::BoxCollider::BoxCollider(const BoxCollider& rhs)
 	: Collider(rhs), m_Center(rhs.m_Center), m_Size(rhs.m_Size)
 {
 
 }
 
-void engine::BoxCollier::UpdateCollider()
+void engine::BoxCollider::UpdateCollider()
 {
 	calcWorldABB();
 	calcWorldOBB();
 }
 
-void engine::BoxCollier::Render(ComPtr<ID3D11DeviceContext> context)
+void engine::BoxCollider::Render(ComPtr<ID3D11DeviceContext> context, const SharedPtr<VIBuffer>& buffer)
 {
 
 }
 
-void engine::BoxCollier::Destroy()
+void engine::BoxCollider::Destroy()
 {
 	m_bDestroyed = true;
 }
 
-engine::OBB engine::BoxCollier::calcWorldOBB()
+engine::OBB engine::BoxCollider::calcWorldOBB()
 {
 	OBB obb;
 
@@ -66,7 +66,7 @@ engine::OBB engine::BoxCollier::calcWorldOBB()
 	return obb;
 }
 
-void engine::BoxCollier::calcWorldABB()
+void engine::BoxCollider::calcWorldABB()
 {
 	_matrix worldMat = GetTransform()->GetWorldMatrix();
 
@@ -99,7 +99,7 @@ void engine::BoxCollier::calcWorldABB()
 	m_AABB = aabb;
 }
 
-void engine::BoxCollier::to_json(nlohmann::ordered_json& j)
+void engine::BoxCollider::to_json(nlohmann::ordered_json& j)
 {
 	_string type = "BoxCollider";
 	j = nlohmann::ordered_json{
@@ -111,7 +111,7 @@ void engine::BoxCollier::to_json(nlohmann::ordered_json& j)
 	};
 }
 
-void engine::BoxCollier::from_json(const nlohmann::ordered_json& j)
+void engine::BoxCollider::from_json(const nlohmann::ordered_json& j)
 {
 	if (j.contains("enable"))
 	{

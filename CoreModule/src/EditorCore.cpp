@@ -87,14 +87,12 @@ void engine::editor::EditorCore::RenderScene(const ComPtr<ID3D11DeviceContext>& 
 			context->ClearDepthStencilView(m_SceneDepthStencilView.Get(), D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.0f, 0);
 
 			_float4X4 viewMat, projMat;
-			XMStoreFloat4x4(&viewMat, XMMatrixTranspose(m_EditorCamera.GetViewMatrix()));
-			XMStoreFloat4x4(&projMat, XMMatrixTranspose(m_EditorCamera.GetProjectMatrix()));
+			XMStoreFloat4x4(&viewMat, m_EditorCamera.GetViewMatrix());
+			XMStoreFloat4x4(&projMat, m_EditorCamera.GetProjectMatrix());
 
 			m_Grid->UpdateGridVertices(context, m_EditorCamera.GetCameraPos(), 1.0f, 100);
 			m_Grid->Bind(context, viewMat, projMat);
 			m_Grid->RenderGird(context);
-
-
 
 			m_EditorComponentManager->Render(context, viewMat, projMat);
 		}
@@ -223,14 +221,15 @@ void engine::editor::EditorCore::RenderGame(const ComPtr<ID3D11DeviceContext>& c
 		{
 			mainCam->UpdateCamera(viewMat, projMat);
 
-			XMStoreFloat4x4(&viewMat, XMMatrixTranspose(XMLoadFloat4x4(&viewMat)));
-			XMStoreFloat4x4(&projMat, XMMatrixTranspose(XMLoadFloat4x4(&projMat)));
+
+			//XMStoreFloat4x4(&viewMat, XMMatrixTranspose(XMLoadFloat4x4(&viewMat)));
+			//XMStoreFloat4x4(&projMat, XMMatrixTranspose(XMLoadFloat4x4(&projMat)));
 		}
 
 		else
 		{
-			XMStoreFloat4x4(&viewMat, XMMatrixTranspose(m_EditorCamera.GetViewMatrix()));
-			XMStoreFloat4x4(&projMat, XMMatrixTranspose(m_EditorCamera.GetProjectMatrix()));
+			XMStoreFloat4x4(&viewMat, m_EditorCamera.GetViewMatrix());
+			XMStoreFloat4x4(&projMat, m_EditorCamera.GetProjectMatrix());
 		}
 
 		m_EditorComponentManager->Render(context, viewMat, projMat);

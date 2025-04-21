@@ -11,16 +11,16 @@
 
 namespace engine
 {
-    class COREMODULE_API BoxCollier final : public Collider
+    class COREMODULE_API BoxCollider final : public Collider
     {
-        DECLARE_REGISTER_COMPONENT(BoxCollier)
+        DECLARE_REGISTER_COMPONENT(BoxCollider)
         //======================================//
         //				constructor				//
         //======================================//
     protected:
-        explicit BoxCollier(const SharedPtr<GameObject>& owner, const _string& name = "BoxCollider");
-        ~BoxCollier() override = default;
-        BoxCollier(const BoxCollier& rhs);
+        explicit BoxCollider(const SharedPtr<GameObject>& owner, const _string& name = "BoxCollider");
+        ~BoxCollider() override = default;
+        BoxCollider(const BoxCollider& rhs);
 
         //======================================//
         //				 property				//
@@ -28,13 +28,21 @@ namespace engine
     public:
     	ColliderType GetColliderType() const override { return ColliderType_Box; }
 
+        Vector3 GetCenter() const { return m_Center; }
+        void SetCenter(const Vector3& center) { m_Center = center; }
+
+        Vector3 GetSize() const { return m_Size; }
+        void SetSize(const Vector3& size) { m_Size = size; }
+
+        OBB GetOBB() const { return m_OBB; }
+
         //======================================//
         //				  method				//
         //======================================//
     public:
         void 	UpdateCollider() override;
 
-    	void 	Render(ComPtr<ID3D11DeviceContext> context) override;
+    	void 	Render(ComPtr<ID3D11DeviceContext> context, const SharedPtr<VIBuffer>& buffer) override;
         void 	Destroy() override;
 
     private:

@@ -51,13 +51,7 @@ namespace engine
         ModelData ReadModelDataFromFile(const std::wstring& path);
         AnimationClip ReadAnimationClipDataFromFile(const std::wstring& path);
 
-     //   _bool SaveStaticMesh(std::ofstream& ofs, const MeshData& meshData);
-     //   _bool SaveMaterial(std::ofstream& ofs, const std::vector<MaterialData>& material);
-    	//_bool SaveSubMesh(std::ofstream& ofs, const std::vector<SubMeshData>& subMesh);
-
-     //   _bool LoadStaticMesh(std::ifstream& ifs, ApplicationMode mode = CLIENT);
-     //   _bool LoadMaterial(std::ifstream& ifs, ApplicationMode mode);
-     //   _bool LoadSubMesh(std::ifstream& ifs, ApplicationMode mode);
+        void BuildTriangleAABBs(const std::vector<_float3>& vertices, const std::vector<uint32_t>& indices, std::vector<TriangleAABB>& out);
 
         //======================================//
         //				 serialize				//

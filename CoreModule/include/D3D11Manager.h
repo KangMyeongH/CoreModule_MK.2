@@ -54,6 +54,7 @@ namespace engine
 
         HRESULT ClearBackBufferView(_float4 clearColor);
         HRESULT ClearDepthStencilView();
+
         HRESULT Present();
 
         void 	SetCCW();
@@ -83,6 +84,8 @@ namespace engine
 
         ComPtr<ID3D11RenderTargetView> 	m_BackBufferRTV;
         ComPtr<ID3D11DepthStencilView> 	m_DepthStencilView;
+
+        ComPtr<ID3D11SamplerState>      m_DefaultSampler;
 
         VIBufferMap                     m_VIBufferMap;
 

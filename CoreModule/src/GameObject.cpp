@@ -1,8 +1,10 @@
 #include "GameObject.h"
 
+#include "Collision.h"
 #include "Hierarchy.h"
 #include "PrefabManager.h"
 #include "Scene.h"
+#include "ScriptBehaviour.h"
 
 engine::GameObject::GameObject(const _string& name)
 	: Object(name),
@@ -152,6 +154,56 @@ void engine::GameObject::Destroy()
 			if (auto childObj = child->GetGameObject().lock())
 			{
 				childObj->Destroy();
+			}
+		}
+	}
+}
+
+// TODO : 아래의 onCollisionXXX는 반드시 개선해야함. (매우 비효율)
+
+void engine::GameObject::onCollisionEnter(const Collision& other)
+{
+	for (auto& componentVec : m_Components)
+	{
+		for (auto& component : componentVec.second)
+		{
+			auto scriptBehaviour = std::dynamic_pointer_cast<ScriptBehaviour>(component);
+
+			if (scriptBehaviour)
+			{
+				scriptBehaviour->OnCollisionEnter(other);
+			}
+		}
+	}
+}
+
+void engine::GameObject::onCollisionStay(const Collision& other)
+{
+	for (auto& componentVec : m_Components)
+	{
+		for (auto& component : componentVec.second)
+		{
+			auto scriptBehaviour = std::dynamic_pointer_cast<ScriptBehaviour>(component);
+
+			if (scriptBehaviour)
+			{
+				scriptBehaviour->OnCollisionStay(other);
+			}
+		}
+	}
+}
+
+void engine::GameObject::onCollisionExit(const Collision& other)
+{
+	for (auto& componentVec : m_Components)
+	{
+		for (auto& component : componentVec.second)
+		{
+			auto scriptBehaviour = std::dynamic_pointer_cast<ScriptBehaviour>(component);
+
+			if (scriptBehaviour)
+			{
+				scriptBehaviour->OnCollisionExit(other);
 			}
 		}
 	}

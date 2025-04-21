@@ -35,8 +35,8 @@ void engine::RenderManager::UpdateMainCamera()
 	if (auto mainCam = m_MainCamera.lock())
 	{
 		mainCam->UpdateCamera(m_ViewMat, m_ProjMat);
-		XMStoreFloat4x4(&m_ViewMat, XMMatrixTranspose(XMLoadFloat4x4(&m_ViewMat)));
-		XMStoreFloat4x4(&m_ProjMat, XMMatrixTranspose(XMLoadFloat4x4(&m_ProjMat)));
+		//XMStoreFloat4x4(&m_ViewMat, XMMatrixTranspose(XMLoadFloat4x4(&m_ViewMat)));
+		//XMStoreFloat4x4(&m_ProjMat, XMMatrixTranspose(XMLoadFloat4x4(&m_ProjMat)));
 
 	}
 
@@ -73,6 +73,8 @@ void engine::RenderManager::Render(const ComPtr<ID3D11DeviceContext>& context)
 			}
 		}
 	}
+
+	
 }
 
 void engine::RenderManager::RegisterRenderer()

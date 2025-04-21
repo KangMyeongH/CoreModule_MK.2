@@ -53,8 +53,8 @@ enum ApplicationMode
 
 enum ColliderType
 {
-	ColliderType_Sphere,
 	ColliderType_Box,
 	ColliderType_Capsule,
-	ColliderType_Mesh
+	ColliderType_Mesh,
+	ColliderType_Sphere
 };

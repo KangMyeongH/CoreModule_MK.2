@@ -29,7 +29,7 @@ namespace engine
     public:
         // 와이어 프레임 디버깅용 Render
         virtual void UpdateCollider() = 0;
-    	virtual void Render(ComPtr<ID3D11DeviceContext> context) = 0;
+    	virtual void Render(ComPtr<ID3D11DeviceContext> context, const SharedPtr<VIBuffer>& buffer) = 0;
 
         void Destroy() override = 0;
     	SharedPtr<Component> Clone() const override = 0;
@@ -51,7 +51,7 @@ namespace engine
         //======================================//
     protected:
         _bool           m_bTrigger;
-
+        _bool           m_bHit;
         // BroadPhase일 때 사용할 Bounding Box
         AABB            m_AABB;
     };

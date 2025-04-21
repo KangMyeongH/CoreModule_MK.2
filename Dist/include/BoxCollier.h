@@ -22,7 +22,6 @@ namespace engine
         ~BoxCollier() override = default;
         BoxCollier(const BoxCollier& rhs);
 
-
         //======================================//
         //				 property				//
         //======================================//
@@ -35,7 +34,7 @@ namespace engine
     public:
         void 	UpdateCollider() override;
 
-    	void 	Render(ComPtr<ID3D11DeviceContext> context) override;
+    	void 	Render(ComPtr<ID3D11DeviceContext> context, const SharedPtr<VIBuffer>& buffer) override;
         void 	Destroy() override;
 
     private:

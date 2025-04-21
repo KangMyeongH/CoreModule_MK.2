@@ -1,6 +1,7 @@
 #include "MeshRenderer.h"
 
 #include "D3D11Manager.h"
+#include "EditorComponentManager.h"
 #include "LoadManager.h"
 #include "Material.h"
 #include "Mesh.h"
@@ -13,12 +14,10 @@ engine::MeshRenderer::MeshRenderer(const SharedPtr<GameObject>& owner, const _st
 
 }
 
-engine::MeshRenderer::~MeshRenderer()
-{
-}
+engine::MeshRenderer::~MeshRenderer() = default;
 
 engine::MeshRenderer::MeshRenderer(const MeshRenderer& rhs)
-	: Renderer(rhs)
+	: Renderer(rhs), m_Mesh(rhs.m_Mesh)
 {
 
 }
@@ -64,20 +63,14 @@ void engine::MeshRenderer::Render(const ComPtr<ID3D11DeviceContext>& context)
 				material.second->SetColor("DirLight_Diffuse", _float4(1.f, 1.f, 1.f, 1.f));
 				material.second->SetColor("DirLight_Ambient", _float4(1.f, 1.f, 1.f, 1.f));
 				material.second->SetColor("DirLight_Specular", _float4(1.f, 1.f, 1.f, 1.f));
-				//material->SetFloat4("CameraPosition", _float4(0.f, 10.f, -6.f, 1.f));
 
 				material.second->SetColor("Ambient", _float4(0.8f, 0.8f, 0.8f, 0.8f));
 				material.second->SetColor("Specular", _float4(1.f, 1.f, 1.f, 1.f));
-				_float4X4 worldMat;
-				XMStoreFloat4x4(&worldMat, XMMatrixTranspose(GetTransform()->GetWorldMatrix()));
 
-				material.second->SetMatrix("g_WorldMatrix", worldMat);
+				material.second->SetMatrix("g_WorldMatrix", GetTransform()->GetWorldMatrix());
 			}
 		}
 		//=============================================================
-
-		_float4X4 worldMat;
-		XMStoreFloat4x4(&worldMat, XMMatrixTranspose(GetTransform()->GetWorldMatrix()));
 
 		Bind(context);
 

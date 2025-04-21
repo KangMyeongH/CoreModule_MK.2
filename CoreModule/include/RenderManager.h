@@ -30,6 +30,9 @@ namespace engine
         void                SetMainCamera(const SharedPtr<Camera>& camera) { m_MainCamera = camera; }
         SharedPtr<Camera> 	GetMainCamera() const { return m_MainCamera.lock(); }
 
+        _float4X4           GetViewMat() const { return m_ViewMat; }
+        _float4X4           GetProjMat() const { return m_ProjMat; }
+
         void                AddCamera(const SharedPtr<Camera>& camera);
 
         void                AddRenderer(const SharedPtr<Renderer>& renderer);

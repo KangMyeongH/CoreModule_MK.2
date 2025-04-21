@@ -1,5 +1,6 @@
 #include "Core.h"
 
+#include "CollisionManager.h"
 #include "ComponentFactory.h"
 #include "D3D11Manager.h"
 #include "InputManager.h"
@@ -22,6 +23,7 @@ void engine::Core::Release()
 	m_PhysicsManager->Release();
 	m_UIManager->Release();
 	ComponentFactory::GetInstance().Release();
+	m_CollisionManager->Release();
 	m_RenderManager->Release();
 	m_D3D11Manager->Release();
 }
@@ -31,6 +33,7 @@ void engine::Core::registerObjects()
 	m_PhysicsManager->RegisterRigidbody();
 	m_UIManager->RegisterUI();
 	m_RenderManager->RegisterRenderer();
+	m_CollisionManager->RegisterCollider();
 }
 
 void engine::Core::start()
@@ -54,6 +57,7 @@ void engine::Core::onTrigger()
 
 void engine::Core::onCollision()
 {
+	m_CollisionManager->ColliderUpdate();
 }
 
 void engine::Core::update()
@@ -74,6 +78,9 @@ void engine::Core::renderScene()
 
 	m_RenderManager->UpdateMainCamera();
 	m_RenderManager->Render(context);
+
+	m_CollisionManager->RenderCollider(context, m_RenderManager->GetViewMat(), m_RenderManager->GetProjMat());
+
 	m_UIManager->Render(context);
 
 	m_D3D11Manager->Present();
@@ -85,6 +92,7 @@ void engine::Core::destroy()
 	m_Scene->FlushDestroyGameObjects();
 	m_RenderManager->FlushDestroyCamera();
 	m_PhysicsManager->FlushDestroyRigidbody();
+	m_CollisionManager->FlushDestroyCollider();
 	m_UIManager->FlushDestroyUI();
 }
 
@@ -98,6 +106,7 @@ HRESULT engine::Core::Initialize(const HWND hwnd)
 	m_PhysicsManager 			= &PhysicsManager::GetInstance();
 	m_TimeManager 				= &TimeManager::GetInstance();
 	m_InputManager				= &InputManager::GetInstance();
+	m_CollisionManager 			= &CollisionManager::GetInstance();
 	m_RenderManager				= &RenderManager::GetInstance();
 	m_UIManager					= &UIManager::GetInstance();
 

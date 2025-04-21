@@ -50,6 +50,31 @@ void engine::Camera::SetMainCamera()
 	RenderManager::GetInstance().SetMainCamera(std::static_pointer_cast<Camera>(shared_from_this()));
 }
 
+engine::Vector3 engine::Camera::WorldToViewportPoint(const Vector3& worldPos) const
+{
+	_matrix viewProj = XMLoadFloat4x4(&m_ViewMat) * XMLoadFloat4x4(&m_ProjMat);
+
+	_float4 clipPos;
+	XMStoreFloat4(&clipPos, XMVector3TransformCoord(worldPos.ToVector(), viewProj));
+
+	if (clipPos.w == 0.0f)
+	{
+		return Vector3::Zero();
+	}
+
+	Vector3 ndc;
+	ndc.Value.x = clipPos.x / clipPos.w;
+	ndc.Value.y = clipPos.y / clipPos.w;
+	ndc.Value.z = clipPos.z / clipPos.w;
+
+	Vector3 viewport;
+	viewport.Value.x = (ndc.Value.x + 1.f) * 0.5f;
+	viewport.Value.y = 1.f - ((ndc.Value.y + 1.f) * 0.5f);
+	viewport.Value.z = ndc.Value.z;
+
+	return viewport;
+}
+
 void engine::Camera::Destroy()
 {
 	if (!m_bDestroyed)
