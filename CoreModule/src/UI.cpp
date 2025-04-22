@@ -1,8 +1,9 @@
 #include "UI.h"
 
+#include "EditorComponentManager.h"
 #include "UIManager.h"
 
-engine::UI::UI(const SharedPtr<GameObject>& owner) : Behaviour(owner), m_SortingOrder(0)
+engine::UI::UI(const SharedPtr<GameObject>& owner, const _string& name) : Behaviour(owner), m_SortingOrder(0)
 {
 
 }
@@ -14,18 +15,29 @@ engine::UI::UI(const UI& rhs)
 
 }
 
-engine::_uint engine::UI::GetSorting() const
+engine::_int engine::UI::GetSorting() const
 {
 	return m_SortingOrder;
 }
 
-void engine::UI::SetSorting(const _uint sort)
+void engine::UI::SetSorting(const _int sort, ApplicationMode mode)
 {
-	if (m_SortingOrder != sort)
+	if (m_SortingOrder == sort)
 	{
-		m_SortingOrder = sort;
+		return;
+	}
 
-		UIManager::GetInstance().SetDirty(true);
+	_int oldSort = m_SortingOrder;
+	m_SortingOrder = sort;
+
+	if (mode == CLIENT)
+	{
+		UIManager::GetInstance().OnSortingChanged(std::static_pointer_cast<UI>(shared_from_this()), oldSort, m_SortingOrder, false);
+	}
+
+	else if (mode == EDITOR)
+	{
+		editor::EditorComponentManager::GetInstance().OnSortingChanged(std::static_pointer_cast<UI>(shared_from_this()), oldSort, m_SortingOrder, false);
 	}
 }
 
@@ -36,8 +48,5 @@ void engine::UI::Destroy()
 
 void engine::UI::registerComponent(ApplicationMode mode)
 {
-	if (mode == CLIENT)
-	{
-		UIManager::GetInstance().AddUI(std::static_pointer_cast<UI>(shared_from_this()));
-	}
+
 }

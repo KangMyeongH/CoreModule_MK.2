@@ -27,7 +27,7 @@ HRESULT engine::editor::EditorCore::Initialize(HWND hwnd)
 	m_Grid = std::make_shared<Grid>();
 	m_Grid->InitGrid(D3D11Manager::GetInstance().GetDevice(), 400);
 
-
+	m_EditorComponentManager->Initialize();
 
 	return S_OK;
 }
@@ -82,7 +82,7 @@ void engine::editor::EditorCore::RenderScene(const ComPtr<ID3D11DeviceContext>& 
 
 			context->OMSetRenderTargets(1, m_SceneTargetView.GetAddressOf(), m_SceneDepthStencilView.Get());
 
-			float mainClearColor[4] = { 0.1f, 0.1f, 0.1f, 1.0f };
+			float mainClearColor[4] = { 0.1f, 0.1f, 0.1f, 1.f };
 			context->ClearRenderTargetView(m_SceneTargetView.Get(), mainClearColor);
 			context->ClearDepthStencilView(m_SceneDepthStencilView.Get(), D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.0f, 0);
 
@@ -95,6 +95,8 @@ void engine::editor::EditorCore::RenderScene(const ComPtr<ID3D11DeviceContext>& 
 			m_Grid->RenderGird(context);
 
 			m_EditorComponentManager->Render(context, viewMat, projMat);
+
+			D3D11Manager::GetInstance().PostProcessForceAlphaOnePass();
 		}
 	}
 
@@ -208,7 +210,7 @@ void engine::editor::EditorCore::RenderGame(const ComPtr<ID3D11DeviceContext>& c
 		context->RSSetViewports(1, &vp);
 
 		context->OMSetRenderTargets(1, m_GameTargetView.GetAddressOf(), m_GameDepthStencilView.Get());
-
+		
 		float mainClearColor[4] = { 0.1f, 0.1f, 0.1f, 1.0f };
 		context->ClearRenderTargetView(m_GameTargetView.Get(), mainClearColor);
 		context->ClearDepthStencilView(m_GameDepthStencilView.Get(), D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.0f, 0);
@@ -233,6 +235,8 @@ void engine::editor::EditorCore::RenderGame(const ComPtr<ID3D11DeviceContext>& c
 		}
 
 		m_EditorComponentManager->Render(context, viewMat, projMat);
+
+		D3D11Manager::GetInstance().PostProcessForceAlphaOnePass();
 	}
 
 	else

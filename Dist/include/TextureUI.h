@@ -17,7 +17,7 @@ namespace engine
         //				constructor				//
         //======================================//
 
-        explicit TextureUI(const SharedPtr<GameObject>& owner);
+        explicit TextureUI(const SharedPtr<GameObject>& owner, const _string& name = "TextureUI");
         ~TextureUI() override = default;
         TextureUI(const TextureUI& rhs);
 

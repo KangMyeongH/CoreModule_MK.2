@@ -3,11 +3,12 @@
 #include "D3D11Manager.h"
 #include "InputManager.h"
 #include "Material.h"
+#include "UIManager.h"
 
 DEFINE_REGISTER_COMPONENT(TextureUI)
 
-engine::TextureUI::TextureUI(const SharedPtr<GameObject>& owner)
-	: UI(owner), m_TextureScaleMatrix(),
+engine::TextureUI::TextureUI(const SharedPtr<GameObject>& owner, const _string& name)
+	: UI(owner, name), m_TextureScaleMatrix(),
 	  m_Width(0), m_Height(0),
 	  m_bFlipX(false), m_bFlipY(false)
 {
@@ -71,7 +72,9 @@ engine::_bool engine::TextureUI::IsMouseHovered()
 	const _matrix worldMat = XMMatrixMultiply(XMLoadFloat4x4(&m_TextureScaleMatrix), GetTransform()->GetWorldMatrix());
 
 	_vector vScale;
-	XMMatrixDecompose(&vScale, nullptr, nullptr, worldMat);
+	_vector vQot;
+	_vector vPos;
+	XMMatrixDecompose(&vScale, &vQot, &vPos, worldMat);
 
 	_float2 scale;
 	XMStoreFloat2(&scale, vScale);
@@ -166,7 +169,10 @@ void engine::TextureUI::Destroy()
 
 void engine::TextureUI::registerComponent(ApplicationMode mode)
 {
-	UI::registerComponent();
+	if (mode == CLIENT)
+	{
+		UIManager::GetInstance().AddUI(std::static_pointer_cast<UI>(shared_from_this()), false);
+	}
 
 	m_Material = Material::Create(shared_from_this());
 	m_Material->LoadShader(L"..\\Client\\Assets\\Resource\\Shader\\TextureShader.hlsl");
@@ -178,7 +184,7 @@ void engine::TextureUI::registerComponent(ApplicationMode mode)
 	samplerDesc.AddressU = D3D11_TEXTURE_ADDRESS_BORDER;
 	samplerDesc.AddressV = D3D11_TEXTURE_ADDRESS_BORDER;
 	samplerDesc.AddressW = D3D11_TEXTURE_ADDRESS_BORDER;
-	samplerDesc.BorderColor[0] = 0.0f;  						// 투명한 배경 유지
+	samplerDesc.BorderColor[0] = 0.0f;  					
 	samplerDesc.BorderColor[1] = 0.0f;
 	samplerDesc.BorderColor[2] = 0.0f;
 	samplerDesc.BorderColor[3] = 0.0f;

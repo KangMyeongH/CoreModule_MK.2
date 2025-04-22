@@ -13,10 +13,7 @@ engine::D3D11Manager::D3D11Manager()
 {
 }
 
-engine::D3D11Manager::~D3D11Manager()
-{
-
-}
+engine::D3D11Manager::~D3D11Manager() = default;
 
 engine::ComPtr<ID3D11ShaderResourceView> engine::D3D11Manager::GetTexture(const _wstring& path)
 {
@@ -127,9 +124,10 @@ HRESULT engine::D3D11Manager::Initialize(HWND hwnd, _bool isWindowed, _uint winS
 	}
 
 	DebugRenderManager::GetInstance().Initialize(m_Device);
-
 	SetCW();
 
+	createUIAlphaBlendState();
+	createForceAlphaOne();
 	return S_OK;
 }
 
@@ -586,6 +584,44 @@ void engine::D3D11Manager::SetCW()
 	m_DeviceContext->RSSetState(pRasterState.Get());
 }
 
+void engine::D3D11Manager::SetUIAlphaBlendMode()
+{
+	_float blendFactor[4] = { 0.f, 0.f, 0.f, 0.f };
+	UINT sampleMask = 0xffffffff;
+
+	m_DeviceContext->OMSetBlendState(m_UIAlphaBlendState.Get(), blendFactor, sampleMask);
+	m_DeviceContext->OMSetDepthStencilState(m_UIAlphaDepthStencilState.Get(), 0);
+}
+
+void engine::D3D11Manager::SetDefaultRenderState()
+{
+
+}
+
+void engine::D3D11Manager::PostProcessForceAlphaOnePass()
+{
+	ComPtr<ID3D11BlendState> prevBlendState;
+	FLOAT curBlendFactor[4] = { 0, 0, 0, 0 };
+	UINT sampleMask = 0;
+	m_DeviceContext->OMGetBlendState(&prevBlendState, curBlendFactor, &sampleMask);
+
+	m_DeviceContext->IASetInputLayout(nullptr);
+	m_DeviceContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+	m_DeviceContext->VSSetShader(m_PostProcessForceAlphaOneVSShader.Get(), nullptr, 0);
+	m_DeviceContext->PSSetShader(m_PostProcessForceAlphaOnePSShader.Get(), nullptr, 0);
+	m_DeviceContext->HSSetShader(nullptr, nullptr, 0); // Hull Shader OFF
+	m_DeviceContext->DSSetShader(nullptr, nullptr, 0); // Domain Shader OFF
+	m_DeviceContext->GSSetShader(nullptr, nullptr, 0); // Geometry Shader OFF
+	m_DeviceContext->CSSetShader(nullptr, nullptr, 0); // Compute Shader OFF
+
+	float blendFactor[4] = { 0, 0, 0, 0 };
+	m_DeviceContext->OMSetBlendState(m_PostProcessForceAlphaOneBlendState.Get(), blendFactor, 0xffffffff);
+
+	m_DeviceContext->Draw(3, 0);
+
+	m_DeviceContext->OMSetBlendState(prevBlendState.Get(), blendFactor, sampleMask);
+}
+
 void engine::D3D11Manager::Release()
 {
 	m_TextureMap.clear();
@@ -927,6 +963,87 @@ bool engine::D3D11Manager::createConstantBuffer(const ReflectResult& reflectResu
 	}
 
 	return true;
+}
+
+HRESULT engine::D3D11Manager::createUIAlphaBlendState()
+{
+	D3D11_BLEND_DESC blendDesc = {};
+	blendDesc.AlphaToCoverageEnable = FALSE;
+	blendDesc.IndependentBlendEnable = FALSE;
+	for (auto& i : blendDesc.RenderTarget)
+	{
+		i.BlendEnable = TRUE;
+		i.SrcBlend = D3D11_BLEND_SRC_ALPHA;
+		i.DestBlend = D3D11_BLEND_INV_SRC_ALPHA;
+		i.BlendOp = D3D11_BLEND_OP_ADD;
+		i.SrcBlendAlpha = D3D11_BLEND_ZERO;
+		i.DestBlendAlpha = D3D11_BLEND_ONE;
+		i.BlendOpAlpha = D3D11_BLEND_OP_ADD;
+		i.RenderTargetWriteMask = D3D11_COLOR_WRITE_ENABLE_ALL;
+	}
+	m_Device->CreateBlendState(&blendDesc, m_UIAlphaBlendState.GetAddressOf());
+
+	D3D11_DEPTH_STENCIL_DESC dsDesc = {};
+	dsDesc.DepthEnable = TRUE;
+	dsDesc.DepthWriteMask = D3D11_DEPTH_WRITE_MASK_ZERO;
+	dsDesc.DepthFunc = D3D11_COMPARISON_LESS;
+	m_Device->CreateDepthStencilState(&dsDesc, m_UIAlphaDepthStencilState.GetAddressOf());
+
+	return S_OK;
+}
+
+HRESULT engine::D3D11Manager::createForceAlphaOne()
+{
+	ComPtr<ID3DBlob> vsBlob, psBlob, errorBlob;
+
+	const char* vsCode =
+		"float4 VS(uint id : SV_VertexID) : SV_POSITION {\n"
+		"    float2 pos[3] = {\n"
+		"        float2(-1, -1), float2(-1, 3), float2(3, -1)\n"
+		"    };\n"
+		"    return float4(pos[id], 0, 1);\n"
+		"}\n";
+
+	if (FAILED(D3DCompile(vsCode, strlen(vsCode), nullptr, nullptr, nullptr, "VS", "vs_5_0", 0, 0, vsBlob.GetAddressOf(), errorBlob.GetAddressOf())))
+	{
+		if (errorBlob)
+		{
+			std::cerr << static_cast<char*>(errorBlob->GetBufferPointer());
+			return E_FAIL;
+		}
+	}
+
+	if (FAILED(m_Device->CreateVertexShader(vsBlob->GetBufferPointer(), vsBlob->GetBufferSize(),
+		nullptr, m_PostProcessForceAlphaOneVSShader.GetAddressOf())))
+	{
+		return E_FAIL;
+	}
+
+	const char* psCode =
+		"float4 PS() : SV_TARGET {\n"
+		"    return float4(0, 0, 0, 1);\n"
+		"}\n";
+
+	if (FAILED(D3DCompile(psCode, strlen(psCode), nullptr, nullptr, nullptr,
+		"PS", "ps_5_0", 0, 0, psBlob.GetAddressOf(), errorBlob.ReleaseAndGetAddressOf())))
+	{
+		if (errorBlob) std::cerr << (char*)errorBlob->GetBufferPointer();
+		return E_FAIL;
+	}
+
+	if (FAILED(m_Device->CreatePixelShader(psBlob->GetBufferPointer(), psBlob->GetBufferSize(),
+		nullptr, m_PostProcessForceAlphaOnePSShader.GetAddressOf())))
+	{
+		return E_FAIL;
+	}
+
+	D3D11_BLEND_DESC desc = {};
+	desc.RenderTarget[0].BlendEnable = FALSE;
+	desc.RenderTarget[0].RenderTargetWriteMask = D3D11_COLOR_WRITE_ENABLE_ALPHA;
+
+	m_Device->CreateBlendState(&desc, m_PostProcessForceAlphaOneBlendState.GetAddressOf());
+
+	return S_OK;
 }
 
 HRESULT engine::D3D11Manager::readyVIBuffers()

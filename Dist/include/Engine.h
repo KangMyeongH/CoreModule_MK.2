@@ -21,6 +21,7 @@
 #include "Transform.h"
 #include "UI.h"
 #include "TextureUI.h"
+#include "TextUI.h"
 #include "UIManager.h"
 #include "LoadManager.h"
 #include "Mesh.h"

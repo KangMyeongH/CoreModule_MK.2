@@ -12,7 +12,7 @@ namespace engine
         //				constructor				//
         //======================================//
 
-        explicit UI(const SharedPtr<GameObject>& owner);
+        explicit UI(const SharedPtr<GameObject>& owner, const _string& name = "UI");
         ~UI() override = default;
         UI(const UI& rhs);
 
@@ -21,8 +21,8 @@ namespace engine
         //				 property				//
         //======================================//
 
-        _uint GetSorting() const;
-        void SetSorting( _uint sort);
+        _int GetSorting() const;
+        virtual void SetSorting(_int sort, ApplicationMode mode = CLIENT);
 
         SharedPtr<Material> GetMaterial() const { return m_Material; }
 
@@ -60,6 +60,6 @@ namespace engine
 
         SharedPtr<Material> 	m_Material;
         SharedPtr<VIBuffer>     m_VIBuffer;
-        _uint 					m_SortingOrder;
+        _int 					m_SortingOrder;
     };
 }

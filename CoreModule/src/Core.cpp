@@ -110,6 +110,7 @@ HRESULT engine::Core::Initialize(const HWND hwnd)
 	m_RenderManager				= &RenderManager::GetInstance();
 	m_UIManager					= &UIManager::GetInstance();
 
+	m_UIManager->Initialize();
 	m_TimeManager->Initialize();
 	m_InputManager->LockMouse(true);
 

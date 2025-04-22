@@ -44,27 +44,33 @@ namespace engine
         //				  method				//
         //======================================//
         public:
+            void Initialize();
+
             void Render(const ComPtr<ID3D11DeviceContext>& context, const _float4X4& viewMat, const _float4X4& projMat);
             void RenderUIComponent(const ComPtr<ID3D11DeviceContext>& context);
             void RenderCollider(const ComPtr<ID3D11DeviceContext>& context, const _float4X4& viewMat, const _float4X4& projMat) const;
             void AddComponent(const SharedPtr<GameObject>& owner, const SharedPtr<Component>& component);
             void AddComponent(const SharedPtr<Component>& component);
-            template <typename T>
-            SharedPtr<T> CreateComponent(const SharedPtr<GameObject>& owner)
-            {
-                static_assert(std::is_base_of<Component, T>::value, "T must be derived from Component");
+            void AddFont(const _wstring& name, const _wstring& path);
 
-                const _string typeName = StripMsvcClassName(typeid(T).name());
+            void OnSortingChanged(const SharedPtr<UI>& ui, _int oldSort, _int newSort, _bool isText);
 
-                SharedPtr<Component> component = ComponentFactory::GetInstance().CreateComponent(typeName);
+            //template <typename T>
+            //SharedPtr<T> CreateComponent(const SharedPtr<GameObject>& owner)
+            //{
+            //    static_assert(std::is_base_of<Component, T>::value, "T must be derived from Component");
 
-                if (component)
-                {
-                    AddComponent(owner, component);
-                }
+            //    const _string typeName = StripMsvcClassName(typeid(T).name());
 
-                return std::static_pointer_cast<T>(component);
-            }
+            //    SharedPtr<Component> component = ComponentFactory::GetInstance().CreateComponent(typeName);
+
+            //    if (component)
+            //    {
+            //        AddComponent(owner, component);
+            //    }
+
+            //    return std::static_pointer_cast<T>(component);
+            //}
 
             void FlushDestroyComponent();
 
@@ -76,7 +82,16 @@ namespace engine
         private:
             Components          m_Components;
             Renderers 			m_Renderers;
-            UIs                 m_UIs;
+
+            std::map<_int, std::vector<SharedPtr<UI>>> m_UIMap;
+            std::map<_int, std::vector<SharedPtr<UI>>> m_TextUIMap;
+
+            std::unordered_map<_wstring, SharedPtr<DirectX::SpriteFont>> m_Fonts;
+            SharedPtr<DirectX::SpriteBatch> m_Batch;
+
+            _int    m_MaxSort;
+            _int    m_MinSort;
+
             Cameras 			m_Cameras;
 
             Colliders           m_Colliders;
@@ -88,6 +103,7 @@ namespace engine
 
         	bool                m_DirtyFlag;
         };
+
     }
 
 }

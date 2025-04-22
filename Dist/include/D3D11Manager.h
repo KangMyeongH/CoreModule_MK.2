@@ -57,8 +57,13 @@ namespace engine
 
         HRESULT Present();
 
-        void 	SetCCW();
+    	void 	SetCCW();
         void 	SetCW();
+
+        void    SetUIAlphaBlendMode();
+        void    SetDefaultRenderState();
+
+        void 	PostProcessForceAlphaOnePass();
 
     	void 	Release();
 
@@ -70,6 +75,9 @@ namespace engine
         void	compileInputLayoutFromReflector(std::vector<D3D11_INPUT_ELEMENT_DESC>* inputDesc, const ComPtr<ID3D11ShaderReflection>& reflector);
         void    reflectBufferFromReflector(const ComPtr<ID3D11ShaderReflection>& reflector, ReflectResult& outResult);
         bool    createConstantBuffer(const ReflectResult& reflectResult, std::unordered_map<_string, SharedPtr<CBufferRuntime>>& outResult);
+
+        HRESULT createUIAlphaBlendState();
+        HRESULT createForceAlphaOne();
 
         HRESULT readyVIBuffers();
 
@@ -84,6 +92,15 @@ namespace engine
 
         ComPtr<ID3D11RenderTargetView> 	m_BackBufferRTV;
         ComPtr<ID3D11DepthStencilView> 	m_DepthStencilView;
+
+        ComPtr<ID3D11SamplerState>      m_DefaultSampler;
+
+        ComPtr<ID3D11DepthStencilState> m_UIAlphaDepthStencilState;
+        ComPtr<ID3D11BlendState>        m_UIAlphaBlendState;
+
+        ComPtr<ID3D11VertexShader>      m_PostProcessForceAlphaOneVSShader;
+        ComPtr<ID3D11PixelShader>       m_PostProcessForceAlphaOnePSShader;
+        ComPtr<ID3D11BlendState>        m_PostProcessForceAlphaOneBlendState;
 
         VIBufferMap                     m_VIBufferMap;
 
