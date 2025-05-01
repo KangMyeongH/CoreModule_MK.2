@@ -14,6 +14,11 @@ engine::Rigidbody::Rigidbody(const SharedPtr<GameObject>& owner, const _string& 
 {
 }
 
+engine::_float engine::Rigidbody::GetInvMass() const
+{
+	return (m_Mass > 0.f) ? 1.0f / m_Mass : 0.f;
+}
+
 void engine::Rigidbody::AddForce(const Vector3& force)
 {
 	if (m_Mass != 0.f)

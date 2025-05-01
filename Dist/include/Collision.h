@@ -11,19 +11,19 @@ namespace engine
 {
     struct CollisionData
     {
-        CollisionData() : A(nullptr), B(nullptr), Penetration(0)
+        CollisionData() : A(nullptr), B(nullptr)
         {
 	        
         }
 
-        CollisionData(const SharedPtr<Collider>& a, const SharedPtr<Collider>& b, const Vector3& normal, const _float penetration)
-	        : A(a), B(b), Normal(normal), Penetration(penetration)
-		{
+        CollisionData(const SharedPtr<Collider>& a, const SharedPtr<Collider>& b, const Contact& contact)
+	        : A(a), B(b), Contact(contact)
+    	{
 
 		}
 
         CollisionData(const CollisionData& rhs)
-	        : A(rhs.A), B(rhs.B), Normal(rhs.Normal), Penetration(rhs.Penetration)
+	        : A(rhs.A), B(rhs.B), Contact(rhs.Contact)
         {
 	        
         }
@@ -32,11 +32,7 @@ namespace engine
         SharedPtr<Collider> A;
         SharedPtr<Collider> B;
 
-        // ÃÖ¼Ò °ãÄ§ Ãà
-        Vector3 Normal;
-
-        // °ãÄ§·®
-        _float Penetration;
+        Contact Contact;
     };
 
     class Collision

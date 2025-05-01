@@ -58,6 +58,9 @@ namespace engine
         void SetPath(const _wstring& path) { m_MaterialPath = path; }
         _wstring GetPath() const { return m_MaterialPath; }
 
+        _uint GetTextureWidth() const { return m_TextureWidth; }
+        _uint GetTextureHeight() const { return m_TextureHeight; }
+
         //======================================//
         //				  method				//
         //======================================//
@@ -88,5 +91,7 @@ namespace engine
         SharedPtr<Shader>           		m_Shader;
         _wstring                            m_ShaderPath;
         _wstring                            m_MaterialPath;
+        _uint                               m_TextureWidth;
+        _uint                               m_TextureHeight;
     };
 }

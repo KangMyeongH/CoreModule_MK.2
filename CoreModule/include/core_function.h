@@ -153,6 +153,32 @@ namespace engine
 		j.at("z").get_to(v.w);
 	}
 
+	/// <summary>
+	/// 지정된 범위 [min, max] 내에서 index를 delta만큼 이동시켜
+	/// 순환(clamp free wrap around)된 값을 반환합니다.
+	/// <para>
+	/// 예: WrapIndex(0, -1, -1, 20) -> -1, WrapIndex(20, 1, -1, 20) -> -1
+	/// </para>
+	/// </summary>
+	/// <param name="index">현재 인덱스 값</param>
+	/// <param name="delta">증감 값 (±1, ±2 등)</param>
+	/// <param name="min">순환 범위의 최소값 (포함)</param>
+	/// <param name="max">순환 범위의 최대값 (포함)</param>
+	/// <returns>순환된 결과 인덱스</returns>
+	inline _int WrapIndex(const _int index, const _int delta, const _int min, const _int max)
+	{
+		_int range = max - min + 1;
+
+		_int offset = (index - min + delta) % range;
+
+		if (offset < 0)
+		{
+			offset += range;
+		}
+
+		return min + offset;
+	}
+
 	//void BuildSAH(uint32_t first, uint32_t count, std::vector<TriangleAABB>& tris, std::vector<BVHBuildNode>
 
 }

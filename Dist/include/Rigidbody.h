@@ -35,6 +35,7 @@ namespace engine
         void SetIsKinematic(const _bool isKinematic) { m_IsKinematic = isKinematic; }
         _bool IsKinematic() const { return m_IsKinematic; }
 
+        _float GetInvMass() const;
         //======================================//
         //				 method					//
         //======================================//

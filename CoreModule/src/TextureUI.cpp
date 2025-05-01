@@ -8,14 +8,14 @@
 DEFINE_REGISTER_COMPONENT(TextureUI)
 
 engine::TextureUI::TextureUI(const SharedPtr<GameObject>& owner, const _string& name)
-	: UI(owner, name), m_TextureScaleMatrix(),
+	: UI(owner, name), m_TextureScaleMatrix(), m_Color({1.f, 1.f, 1.f, 1.f}),
 	  m_Width(0), m_Height(0),
 	  m_bFlipX(false), m_bFlipY(false)
 {
 }
 
 engine::TextureUI::TextureUI(const TextureUI& rhs)
-	: UI(rhs), m_TextureScaleMatrix(rhs.m_TextureScaleMatrix), m_TexturePath(rhs.m_TexturePath),
+	: UI(rhs), m_TextureScaleMatrix(rhs.m_TextureScaleMatrix), m_TexturePath(rhs.m_TexturePath), m_Color(rhs.m_Color),
 	  m_Width(rhs.m_Width), m_Height(rhs.m_Height),
 	  m_bFlipX(rhs.m_bFlipX), m_bFlipY(rhs.m_bFlipY)
 {
@@ -136,7 +136,6 @@ HRESULT engine::TextureUI::InputAssembler(const ComPtr<ID3D11DeviceContext>& con
 		return S_OK;
 	}
 
-
 	std::cerr << "No VIBuffer! \n";
 
 	return E_FAIL;
@@ -150,6 +149,7 @@ void engine::TextureUI::RenderUI(const ComPtr<ID3D11DeviceContext>& context)
 		XMStoreFloat4x4(&worldMat, XMMatrixMultiply(XMLoadFloat4x4(&m_TextureScaleMatrix), GetTransform()->GetWorldMatrix()));
 
 		m_Material->SetMatrix("g_WorldMatrix", worldMat);
+		m_Material->SetColor("Color", m_Color);
 
 		m_Material->Bind(context.Get());
 
@@ -213,6 +213,10 @@ void engine::TextureUI::to_json(nlohmann::ordered_json& j)
 		{"enable", m_bEnabled},
 		{"sortingOrder", m_SortingOrder},
 		{"path", m_TexturePath},
+		{"colorR", m_Color.x},
+		{"colorG", m_Color.y},
+		{"colorB", m_Color.z},
+		{"colorA", m_Color.w},
 		{"flipX", m_bFlipX},
 		{"flipY", m_bFlipY}
 	};
@@ -231,6 +235,22 @@ void engine::TextureUI::from_json(const nlohmann::ordered_json& j)
 	if (j.contains("path"))
 	{
 		j.at("path").get_to(m_TexturePath);
+	}
+	if (j.contains("colorR"))
+	{
+		j.at("colorR").get_to(m_Color.x);
+	}
+	if (j.contains("colorG"))
+	{
+		j.at("colorG").get_to(m_Color.y);
+	}
+	if (j.contains("colorB"))
+	{
+		j.at("colorB").get_to(m_Color.z);
+	}
+	if (j.contains("colorA"))
+	{
+		j.at("colorA").get_to(m_Color.w);
 	}
 	if (j.contains("flipX"))
 	{

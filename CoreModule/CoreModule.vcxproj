@@ -38,10 +38,12 @@
     <ClCompile Include="src\EditorCamera.cpp" />
     <ClCompile Include="src\EditorComponentManager.cpp" />
     <ClCompile Include="src\EditorCore.cpp" />
+    <ClCompile Include="src\EffectUI.cpp" />
     <ClCompile Include="src\GameObject.cpp" />
     <ClCompile Include="src\Grid.cpp" />
     <ClCompile Include="src\Hierarchy.cpp" />
     <ClCompile Include="src\InputManager.cpp" />
+    <ClCompile Include="src\Light.cpp" />
     <ClCompile Include="src\LoadManager.cpp" />
     <ClCompile Include="src\Material.cpp" />
     <ClCompile Include="src\Mesh.cpp" />
@@ -58,6 +60,7 @@
     <ClCompile Include="src\ScriptBehaviour.cpp" />
     <ClCompile Include="src\ScriptBehaviourManager.cpp" />
     <ClCompile Include="src\SkinnedMeshRenderer.cpp" />
+    <ClCompile Include="src\SkySphere.cpp" />
     <ClCompile Include="src\SphereCollider.cpp" />
     <ClCompile Include="src\TextUI.cpp" />
     <ClCompile Include="src\TextureUI.cpp" />
@@ -95,12 +98,14 @@
     <ClInclude Include="include\EditorCamera.h" />
     <ClInclude Include="include\EditorComponentManager.h" />
     <ClInclude Include="include\EditorCore.h" />
+    <ClInclude Include="include\EffectUI.h" />
     <ClInclude Include="include\Engine.h" />
     <ClInclude Include="include\GameObject.h" />
     <ClInclude Include="include\Grid.h" />
     <ClInclude Include="include\Hierarchy.h" />
     <ClInclude Include="include\InputManager.h" />
     <ClInclude Include="include\json.hpp" />
+    <ClInclude Include="include\Light.h" />
     <ClInclude Include="include\LoadManager.h" />
     <ClInclude Include="include\Material.h" />
     <ClInclude Include="include\Mesh.h" />
@@ -117,6 +122,7 @@
     <ClInclude Include="include\ScriptBehaviour.h" />
     <ClInclude Include="include\ScriptBehaviourManager.h" />
     <ClInclude Include="include\SkinnedMeshRenderer.h" />
+    <ClInclude Include="include\SkySphere.h" />
     <ClInclude Include="include\SphereCollider.h" />
     <ClInclude Include="include\TextUI.h" />
     <ClInclude Include="include\TextureUI.h" />
@@ -231,6 +237,7 @@
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
       <AdditionalIncludeDirectories>src;include;$(SolutionDir)\ThirdParty\DirectXTK\include\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -265,6 +272,7 @@ xcopy /Y "$(SolutionDir)bin\Debug\*.pdb" "$(SolutionDir)Dist\bin\"</Command>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
       <AdditionalIncludeDirectories>src;include;$(SolutionDir)\ThirdParty\DirectXTK\include\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>

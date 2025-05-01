@@ -825,4 +825,10 @@ void engine::LoadManager::BuildTriangleAABBs(const std::vector<_float3>& vertice
 	}
 }
 
+void engine::LoadManager::Release()
+{
+	m_Models.clear();
+	m_AnimationClips.clear();
+}
+
 IMPLEMENT_SINGLETON(engine::LoadManager)

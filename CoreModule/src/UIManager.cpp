@@ -292,6 +292,10 @@ void engine::UIManager::Release()
 	m_TextUIMap.clear();
 
 	m_RegisterQueue.clear();
+	m_RegisterTextQueue.clear();
+
+	m_Fonts.clear();
+	m_Batch.reset();
 }
 
 IMPLEMENT_SINGLETON(engine::UIManager)

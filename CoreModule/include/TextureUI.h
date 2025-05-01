@@ -29,6 +29,9 @@ namespace engine
         void SetTexture(const _wstring& path);
         ComPtr<ID3D11ShaderResourceView> GetTexture() const;
 
+        void SetColor(const _float4& color) { m_Color = color; }
+        _float4 GetColor() const { return m_Color; }
+
         _wstring GetPath() const { return m_TexturePath; }
 
         void SetFlipX(const _bool flipX) { m_bFlipX = flipX; }
@@ -71,6 +74,7 @@ namespace engine
 
         _float4X4                           m_TextureScaleMatrix;
         _wstring                            m_TexturePath;
+        _float4                             m_Color;
         _uint                               m_Width;
         _uint                               m_Height;
         _bool                               m_bFlipX;

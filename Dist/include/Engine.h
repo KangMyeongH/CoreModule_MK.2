@@ -27,3 +27,4 @@
 #include "Mesh.h"
 #include "MeshRenderer.h"
 #include "SkinnedMeshRenderer.h"
+#include "Light.h"

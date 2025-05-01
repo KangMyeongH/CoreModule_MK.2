@@ -51,6 +51,6 @@ namespace engine
         //				  fields				//
         //======================================//
     protected:
-        std::map<int, SharedPtr<Material>> 	m_Material;
+        std::map<int, SharedPtr<Material>> m_Material;
     };
 }

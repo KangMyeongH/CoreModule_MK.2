@@ -58,8 +58,18 @@ void engine::DebugRenderManager::RenderCollider(const std::vector<SharedPtr<Coll
 				_matrix localScale = DirectX::XMMatrixScaling(uniformLocalScale, uniformLocalScale, uniformLocalScale);
 				_matrix localMat = localScale * localPos;
 				_matrix finalMat = localMat * worldMat;
+				_float4 color{};
+				if (col->IsHit())
+				{
+					color = { 1.f, 0.f, 0.f, 1.f };
+				}
 
-				m_ColliderMaterial->SetFloat4("g_Color", _float4(0.f, 1.f, 0.f, 1.f));
+				else
+				{
+					color = { 0.f, 1.f, 0.f, 1.f };
+				}
+
+				m_ColliderMaterial->SetFloat4("g_Color", color);
 				m_ColliderMaterial->SetMatrix("g_ViewMatrix", viewMat);
 				m_ColliderMaterial->SetMatrix("g_ProjMatrix", projMat);
 				m_ColliderMaterial->SetMatrix("g_WorldMatrix", worldMat);
@@ -95,7 +105,24 @@ void engine::DebugRenderManager::RenderCollider(const std::vector<SharedPtr<Coll
 				_matrix localMat = localS * localP;
 				_matrix worldMat = localMat * col->GetTransform()->GetWorldMatrix();
 
-				m_ColliderMaterial->SetFloat4("g_Color", _float4(0.f, 1.f, 0.f, 1.f));
+				_float4 color{};
+
+				if (col->IsHit())
+				{
+					color = { 1.f, 0.f, 0.f, 1.f };
+				}
+
+				else if (col->IsBoardHit())
+				{
+					color = { 0.f, 0.f, 1.f, 1.f };
+				}
+
+				else
+				{
+					color = { 0.f, 1.f, 0.f, 1.f };
+				}
+
+				m_ColliderMaterial->SetFloat4("g_Color", color);
 				m_ColliderMaterial->SetMatrix("g_ViewMatrix", viewMat);
 				m_ColliderMaterial->SetMatrix("g_ProjMatrix", projMat);
 				m_ColliderMaterial->SetMatrix("g_WorldMatrix", worldMat);

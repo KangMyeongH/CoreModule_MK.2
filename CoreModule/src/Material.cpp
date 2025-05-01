@@ -4,15 +4,15 @@
 #include "LoadManager.h"
 
 engine::Material::Material(const SharedPtr<Object>& owner, const _string& name)
-	: Object(name), m_Owner(owner)
+	: Object(name), m_Owner(owner), m_TextureWidth(0), m_TextureHeight(0)
 {
-
 }
 
 engine::Material::~Material() = default;
 
 engine::Material::Material(const Material& rhs)
-	: Object(rhs), m_ShaderPath(rhs.m_ShaderPath), m_MaterialPath(rhs.m_MaterialPath)
+	: Object(rhs), m_ShaderPath(rhs.m_ShaderPath), m_MaterialPath(rhs.m_MaterialPath), m_TextureWidth(rhs.m_TextureWidth),
+	  m_TextureHeight(rhs.m_TextureHeight)
 {
 }
 
@@ -411,6 +411,18 @@ void engine::Material::SetTexture(const _string& name, const ComPtr<ID3D11Shader
 
 			m_Shader->Textures[i][name] = textureRuntime;
 
+			ComPtr<ID3D11Resource> resource;
+			texture->GetResource(resource.GetAddressOf());
+
+			ComPtr<ID3D11Texture2D> texture2D;
+			resource->QueryInterface(__uuidof(ID3D11Texture2D), reinterpret_cast<void**>(texture2D.GetAddressOf()));
+
+			D3D11_TEXTURE2D_DESC desc;
+			texture2D->GetDesc(&desc);
+
+			m_TextureWidth = desc.Width;
+			m_TextureHeight = desc.Height;
+
 			break;
 		}
 	}
@@ -435,6 +447,18 @@ void engine::Material::SetTexture(const _string& name, const _wstring& path)
 			textureRuntime->BindPoint = texIt->second.BindPoint;
 
 			m_Shader->Textures[i][name] = textureRuntime;
+
+			ComPtr<ID3D11Resource> resource;
+			texture->GetResource(resource.GetAddressOf());
+
+			ComPtr<ID3D11Texture2D> texture2D;
+			resource->QueryInterface(__uuidof(ID3D11Texture2D), reinterpret_cast<void**>(texture2D.GetAddressOf()));
+
+			D3D11_TEXTURE2D_DESC desc;
+			texture2D->GetDesc(&desc);
+
+			m_TextureWidth = desc.Width;
+			m_TextureHeight = desc.Height;
 
 			break;
 		}
@@ -552,9 +576,10 @@ void engine::Material::to_json(nlohmann::ordered_json& j)
 					if (var.second.Size == sizeof(_float))
 					{
 						_float value = GetFloat(var.first);
+						_string xName = var.first + "_x";
 
 						nlohmann::ordered_json propertyJson = nlohmann::ordered_json{
-							{var.first.c_str(), value}
+							{xName.c_str(), value}
 						};
 
 						j["properties"].push_back(propertyJson);

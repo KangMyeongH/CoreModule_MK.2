@@ -58,3 +58,10 @@ enum ColliderType
 	ColliderType_Mesh,
 	ColliderType_Sphere
 };
+
+enum LightType
+{
+	LightType_Spot,
+	LightType_Directional,
+	LightType_Point
+};

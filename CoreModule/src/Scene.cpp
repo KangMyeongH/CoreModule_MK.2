@@ -2,13 +2,19 @@
 
 #include <fstream>
 
+#include "CollisionManager.h"
 #include "GameObject.h"
 #include "LoadManager.h"
 #include "Mesh.h"
 #include "MeshRenderer.h"
+#include "PhysicsManager.h"
 #include "Prefab.h"
 #include "PrefabManager.h"
+#include "RenderManager.h"
+#include "ScriptBehaviour.h"
 #include "SkinnedMeshRenderer.h"
+#include "TimeManager.h"
+#include "UIManager.h"
 
 IMPLEMENT_SINGLETON(engine::Scene)
 
@@ -49,6 +55,7 @@ bool engine::Scene::Initialize(const _wstring& path)
 
 void engine::Scene::ChangeScene(const _wstring& sceneName)
 {
+	m_NextScene = sceneName;
 }
 
 engine::SharedPtr<engine::GameObject> engine::Scene::Find(const _string& name)
@@ -139,6 +146,53 @@ void engine::Scene::FlushDestroyGameObjects()
 		else
 		{
 			++it;
+		}
+	}
+}
+
+void engine::Scene::RegisterNextScene()
+{
+	if (!m_NextScene.empty())
+	{
+		if (!m_LoadingThread.joinable())
+		{
+			const _wstring basePath = L"..\\Client\\Assets\\Scenes\\";
+			const _wstring fileExtension = L".Scene";
+			const _wstring fullPath = basePath + m_NextScene + fileExtension;
+
+			m_bSceneLoaded = false;
+			m_LoadingThread = std::thread(&Scene::loadSceneInBackGround, this, fullPath);
+		}
+
+		while (true)
+		{
+			MSG msg;
+			while (PeekMessage(&msg, nullptr, 0, 0, PM_REMOVE))
+			{
+				TranslateMessage(&msg);
+				DispatchMessage(&msg);
+			}
+
+			// TODO : ·Îµù ¾À ·»´õ¸µ
+
+			{
+				std::unique_lock<std::mutex> lock(m_LoadingMutex);
+				if (m_bSceneLoaded)
+				{
+					break;
+				}
+			}
+
+			Sleep(16);
+		}
+
+		TimeManager::GetInstance().Initialize();
+
+		m_NextScene.clear();
+
+		if (m_LoadingThread.joinable())
+		{
+			m_LoadingThread.join();
 		}
 	}
 }
@@ -313,4 +367,46 @@ void engine::Scene::registerGameObject(const SharedPtr<GameObject>& gameObject)
 	m_GameObjects.push_back(gameObject);
 	m_GameObjectsTagMap[gameObject->GetTag()].insert(gameObject);
 	//gameObject->m_Transform->SetOwner(gameObject);
+}
+
+void engine::Scene::loadSceneInBackGround(const std::wstring& nextScene)
+{
+	Release();
+	ScriptBehaviourManager::GetInstance().Release();
+	CollisionManager::GetInstance().Release();
+	PhysicsManager::GetInstance().Release();
+	RenderManager::GetInstance().Release();
+	UIManager::GetInstance().Release();
+
+	loadSceneData(nextScene);
+
+	{
+		std::lock_guard<std::mutex> lock(m_LoadingMutex);
+		m_bSceneLoaded = true;
+	}
+
+	m_CV.notify_one();
+}
+
+engine::_bool engine::Scene::loadSceneData(const _wstring& path)
+{
+	if (path.empty())
+	{
+		return false;
+	}
+
+	std::ifstream inFile(path);
+
+	if (!inFile.is_open())
+	{
+		return false;
+	}
+
+	nlohmann::ordered_json j;
+	inFile >> j;
+	From_Json(j);
+	inFile.clear();
+	inFile.close();
+
+	return true;
 }

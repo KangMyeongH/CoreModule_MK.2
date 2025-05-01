@@ -3,8 +3,11 @@
 #include "CollisionManager.h"
 #include "ComponentFactory.h"
 #include "D3D11Manager.h"
+#include "DebugRenderManager.h"
 #include "InputManager.h"
+#include "LoadManager.h"
 #include "PhysicsManager.h"
+#include "PrefabManager.h"
 #include "RenderManager.h"
 #include "Scene.h"
 #include "ScriptBehaviourManager.h"
@@ -18,6 +21,7 @@ engine::Core::~Core()
 void engine::Core::Release()
 {
 	// TODO : release manager
+	PrefabManager::GetInstance().Release();
 	m_Scene->Release();
 	m_ScriptBehaviourManager->Release();
 	m_PhysicsManager->Release();
@@ -25,6 +29,8 @@ void engine::Core::Release()
 	ComponentFactory::GetInstance().Release();
 	m_CollisionManager->Release();
 	m_RenderManager->Release();
+	DebugRenderManager::GetInstance().Release();
+	LoadManager::GetInstance().Release();
 	m_D3D11Manager->Release();
 }
 
@@ -33,6 +39,7 @@ void engine::Core::registerObjects()
 	m_PhysicsManager->RegisterRigidbody();
 	m_UIManager->RegisterUI();
 	m_RenderManager->RegisterRenderer();
+	m_RenderManager->RegisterLight();
 	m_CollisionManager->RegisterCollider();
 }
 
@@ -91,6 +98,8 @@ void engine::Core::destroy()
 	m_ScriptBehaviourManager->FlushDestroyScriptBehaviours();
 	m_Scene->FlushDestroyGameObjects();
 	m_RenderManager->FlushDestroyCamera();
+	m_RenderManager->FlushDestroyRenderer();
+	m_RenderManager->FlushDestroyLight();
 	m_PhysicsManager->FlushDestroyRigidbody();
 	m_CollisionManager->FlushDestroyCollider();
 	m_UIManager->FlushDestroyUI();
@@ -113,6 +122,7 @@ HRESULT engine::Core::Initialize(const HWND hwnd)
 	m_UIManager->Initialize();
 	m_TimeManager->Initialize();
 	m_InputManager->LockMouse(true);
+	m_RenderManager->Initialize(m_D3D11Manager->GetDevice(), m_D3D11Manager->GetContext());
 
 	return S_OK;
 }
@@ -134,6 +144,8 @@ void engine::Core::Progress()
 	GameLogic();
 	SceneRender();
 	Decommissioning();
+
+	m_Scene->RegisterNextScene();
 }
 
 void engine::Core::Initialization()

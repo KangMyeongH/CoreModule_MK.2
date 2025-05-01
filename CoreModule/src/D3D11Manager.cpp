@@ -584,6 +584,11 @@ void engine::D3D11Manager::SetCW()
 	m_DeviceContext->RSSetState(pRasterState.Get());
 }
 
+void engine::D3D11Manager::SetDepthNoWrite()
+{
+	m_DeviceContext->OMSetDepthStencilState(m_DepthStencilNoWrite.Get(), 0);
+}
+
 void engine::D3D11Manager::SetUIAlphaBlendMode()
 {
 	_float blendFactor[4] = { 0.f, 0.f, 0.f, 0.f };
@@ -591,11 +596,6 @@ void engine::D3D11Manager::SetUIAlphaBlendMode()
 
 	m_DeviceContext->OMSetBlendState(m_UIAlphaBlendState.Get(), blendFactor, sampleMask);
 	m_DeviceContext->OMSetDepthStencilState(m_UIAlphaDepthStencilState.Get(), 0);
-}
-
-void engine::D3D11Manager::SetDefaultRenderState()
-{
-
 }
 
 void engine::D3D11Manager::PostProcessForceAlphaOnePass()
@@ -624,9 +624,33 @@ void engine::D3D11Manager::PostProcessForceAlphaOnePass()
 
 void engine::D3D11Manager::Release()
 {
+	m_DeviceContext->VSSetShader(nullptr, nullptr, 0);
+	m_DeviceContext->PSSetShader(nullptr, nullptr, 0);
+	m_DeviceContext->IASetInputLayout(nullptr);
+	m_DeviceContext->OMSetRenderTargets(0, nullptr, nullptr);
+	m_DeviceContext->ClearState();
+	m_DeviceContext->Flush();
+
 	m_TextureMap.clear();
 	m_VIBufferMap.clear();
 	m_ShaderMap.clear();
+	m_MeshMap.clear();
+
+	m_PostProcessForceAlphaOnePSShader.Reset();
+	m_PostProcessForceAlphaOneVSShader.Reset();
+	m_PostProcessForceAlphaOneBlendState.Reset();
+
+	m_UIAlphaBlendState.Reset();
+	m_UIAlphaDepthStencilState.Reset();
+
+	m_DefaultSampler.Reset();
+	m_DepthStencilView.Reset();
+	m_BackBufferRTV.Reset();
+
+	m_SwapChain.Reset();
+
+	m_DeviceContext.Reset();
+	m_Device.Reset();
 }
 
 HRESULT engine::D3D11Manager::readySwapChain(const HWND hWnd, const _bool isWindowed, const _uint winSizeX, const _uint winSizeY)
@@ -747,6 +771,13 @@ HRESULT engine::D3D11Manager::readyDepthStencilView(const _uint winSizeX, const 
 	{
 		return E_FAIL;
 	}
+
+	D3D11_DEPTH_STENCIL_DESC dsDesc = {};
+	dsDesc.DepthEnable = TRUE;
+	dsDesc.DepthWriteMask = D3D11_DEPTH_WRITE_MASK_ZERO;
+	dsDesc.DepthFunc = D3D11_COMPARISON_LESS_EQUAL;
+
+	m_Device->CreateDepthStencilState(&dsDesc, m_DepthStencilNoWrite.ReleaseAndGetAddressOf());
 
 	SafeRelease(depthStencilTexture);
 

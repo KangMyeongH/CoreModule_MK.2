@@ -56,7 +56,7 @@ namespace engine
         static SharedPtr<MeshRenderer> create()
         {
             return SharedPtr<MeshRenderer>(new MeshRenderer(nullptr), []
-            (const MeshRenderer* ptr) {delete ptr; });
+            (const MeshRenderer* ptr) { delete ptr; });
         }
 
         //======================================//

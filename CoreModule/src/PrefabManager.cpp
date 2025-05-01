@@ -57,6 +57,7 @@ void engine::PrefabManager::AddTempGameObject(const SharedPtr<GameObject>& gameO
 void engine::PrefabManager::Release()
 {
 	m_PrefabMap.clear();
+	m_TempGameObjects.clear();
 }
 
 IMPLEMENT_SINGLETON(engine::PrefabManager)

@@ -161,6 +161,7 @@ void engine::CollisionManager::FlushDestroyCollider()
 void engine::CollisionManager::Release()
 {
 	m_Colliders.clear();
+	m_CollisionMap.clear();
 	m_DynamicColliders.clear();
 	m_RegisterQueue.clear();
 }
@@ -184,6 +185,8 @@ void engine::CollisionManager::broadPhaseSap(std::vector<std::pair<SharedPtr<Col
 			continue;
 		}
 
+		col->SetHit(false);
+		col->SetBoardHit(false);
 		const auto& aabb = col->GetWorldAABB();
 		edges.push_back({ aabb.Min.Value.x, col, true });
 		edges.push_back({ aabb.Max.Value.x, col, false });
@@ -211,11 +214,13 @@ void engine::CollisionManager::broadPhaseSap(std::vector<std::pair<SharedPtr<Col
 				outPotentialPairs.emplace_back(c1, c2);
 			}
 
+			edge.Collider->SetBoardHit(true);
 			active.insert(edge.Collider);
 		}
 
 		else
 		{
+			edge.Collider->SetBoardHit(false);
 			active.erase(edge.Collider);
 		}
 	}
@@ -258,14 +263,25 @@ void engine::CollisionManager::narrowPhase(
 			continue;
 		}
 
-		Vector3 normal;
-		_float penetration;
+		Contact contact;
+
+		//Vector3 normal;
+		//_float penetration;
 
 		// 충돌 검사 일단은 BoxCollider끼리만
-		if (checkCollider(a, b, normal, penetration))
+		if (checkCollider(a, b, contact))
 		{
 			std::pair<SharedPtr<Collider>, SharedPtr<Collider>> key(a, b);
-			const CollisionData data(a, b, normal, penetration);
+			const CollisionData data(a, b, contact);
+
+			SharedPtr<Rigidbody> rigidA = a->GetGameObject().lock()->GetComponent<Rigidbody>();
+			SharedPtr<Rigidbody> rigidB = b->GetGameObject().lock()->GetComponent<Rigidbody>();
+
+			if (rigidA && rigidB)
+			{
+				resolvePenetration(rigidA, rigidB, contact);
+				applyImpulse(rigidA, rigidB, contact);
+			}
 
 			newCollisionMap[key] = data;
 		}
@@ -296,16 +312,21 @@ void engine::CollisionManager::processCollisionResults(
 		{
 			if (rigidA->IsKinematic() != rigidB->IsKinematic())
 			{
-				const Vector3 mtv = c.second.Normal * c.second.Penetration;
+				Contact contact = c.second.Contact;
+
+				//resolvePenetration(rigidA, rigidB, contact);
+				//applyImpulse(rigidA, rigidB, contact);
 				if (rigidA->IsKinematic())
 				{
-					objB->GetTransform()->Translate(mtv);
+					
+
+					//objB->GetTransform()->Translate(mtv);
 					//objB->GetTransform()->SetPosition(objB->GetTransform()->Position() - (-c.second.Normal * c.second.Penetration));
 				}
 
 				else if (rigidB->IsKinematic())
 				{
-					objA->GetTransform()->Translate(-mtv);
+					//objA->GetTransform()->Translate(-mtv);
 					//objA->GetTransform()->SetPosition(objA->GetTransform()->Position() - (c.second.Normal * c.second.Penetration));
 				}
 			}
@@ -314,13 +335,13 @@ void engine::CollisionManager::processCollisionResults(
 		if (m_CollisionMap.find(c.first) == m_CollisionMap.end())
 		{
 			// enter
-			invokeCollisionEnter(c.first.first, c.first.second, c.second.Normal, c.second.Penetration);
+			invokeCollisionEnter(c.first.first, c.first.second, c.second.Contact);
 		}
 
 		else
 		{
 			// stay
-			invokeCollisionStay(c.first.first, c.first.second, c.second.Normal, c.second.Penetration);
+			invokeCollisionStay(c.first.first, c.first.second, c.second.Contact);
 		}
 	}
 
@@ -329,33 +350,36 @@ void engine::CollisionManager::processCollisionResults(
 		if (newCollisionMap.find(c.first) == newCollisionMap.end())
 		{
 			// exit
-			invokeCollisionExit(c.first.first, c.first.second, c.second.Normal, c.second.Penetration);
+			invokeCollisionExit(c.first.first, c.first.second, c.second.Contact);
 		}
 	}
 }
 
-void engine::CollisionManager::invokeCollisionEnter(const SharedPtr<Collider>& a, const SharedPtr<Collider>& b,
-	const Vector3& normal, const _float& penetration)
+void engine::CollisionManager::invokeCollisionEnter(const SharedPtr<Collider>& a, const SharedPtr<Collider>& b, const Contact& contact)
 {
 	auto objA = a->GetGameObject().lock();
 	auto objB = b->GetGameObject().lock();
+
+	a->SetHit(true);
+	b->SetHit(true);
 
 	objA->onCollisionEnter(Collision(objB, b));
 	objB->onCollisionEnter(Collision(objA, a));
 }
 
-void engine::CollisionManager::invokeCollisionStay(const SharedPtr<Collider>& a, const SharedPtr<Collider>& b,
-	const Vector3& normal, const _float& penetration)
+void engine::CollisionManager::invokeCollisionStay(const SharedPtr<Collider>& a, const SharedPtr<Collider>& b, const Contact& contact)
 {
 	auto objA = a->GetGameObject().lock();
 	auto objB = b->GetGameObject().lock();
+
+	a->SetHit(true);
+	b->SetHit(true);
 
 	objA->onCollisionStay(Collision(objB, b));
 	objB->onCollisionStay(Collision(objA, a));
 }
 
-void engine::CollisionManager::invokeCollisionExit(const SharedPtr<Collider>& a, const SharedPtr<Collider>& b,
-	const Vector3& normal, const _float& penetration)
+void engine::CollisionManager::invokeCollisionExit(const SharedPtr<Collider>& a, const SharedPtr<Collider>& b, const Contact& contact)
 {
 	auto objA = a->GetGameObject().lock();
 	auto objB = b->GetGameObject().lock();
@@ -364,7 +388,7 @@ void engine::CollisionManager::invokeCollisionExit(const SharedPtr<Collider>& a,
 	objB->onCollisionExit(Collision(objA, a));
 }
 
-engine::_bool engine::CollisionManager::checkCollider(const SharedPtr<Collider>& a, const SharedPtr<Collider>& b, Vector3& outNormal, _float& outPenetration)
+engine::_bool engine::CollisionManager::checkCollider(const SharedPtr<Collider>& a, const SharedPtr<Collider>& b, Contact& out)
 {
 	auto typeA = a->GetColliderType();
 	auto typeB = b->GetColliderType();
@@ -376,13 +400,13 @@ engine::_bool engine::CollisionManager::checkCollider(const SharedPtr<Collider>&
 		switch (typeB)
 		{
 		case ColliderType_Box:
-			return checkBoxBox(a, b, outNormal, outPenetration);
+			return checkBoxBox(a, b, out);
 		case ColliderType_Capsule:
-			return checkBoxCapsule(a, b, outNormal, outPenetration);
+			return checkBoxCapsule(a, b, out);
 		case ColliderType_Mesh:
-			return checkBoxMesh(a, b, outNormal, outPenetration);
+			return checkBoxMesh(a, b, out);
 		case ColliderType_Sphere:
-			return checkBoxSphere(a, b, outNormal, outPenetration);
+			return checkBoxSphere(a, b, out);
 		}
 	}
 	break;
@@ -391,13 +415,13 @@ engine::_bool engine::CollisionManager::checkCollider(const SharedPtr<Collider>&
 		switch (typeB)
 		{
 		case ColliderType_Box:
-			return checkBoxCapsule(b, a, outNormal, outPenetration);
+			return checkBoxCapsule(b, a, out);
 		case ColliderType_Capsule:
-			return checkCapsuleCapsule(a, b, outNormal, outPenetration);
+			return checkCapsuleCapsule(a, b, out);
 		case ColliderType_Mesh:
-			return checkCapsuleMesh(a, b, outNormal, outPenetration);
+			return checkCapsuleMesh(a, b, out);
 		case ColliderType_Sphere:
-			return checkCapsuleSphere(a, b, outNormal, outPenetration);
+			return checkCapsuleSphere(a, b, out);
 		}
 	}
 	break;
@@ -406,13 +430,13 @@ engine::_bool engine::CollisionManager::checkCollider(const SharedPtr<Collider>&
 		switch (typeB)
 		{
 		case ColliderType_Box:
-			return checkBoxMesh(b, a, outNormal, outPenetration);
+			return checkBoxMesh(b, a, out);
 		case ColliderType_Capsule:
-			return checkCapsuleMesh(b, a, outNormal, outPenetration);
+			return checkCapsuleMesh(b, a, out);
 		case ColliderType_Mesh:
-			return checkMeshMesh(a, b, outNormal, outPenetration);
+			return checkMeshMesh(a, b, out);
 		case ColliderType_Sphere:
-			return checkMeshSphere(a, b, outNormal, outPenetration);
+			return checkMeshSphere(a, b, out);
 		}
 
 	}
@@ -421,13 +445,13 @@ engine::_bool engine::CollisionManager::checkCollider(const SharedPtr<Collider>&
 	{
 		switch (typeB) {
 		case ColliderType_Box:
-			return checkBoxSphere(b, a, outNormal, outPenetration);
+			return checkBoxSphere(b, a, out);
 		case ColliderType_Capsule:
-			return checkCapsuleSphere(b, a, outNormal, outPenetration);
+			return checkCapsuleSphere(b, a, out);
 		case ColliderType_Mesh:
-			return checkMeshSphere(b, a, outNormal, outPenetration);
+			return checkMeshSphere(b, a, out);
 		case ColliderType_Sphere:
-			return checkSphereSphere(a, b, outNormal, outPenetration);
+			return checkSphereSphere(a, b, out);
 		}
 	}
 	break;
@@ -436,13 +460,231 @@ engine::_bool engine::CollisionManager::checkCollider(const SharedPtr<Collider>&
 	return false;
 }
 
-engine::_bool engine::CollisionManager::checkBoxBox(const SharedPtr<Collider>& a, const SharedPtr<Collider>& b,
-	Vector3& outNormal, _float& outPenetration)
+engine::_bool engine::CollisionManager::checkBoxBox(const SharedPtr<Collider>& a, const SharedPtr<Collider>& b, Contact& out)
 {
+	using namespace DirectX;
+
+	const _float epsilon = 1e-5f;
+
+	out.IsHit = false;
+
 	const OBB& obbA = std::static_pointer_cast<BoxCollider>(a)->GetOBB();
 	const OBB& obbB = std::static_pointer_cast<BoxCollider>(b)->GetOBB();
 
-	_float R[3][3], AbsR[3][3];
+	_vector cA = obbA.Center.ToVector();
+	_vector cB = obbB.Center.ToVector();
+
+	_vector uA[3] = {
+		obbA.AxisX.ToVector(),
+		obbA.AxisY.ToVector(),
+		obbA.AxisZ.ToVector()
+	};
+
+	_vector uB[3] = {
+		obbB.AxisX.ToVector(),
+		obbB.AxisY.ToVector(),
+		obbB.AxisZ.ToVector()
+	};
+
+	const float hA[3] = {
+		obbA.Extents.Value.x,
+		obbA.Extents.Value.y,
+		obbA.Extents.Value.z
+	};
+
+	const float hB[3] = {
+		obbB.Extents.Value.x,
+		obbB.Extents.Value.y,
+		obbB.Extents.Value.z
+	};
+
+	_float R[3][3];
+	_float absR[3][3];
+
+	for (_int i = 0; i < 3; ++i)
+	{
+		for (_int j = 0; j < 3; ++j)
+		{
+			R[i][j] = XMVectorGetX(XMVector3Dot(uA[i], uB[j]));
+			absR[i][j] = std::fabs(R[i][j]) + epsilon;
+		}
+	}
+
+	_vector tV = cB - cA;
+	_float t[3] = {
+		XMVectorGetX(XMVector3Dot(tV, uA[0])),
+		XMVectorGetX(XMVector3Dot(tV, uA[1])),
+		XMVectorGetX(XMVector3Dot(tV, uA[2])),
+	};
+
+	_float minOverlap = FLT_MAX;
+	_int minType = -1;		// 0~2 : A축, 3~5 : B축, 6~14 : AXB 축
+	_int minIdxI = 0;	// 교차축용
+	_int minIdxJ = 0;	// 교차축용
+	_int sign = 1;		// 노멀 방향
+
+	auto TestAxis = [&](_float overlap, _int type, _int i = 0, _int j = 0, _float s = 1.f)
+		{
+			if (overlap < minOverlap)
+			{
+				minOverlap = overlap;
+				minType = type;
+				minIdxI = i;
+				minIdxJ = j;
+				sign = (s >= 0.f) ? 1 : -1;
+			}
+		};
+
+	// 15개의 분리축 테스트
+	_float ra, rb, proj, overlap;
+
+	// A 축 3개
+	for (_int i = 0; i < 3; ++i)
+	{
+		ra = hA[i];
+		rb = hB[0] * absR[i][0] + hB[1] * absR[i][1] + hB[2] * absR[i][2];
+		proj = std::fabs(t[i]);
+		overlap = ra + rb - proj;
+		if (overlap < 0)
+		{
+			return false;
+		}
+		TestAxis(overlap, i, i, 0, (t[i] < 0.f) ? -1.f : 1.f);
+	}
+
+	// B 축 3개
+	for (int j = 0; j < 3; ++j)
+	{
+		ra = hA[0] * absR[0][j] + hA[1] * absR[1][j] + hA[2] * absR[2][j];
+		rb = hB[j];
+		proj = std::fabs(t[0] * R[0][j] + t[1] * R[1][j] + t[2] * R[2][j]);
+		overlap = ra + rb - proj;
+		if (overlap < 0)
+		{
+			return false;
+		}
+		TestAxis(overlap, 3 + j, 0, j, ((t[0] * R[0][j] + t[1] * R[1][j] + t[2] * R[2][j]) < 0.f) ? -1.f : 1.f);
+	}
+
+#define EDGE_TEST(i, j, T0, T1, TaX, TaY, TbX, TbY)	 			\
+	ra = hA[T0] * absR[T1][j] + hA[T1] * absR[T0][j]; 			\
+	rb = hB[TbX] * absR[i][TbY] + hB[TbY] * absR[i][TbX]; 		\
+	proj = std::fabs(t[T0] * R[T1][j] - t[T1] * R[T0][j]); 		\
+	overlap = ra + rb - proj; 									\
+	if (overlap < 0) 											\
+	{															\
+		return false;											\
+	}															\
+	TestAxis(overlap, 6 + 3 * (i) + (j), i, j, ((t[T0] * R[T1][j] - t[T1] * R[T0][j]) < 0.f ? -1.f : 1.f));
+
+	// i=0
+	EDGE_TEST(0, 0, 1, 2, 1, 2, 1, 2);
+	EDGE_TEST(0, 1, 1, 2, 1, 2, 0, 2);
+	EDGE_TEST(0, 2, 1, 2, 1, 2, 0, 1);
+	// i=1
+	EDGE_TEST(1, 0, 0, 2, 0, 2, 1, 2);
+	EDGE_TEST(1, 1, 0, 2, 0, 2, 0, 2);
+	EDGE_TEST(1, 2, 0, 2, 0, 2, 0, 1);
+	// i=2
+	EDGE_TEST(2, 0, 0, 1, 0, 1, 1, 2);
+	EDGE_TEST(2, 1, 0, 1, 0, 1, 0, 2);
+	EDGE_TEST(2, 2, 0, 1, 0, 1, 0, 1);
+
+#undef EDGE_TEST
+
+	out.IsHit = true;
+	out.Penetration = minOverlap;
+
+	_vector n;
+
+	if (minType < 3)
+	{
+		n = uA[minType] * static_cast<_float>(sign);
+	}
+
+	else if (minType < 6)
+	{
+		n = uB[minType - 3] * static_cast<_float>(sign);
+	}
+
+	else
+	{
+		n = XMVector3Cross(uA[minIdxI], uB[minIdxJ]);
+		n = XMVector3Normalize(n) * static_cast<_float>(sign);
+	}
+
+	out.Normal = n;
+
+	_vector contactA = cA + XMVectorScale(n, hA[0]);
+	_vector contactB = contactA - XMVectorScale(n, out.Penetration);
+	out.PointA = contactA;
+	out.PointB = contactB;
+
+	//// 9개 축
+	//ra = hA[1] * absR[2][0] + hA[2] * absR[1][0];
+	//rb = hB[1] * absR[0][2] + hB[2] * absR[0][1];
+	//if (std::fabs(t[2] * R[1][0] - t[1] * R[2][0]) > ra + rb)
+	//{
+	//	return false;
+	//}
+
+	//ra = hA[1] * absR[2][1] + hA[2] * absR[1][1];
+	//rb = hB[0] * absR[0][2] + hB[2] * absR[0][0];
+	//if (std::fabs(t[2] * R[1][1] - t[1] * R[2][1]) > ra + rb)
+	//{
+	//	return false;
+	//}
+
+	//ra = hA[1] * absR[2][2] + hA[2] * absR[1][2];
+	//rb = hB[0] * absR[0][1] + hB[1] * absR[0][0];
+	//if (std::fabs(t[2] * R[1][2] - t[1] * R[2][2]) > ra + rb)
+	//{
+	//	return false;
+	//}
+
+	//ra = hA[0] * absR[2][0] + hA[2] * absR[0][0];
+	//rb = hB[1] * absR[1][2] + hB[2] * absR[1][1];
+	//if (std::fabs(t[0] * R[2][0] - t[2] * R[0][0]) > ra + rb)
+	//{
+	//	return false;
+	//}
+
+	//ra = hA[0] * absR[2][1] + hA[2] * absR[0][1];
+	//rb = hB[0] * absR[1][2] + hB[2] * absR[1][0];
+	//if (std::fabs(t[0] * R[2][1] - t[2] * R[0][1]) > ra + rb) 
+	//{
+	//	return false;
+	//}
+
+	//ra = hA[0] * absR[2][2] + hA[2] * absR[0][2];
+	//rb = hB[0] * absR[1][1] + hB[1] * absR[1][0];
+	//if (std::fabs(t[0] * R[2][2] - t[2] * R[0][2]) > ra + rb) 
+	//{
+	//	return false;
+	//}
+
+	//ra = hA[0] * absR[1][0] + hA[1] * absR[0][0];
+	//rb = hB[1] * absR[2][2] + hB[2] * absR[2][1];
+	//if (std::fabs(t[1] * R[0][0] - t[0] * R[1][0]) > ra + rb)
+	//{
+	//	return false;
+	//}
+
+	//ra = hA[0] * absR[1][1] + hA[1] * absR[0][1];
+	//rb = hB[0] * absR[2][2] + hB[2] * absR[2][0];
+	//if (std::fabs(t[1] * R[0][1] - t[0] * R[1][1]) > ra + rb)
+	//{
+	//	return false;
+	//}
+
+	//ra = hA[0] * absR[1][2] + hA[1] * absR[0][2];
+	//rb = hB[0] * absR[2][1] + hB[1] * absR[2][0];
+	//if (std::fabs(t[1] * R[0][2] - t[0] * R[1][2]) > ra + rb)
+	//{
+	//	return false;
+	//}
+
+	/*_float R[3][3], AbsR[3][3];
 	for (_int i = 0; i < 3; ++i)
 	{
 		Vector3 Ai = (i == 0 ? obbA.AxisX : (i == 1 ? obbA.AxisY : obbA.AxisZ));
@@ -536,63 +778,119 @@ engine::_bool engine::CollisionManager::checkBoxBox(const SharedPtr<Collider>& a
 	}
 
 	outPenetration = minPen;
-	outNormal = bestAxis;
+	outNormal = bestAxis;*/
 
 	return true;
 }
 
-engine::_bool engine::CollisionManager::checkBoxCapsule(const SharedPtr<Collider>& a, const SharedPtr<Collider>& b,
-	Vector3& outNormal, _float& outPenetration)
+engine::_bool engine::CollisionManager::checkBoxCapsule(const SharedPtr<Collider>& a, const SharedPtr<Collider>& b, Contact& out)
 {
 	return true;
 }
 
 engine::_bool engine::CollisionManager::checkBoxMesh(const SharedPtr<Collider>& a, const SharedPtr<Collider>& b,
-	Vector3& outNormal, _float& outPenetration)
+	Contact& out)
 {
 	return true;
 }
 
 engine::_bool engine::CollisionManager::checkBoxSphere(const SharedPtr<Collider>& a, const SharedPtr<Collider>& b,
-	Vector3& outNormal, _float& outPenetration)
+	Contact& out)
 {
 	return true;
 }
 
 engine::_bool engine::CollisionManager::checkCapsuleCapsule(const SharedPtr<Collider>& a, const SharedPtr<Collider>& b,
-	Vector3& outNormal, _float& outPenetration)
+	Contact& out)
 {
 	return true;
 }
 
 engine::_bool engine::CollisionManager::checkCapsuleMesh(const SharedPtr<Collider>& a, const SharedPtr<Collider>& b,
-	Vector3& outNormal, _float& outPenetration)
+	Contact& out)
 {
 	return true;
 }
 
 engine::_bool engine::CollisionManager::checkCapsuleSphere(const SharedPtr<Collider>& a, const SharedPtr<Collider>& b,
-	Vector3& outNormal, _float& outPenetration)
+	Contact& out)
 {
 	return true;
 }
 
 engine::_bool engine::CollisionManager::checkMeshMesh(const SharedPtr<Collider>& a, const SharedPtr<Collider>& b,
-	Vector3& outNormal, _float& outPenetration)
+	Contact& out)
 {
 	return true;
 }
 
 engine::_bool engine::CollisionManager::checkMeshSphere(const SharedPtr<Collider>& a, const SharedPtr<Collider>& b,
-	Vector3& outNormal, _float& outPenetration)
+	Contact& out)
 {
 	return true;
 }
 
 engine::_bool engine::CollisionManager::checkSphereSphere(const SharedPtr<Collider>& a, const SharedPtr<Collider>& b,
-	Vector3& outNormal, _float& outPenetration)
+	Contact& out)
 {
 	return true;
+}
+
+void engine::CollisionManager::resolvePenetration(const SharedPtr<Rigidbody>& a, const SharedPtr<Rigidbody>& b,
+	const Contact& c, _float percent, _float slop)
+{
+	if (!c.IsHit)
+	{
+		return;
+	}
+
+	_float invMassA = a->GetInvMass();
+	_float invMassB = b->GetInvMass();
+	_float totalInv = invMassA + invMassB;
+
+	if (totalInv == 0.f)
+	{
+		return;
+	}
+
+	_float correction = std::max(c.Penetration - slop, 0.f) * percent / totalInv;
+
+	Vector3 corr = c.Normal * correction;
+	std::cerr << "penetration : " << c.Penetration << "\n";
+	std::cerr << "X : " << corr.Value.x << ", Y : " << corr.Value.y << ", Z : " << corr.Value.z << "\n";
+
+	a->GetTransform()->Translate(-(corr * invMassA));
+	b->GetTransform()->Translate(corr * invMassB);
+}
+
+void engine::CollisionManager::applyImpulse(const SharedPtr<Rigidbody>& a, const SharedPtr<Rigidbody>& b,
+	const Contact& c, _float restitution)
+{
+	if (!c.IsHit)
+	{
+		return;
+	}
+
+	_vector n = c.Normal.ToVector();
+	Vector3 vA = a->Velocity();
+	Vector3 vB = b->Velocity();
+	_vector rv = (vB - vA).ToVector();
+
+	_float velAlongN = DirectX::XMVectorGetX(DirectX::XMVector3Dot(rv, n));
+	if (velAlongN > 0)
+	{
+		return;
+	}
+
+	_float invMassSum = a->GetInvMass() + b->GetInvMass();
+	_float j = -(1.f + restitution) * velAlongN / invMassSum;
+
+	Vector3 impulse = c.Normal * j;
+	vA -= impulse * a->GetInvMass();
+	vB += impulse * b->GetInvMass();
+
+	a->Velocity() = vA;
+	b->Velocity() = vB;
 }
 
 IMPLEMENT_SINGLETON(engine::CollisionManager)

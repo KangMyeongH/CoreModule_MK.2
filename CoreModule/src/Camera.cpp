@@ -38,8 +38,10 @@ void engine::Camera::UpdateCamera(_float4X4& viewMat, _float4X4& projMat) const
 	forward = DirectX::XMVector3Normalize(forward);
 	up 		= DirectX::XMVector3Normalize(up);
 
+	_float fov = DegreeToRadian(m_FiledOfView);
+
 	const _matrix viewMatrix = DirectX::XMMatrixLookToLH(eye, forward, up);
-	const _matrix projMatrix = DirectX::XMMatrixPerspectiveFovLH(m_FiledOfView, m_AspectRatio, m_NearPlane, m_FarPlane);
+	const _matrix projMatrix = DirectX::XMMatrixPerspectiveFovLH(fov, m_AspectRatio, m_NearPlane, m_FarPlane);
 
 	XMStoreFloat4x4(&viewMat, viewMatrix);
 	XMStoreFloat4x4(&projMat, projMatrix);

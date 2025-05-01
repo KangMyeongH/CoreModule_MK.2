@@ -121,6 +121,15 @@
     <Filter Include="00. System\UI\Text">
       <UniqueIdentifier>{39c16965-6ca9-4eea-8a41-88eaadd51b79}</UniqueIdentifier>
     </Filter>
+    <Filter Include="00. System\Graphic\SkySphere">
+      <UniqueIdentifier>{c8d25b39-87e2-4ad1-82a8-c3a776913ec1}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="00. System\Graphic\Light">
+      <UniqueIdentifier>{cfe868b1-c683-473d-a869-41a311d4d870}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="00. System\UI\Effect">
+      <UniqueIdentifier>{53400629-9e06-4744-8b7b-879e256fd92b}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="include\core_defines.h">
@@ -281,6 +290,15 @@
     <ClInclude Include="include\TextUI.h">
       <Filter>00. System\UI\Text</Filter>
     </ClInclude>
+    <ClInclude Include="include\SkySphere.h">
+      <Filter>00. System\Graphic\SkySphere</Filter>
+    </ClInclude>
+    <ClInclude Include="include\Light.h">
+      <Filter>00. System\Graphic\Light</Filter>
+    </ClInclude>
+    <ClInclude Include="include\EffectUI.h">
+      <Filter>00. System\UI\Effect</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\GameObject.cpp">
@@ -413,6 +431,15 @@
     </ClCompile>
     <ClCompile Include="src\TextUI.cpp">
       <Filter>00. System\UI\Text</Filter>
+    </ClCompile>
+    <ClCompile Include="src\SkySphere.cpp">
+      <Filter>00. System\Graphic\SkySphere</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Light.cpp">
+      <Filter>00. System\Graphic\Light</Filter>
+    </ClCompile>
+    <ClCompile Include="src\EffectUI.cpp">
+      <Filter>00. System\UI\Effect</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

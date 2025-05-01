@@ -4,6 +4,11 @@
 
 namespace engine
 {
+	class Rigidbody;
+}
+
+namespace engine
+{
 	class Collider;
     
     struct ColliderPairHash
@@ -83,26 +88,26 @@ namespace engine
 
         void processCollisionResults(const std::unordered_map<std::pair<SharedPtr<Collider>, SharedPtr<Collider>>, CollisionData, ColliderPairHash, ColliderPairEq>& newCollisionMap);
 
-        void invokeCollisionEnter(const SharedPtr<Collider>& a, const SharedPtr<Collider>& b, const Vector3& normal, const _float& penetration);
-        void invokeCollisionStay(const SharedPtr<Collider>& a, const SharedPtr<Collider>& b, const Vector3& normal, const _float& penetration);
-        void invokeCollisionExit(const SharedPtr<Collider>& a, const SharedPtr<Collider>& b, const Vector3& normal, const _float& penetration);
+        void invokeCollisionEnter(const SharedPtr<Collider>& a, const SharedPtr<Collider>& b, const Contact& contact);
+        void invokeCollisionStay(const SharedPtr<Collider>& a, const SharedPtr<Collider>& b, const Contact& contact);
+        void invokeCollisionExit(const SharedPtr<Collider>& a, const SharedPtr<Collider>& b, const Contact& contact);
 
-
-
-        _bool checkCollider(const SharedPtr<Collider>& a, const SharedPtr<Collider>& b, Vector3& outNormal, _float& outPenetration);
+        _bool checkCollider(const SharedPtr<Collider>& a, const SharedPtr<Collider>& b, Contact& out);
 
         // Box, Sphere, Capsule, Mesh
-        _bool checkBoxBox(const SharedPtr<Collider>& a, const SharedPtr<Collider>& b, Vector3& outNormal, _float& outPenetration);
-        _bool checkBoxCapsule(const SharedPtr<Collider>& a, const SharedPtr<Collider>& b, Vector3& outNormal, _float& outPenetration);
-        _bool checkBoxMesh(const SharedPtr<Collider>& a, const SharedPtr<Collider>& b, Vector3& outNormal, _float& outPenetration);
-        _bool checkBoxSphere(const SharedPtr<Collider>& a, const SharedPtr<Collider>& b, Vector3& outNormal, _float& outPenetration);
-        _bool checkCapsuleCapsule(const SharedPtr<Collider>& a, const SharedPtr<Collider>& b, Vector3& outNormal, _float& outPenetration);
-        _bool checkCapsuleMesh(const SharedPtr<Collider>& a, const SharedPtr<Collider>& b, Vector3& outNormal, _float& outPenetration);
-        _bool checkCapsuleSphere(const SharedPtr<Collider>& a, const SharedPtr<Collider>& b, Vector3& outNormal, _float& outPenetration);
-        _bool checkMeshMesh(const SharedPtr<Collider>& a, const SharedPtr<Collider>& b, Vector3& outNormal, _float& outPenetration);
-        _bool checkMeshSphere(const SharedPtr<Collider>& a, const SharedPtr<Collider>& b, Vector3& outNormal, _float& outPenetration);
-        _bool checkSphereSphere(const SharedPtr<Collider>& a, const SharedPtr<Collider>& b, Vector3& outNormal, _float& outPenetration);
+        _bool checkBoxBox(const SharedPtr<Collider>& a, const SharedPtr<Collider>& b, Contact& out);
+        _bool checkBoxCapsule(const SharedPtr<Collider>& a, const SharedPtr<Collider>& b, Contact& out);
+        _bool checkBoxMesh(const SharedPtr<Collider>& a, const SharedPtr<Collider>& b, Contact& out);
+        _bool checkBoxSphere(const SharedPtr<Collider>& a, const SharedPtr<Collider>& b, Contact& out);
+        _bool checkCapsuleCapsule(const SharedPtr<Collider>& a, const SharedPtr<Collider>& b, Contact& out);
+        _bool checkCapsuleMesh(const SharedPtr<Collider>& a, const SharedPtr<Collider>& b, Contact& out);
+        _bool checkCapsuleSphere(const SharedPtr<Collider>& a, const SharedPtr<Collider>& b, Contact& out);
+        _bool checkMeshMesh(const SharedPtr<Collider>& a, const SharedPtr<Collider>& b, Contact& out);
+        _bool checkMeshSphere(const SharedPtr<Collider>& a, const SharedPtr<Collider>& b, Contact& out);
+        _bool checkSphereSphere(const SharedPtr<Collider>& a, const SharedPtr<Collider>& b, Contact& out);
 
+        void resolvePenetration(const SharedPtr<Rigidbody>& a, const SharedPtr<Rigidbody>& b, const Contact& c, _float percent = 0.8f, _float slop = 0.001f);
+        void applyImpulse(const SharedPtr<Rigidbody>& a, const SharedPtr<Rigidbody>& b, const Contact& c, _float restitution = 0.2f);
 
         //======================================//
         //				  fields				//

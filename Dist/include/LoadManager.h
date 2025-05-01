@@ -53,6 +53,8 @@ namespace engine
 
         void BuildTriangleAABBs(const std::vector<_float3>& vertices, const std::vector<uint32_t>& indices, std::vector<TriangleAABB>& out);
 
+
+        void Release();
         //======================================//
         //				 serialize				//
         //======================================//

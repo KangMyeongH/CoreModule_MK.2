@@ -31,6 +31,12 @@ namespace engine
         virtual void UpdateCollider() = 0;
     	virtual void Render(ComPtr<ID3D11DeviceContext> context, const SharedPtr<VIBuffer>& buffer) = 0;
 
+        void SetHit(const _bool bHit) { m_bHit = bHit; }
+        _bool IsHit() const { return m_bHit; }
+
+        void SetBoardHit(const _bool bHit) { m_bBoardHit = bHit; }
+        _bool IsBoardHit() const { return m_bBoardHit; }
+
         void Destroy() override = 0;
     	SharedPtr<Component> Clone() const override = 0;
 
@@ -52,6 +58,7 @@ namespace engine
     protected:
         _bool           m_bTrigger;
         _bool           m_bHit;
+        _bool           m_bBoardHit;
         // BroadPhase일 때 사용할 Bounding Box
         AABB            m_AABB;
     };

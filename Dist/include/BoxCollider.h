@@ -31,6 +31,8 @@ namespace engine
         Vector3 GetCenter() const { return m_Center; }
         void SetCenter(const Vector3& center) { m_Center = center; }
 
+        Vector3 GetWorldCenter() const;
+
         Vector3 GetSize() const { return m_Size; }
         void SetSize(const Vector3& size) { m_Size = size; }
 

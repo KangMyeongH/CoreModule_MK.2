@@ -60,8 +60,9 @@ namespace engine
     	void 	SetCCW();
         void 	SetCW();
 
+        void 	SetDepthNoWrite();
+
         void    SetUIAlphaBlendMode();
-        void    SetDefaultRenderState();
 
         void 	PostProcessForceAlphaOnePass();
 
@@ -92,6 +93,8 @@ namespace engine
 
         ComPtr<ID3D11RenderTargetView> 	m_BackBufferRTV;
         ComPtr<ID3D11DepthStencilView> 	m_DepthStencilView;
+
+        ComPtr<ID3D11DepthStencilState> m_DepthStencilNoWrite;
 
         ComPtr<ID3D11SamplerState>      m_DefaultSampler;
 

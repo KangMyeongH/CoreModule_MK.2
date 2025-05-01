@@ -17,6 +17,16 @@ namespace engine
 namespace engine
 {
 	struct TriangleAABB;
+	struct Contact;
+
+	struct Contact
+	{
+		_bool IsHit = false;		// 충돌 여부
+		Vector3 Normal{};				// A -> B 방향 노멀 (단위 벡터
+		_float Penetration = 0.f;	// 침투 깊이 (>0) MTV = Normal * penetration;
+		Vector3 PointA{};				// A 접촉점
+		Vector3 PointB{};				// B 접촉점
+	};
 
 	struct Ray
 	{
@@ -437,6 +447,12 @@ namespace engine
 
 			return result;
 		}
+	};
+
+	struct VTX_SKY_SPHERE
+	{
+		_float3 Position;
+		_float2 TexCoord;
 	};
 
 	struct VTX_MESH_EQUAL
@@ -866,5 +882,16 @@ namespace engine
 	struct CB_Color
 	{
 		_float4 Color;
+	};
+
+	struct LightDesc
+	{
+		LightType 	Type;
+		_float4		Position;
+		_float4		Dir;
+		_float4 	Color;
+		_float		Intensity;
+		_float     	Range;
+		_float     	SpotAngle;
 	};
 }

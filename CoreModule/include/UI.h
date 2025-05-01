@@ -25,6 +25,7 @@ namespace engine
         virtual void SetSorting(_int sort, ApplicationMode mode = CLIENT);
 
         SharedPtr<Material> GetMaterial() const { return m_Material; }
+        void SetMaterial(const _wstring& path);
 
         //======================================//
         //				  method				//

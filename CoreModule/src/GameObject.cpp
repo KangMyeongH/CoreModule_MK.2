@@ -258,7 +258,16 @@ void engine::GameObject::FromJson(const nlohmann::ordered_json& j, const SharedP
 
 	for (const auto& component_json : j.at("components"))
 	{
-		_string type = component_json.at("type").get<_string>();
+		_string type;
+		if (component_json.contains("type"))
+		{
+			type = component_json.at("type").get<_string>();
+		}
+
+		else
+		{
+			continue;
+		}
 
 		SharedPtr<Component> component = ComponentFactory::GetInstance().CreateComponent(type);
 		component->from_json(component_json);

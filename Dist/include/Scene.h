@@ -1,4 +1,6 @@
 #pragma once
+#include <condition_variable>
+
 #include "core_defines.h"
 
 namespace engine
@@ -33,12 +35,17 @@ namespace engine
         SharedPtr<GameObject> FindWithTag(const _string& tag);
 
         void FlushDestroyGameObjects();
-        void Release();
+        void RegisterNextScene();
+
+    	void Release();
 
     private:
         void setupTransformHierarchy() const;
         void updateGameObjectTag(const SharedPtr<GameObject>& obj, const _string& newTag);
     	void registerGameObject(const SharedPtr<GameObject>& gameObject);
+        void loadSceneInBackGround(const std::wstring& nextScene);
+
+        _bool loadSceneData(const _wstring& path);
 
         //======================================//
         //				 serialize				//
@@ -55,6 +62,12 @@ namespace engine
         GameObjects 		m_GameObjects;
         GameObjectsTagMap  	m_GameObjectsTagMap;
         _string             m_SceneName;
+        _wstring            m_NextScene;
+
+        std::atomic<bool> 			m_bSceneLoaded{ false };
+        std::condition_variable 	m_CV;
+        std::mutex 					m_LoadingMutex;
+        std::thread 				m_LoadingThread;
 
         friend class GameObject;
     };

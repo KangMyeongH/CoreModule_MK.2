@@ -1,6 +1,7 @@
 #include "UI.h"
 
 #include "EditorComponentManager.h"
+#include "LoadManager.h"
 #include "UIManager.h"
 
 engine::UI::UI(const SharedPtr<GameObject>& owner, const _string& name) : Behaviour(owner), m_SortingOrder(0)
@@ -39,6 +40,11 @@ void engine::UI::SetSorting(const _int sort, ApplicationMode mode)
 	{
 		editor::EditorComponentManager::GetInstance().OnSortingChanged(std::static_pointer_cast<UI>(shared_from_this()), oldSort, m_SortingOrder, false);
 	}
+}
+
+void engine::UI::SetMaterial(const _wstring& path)
+{
+	LoadManager::GetInstance().LoadMaterialData(m_Material, path);
 }
 
 void engine::UI::Destroy()

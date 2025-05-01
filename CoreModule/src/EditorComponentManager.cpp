@@ -6,8 +6,10 @@
 #include "DebugRenderManager.h"
 #include "EditorCore.h"
 #include "GameObject.h"
+#include "Light.h"
 #include "Material.h"
 #include "Renderer.h"
+#include "SkySphere.h"
 #include "TextUI.h"
 #include "UI.h"
 #include "UIManager.h"
@@ -31,6 +33,9 @@ void engine::editor::EditorComponentManager::Render(const ComPtr<ID3D11DeviceCon
 {
 	Vector3 camPos = EditorCore::GetInstance().GetEditorCamera().GetCameraPos();
 	_float4 finalCamPos = { camPos.Value.x, camPos.Value.y, camPos.Value.z, 1.f };
+
+	//RenderSkySphere(context);
+
 	for (const auto& renderer : m_Renderers)
 	{
 		if (auto owner = renderer->GetGameObject().lock())
@@ -43,6 +48,11 @@ void engine::editor::EditorComponentManager::Render(const ComPtr<ID3D11DeviceCon
 				{
 					if (material.second->GetShader())
 					{
+						for (auto light : m_Lights)
+						{
+							light->BindLight(material.second);
+						}
+
 						material.second->SetMatrix("g_ViewMatrix", viewMat);
 						material.second->SetMatrix("g_ProjMatrix", projMat);
 						material.second->SetFloat4("CameraPosition", finalCamPos);
@@ -115,7 +125,7 @@ void engine::editor::EditorComponentManager::RenderUIComponent(const ComPtr<ID3D
 				{
 					auto material = ui->GetMaterial();
 
-					if (material)
+					if (material && material->GetShader())
 					{
 						material->SetMatrix("g_ViewMatrix", viewMat);
 						material->SetMatrix("g_ProjMatrix", projMat);
@@ -255,6 +265,11 @@ void engine::editor::EditorComponentManager::AddComponent(const SharedPtr<Compon
 		m_Colliders.push_back(collider);
 	}
 
+	else if (auto light = std::dynamic_pointer_cast<Light>(component))
+	{
+		m_Lights.push_back(light);
+	}
+
 	else
 	{
 		m_Components.push_back(component);
@@ -294,6 +309,41 @@ void engine::editor::EditorComponentManager::OnSortingChanged(const SharedPtr<UI
 
 		m_TextUIMap[newSort].push_back(ui);
 	}
+}
+
+void engine::editor::EditorComponentManager::RenderSkySphere(const ComPtr<ID3D11DeviceContext>& context)
+{
+	if (!m_MainCamera.lock())
+	{
+		return;
+	}
+
+	ComPtr<ID3D11DepthStencilState> prevState;
+	UINT ref;
+
+	auto skySphere = RenderManager::GetInstance().GetSkySphere();
+
+	context->OMGetDepthStencilState(prevState.ReleaseAndGetAddressOf(), &ref);
+
+	D3D11Manager::GetInstance().SetDepthNoWrite();
+
+	Vector3 camPos = m_MainCamera.lock()->GetTransform()->Position();
+
+	// SkySphere
+	_float3 sunDir{};
+
+	for (auto light : m_Lights)
+	{
+		if (light->GetType() == LightType_Directional)
+		{
+			_float4 dir = light->GetLightDesc().Dir;
+			sunDir = { dir.x, dir.y, dir.z };
+		}
+	}
+
+	skySphere->Render(context, m_ViewMat, m_ProjMat, camPos, sunDir);
+
+	context->OMSetDepthStencilState(prevState.Get(), ref);
 }
 
 
@@ -417,4 +467,5 @@ void engine::editor::EditorComponentManager::Release()
 	m_Renderers.clear();
 	m_Cameras.clear();
 	m_Components.clear();
+	m_Lights.clear();
 }

@@ -55,6 +55,8 @@ namespace engine
 
             void OnSortingChanged(const SharedPtr<UI>& ui, _int oldSort, _int newSort, _bool isText);
 
+            void RenderSkySphere(const ComPtr<ID3D11DeviceContext>& context);
+
             //template <typename T>
             //SharedPtr<T> CreateComponent(const SharedPtr<GameObject>& owner)
             //{
@@ -95,6 +97,8 @@ namespace engine
             Cameras 			m_Cameras;
 
             Colliders           m_Colliders;
+
+            std::vector<SharedPtr<Light>> m_Lights;
 
             WeakPtr<Camera> 	m_MainCamera;
 
