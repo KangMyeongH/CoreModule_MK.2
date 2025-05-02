@@ -1,6 +1,7 @@
 #include "DebugRenderManager.h"
 
 #include "BoxCollider.h"
+#include "CapsuleCollider.h"
 #include "Collider.h"
 #include "Material.h"
 #include "SphereCollider.h"
@@ -135,6 +136,57 @@ void engine::DebugRenderManager::RenderCollider(const std::vector<SharedPtr<Coll
 			}
 			break;
 			case ColliderType_Capsule:
+			{
+				using namespace DirectX;
+				auto capsuleCol = std::static_pointer_cast<CapsuleCollider>(col);
+				auto capsule = capsuleCol->GetCapsule();
+				_float axialScale = (capsule.HalfHeight + capsule.Radius) / 2.f;
+				_float radialScale = capsule.Radius;
+
+				_matrix S = XMMatrixScaling(radialScale, axialScale, radialScale);
+
+					_vector up = XMVectorSet(0.f, 1.f, 0.f, 0.f);
+					_vector axisW = capsule.AxisW.ToVector();
+					_vector qRot = XMQuaternionRotationNormal(XMVector3Cross(up, axisW),
+						XMVectorGetX(XMVector3AngleBetweenVectors(up, axisW)));
+
+					_matrix R = XMMatrixRotationQuaternion(qRot);
+					_matrix T = XMMatrixTranslationFromVector(capsule.CenterW.ToVector());
+
+					_matrix worldMat = S * R * T;
+
+					_float4 color{};
+
+					if (col->IsHit())
+					{
+						color = { 1.f, 0.f, 0.f, 1.f };
+					}
+
+					else if (col->IsBoardHit())
+					{
+						color = { 0.f, 0.f, 1.f, 1.f };
+					}
+
+					else
+					{
+						color = { 0.f, 1.f, 0.f, 1.f };
+					}
+
+					m_ColliderMaterial->SetFloat4("g_Color", color);
+					m_ColliderMaterial->SetMatrix("g_ViewMatrix", viewMat);
+					m_ColliderMaterial->SetMatrix("g_ProjMatrix", projMat);
+					m_ColliderMaterial->SetMatrix("g_WorldMatrix", worldMat);
+					m_ColliderMaterial->Bind(context.Get());
+
+					ID3D11Buffer* vb = m_CapsuleVB.Get();
+
+					D3D11_BUFFER_DESC bd{};
+					vb->GetDesc(&bd);
+					UINT stride = sizeof(DebugVertex), offset = 0;
+					context->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_LINELIST);
+					context->IASetVertexBuffers(0, 1, &vb, &stride, &offset);
+					context->Draw(bd.ByteWidth / stride, 0);
+			}
 				break;
 			case ColliderType_Mesh:
 				break;
@@ -294,96 +346,95 @@ HRESULT engine::DebugRenderManager::createSphereWireframe(const ComPtr<ID3D11Dev
 
 HRESULT engine::DebugRenderManager::createCapsuleWireframe(const ComPtr<ID3D11Device>& device)
 {
-	std::vector<DebugVertex> vb;
-	std::vector<_ushort> ib;
+	using namespace DirectX;
+	std::vector<DebugVertex> 	vb;
+	std::vector<_ushort> 		ib;
+	const float angStep = XM_2PI / 16.f;
+	const int hemiSeg = 16 / 2;
+	const float hemiStep = XM_PIDIV2 / hemiSeg;
+	const float yTop = 1.0f;
+	const float yCap = 1.f + 1.f;
 
-	const int segments = 16;
-	const float radius = 0.5f;
-	const float halfHeight = 1.0f;
+	auto push = [&](const XMFLOAT3& a, const XMFLOAT3& b)
+		{ vb.push_back({ a }); vb.push_back({ b }); };
 
-	for (int i = 0; i < segments; ++i)
+	for (int i = 0; i < 16; ++i)
 	{
-		float angle = DirectX::XM_2PI * i / segments;
-		float x = cosf(angle) * radius;
-		float z = sinf(angle) * radius;
+		float a0 = i * angStep;
+		float a1 = (i + 1) * angStep;
 
-		DirectX::XMFLOAT3 bottom = { x, -halfHeight, z };
-		DirectX::XMFLOAT3 top = { x, +halfHeight, z };
+		// XZ 평면 방향 벡터
+		XMFLOAT3 dir0 = { cosf(a0), 0.f, sinf(a0) };
+		XMFLOAT3 dir1 = { cosf(a1), 0.f, sinf(a1) };
 
-		vb.push_back({ bottom });
-		vb.push_back({ top });
+		// ── 1) 원통 상·하 링 ──────────────────────────────────────────────
+		push({ dir0.x,  1.f, dir0.z }, { dir1.x,  1.f, dir1.z });
+		push({ dir0.x, -1.f, dir0.z }, { dir1.x, -1.f, dir1.z });
 
-		_ushort base = static_cast<_ushort>(vb.size()) - 2;
-		ib.push_back(base);
-		ib.push_back(base + 1);
+		// ── 2) 세로 라인 (원통+반구 경계까지) ────────────────────────────
+		push({ dir0.x,  1.f, dir0.z }, { dir0.x, -1.f, dir0.z });
+
+		// ── 3) 반구 세로 아크 (상·하) ───────────────────────────────────
+		for (int h = 0; h < hemiSeg; ++h)
+		{
+			float p0 = h * hemiStep;
+			float p1 = (h + 1) * hemiStep;
+
+			// 상반구 (y ≥ 1)
+			XMFLOAT3 s0 = { dir0.x * sinf(p0),  1.f + cosf(p0), dir0.z * sinf(p0) };
+			XMFLOAT3 s1 = { dir0.x * sinf(p1),  1.f + cosf(p1), dir0.z * sinf(p1) };
+			push(s0, s1);
+
+			// 하반구 (y ≤ -1)  -y 대칭
+			s0.y = -s0.y;  s1.y = -s1.y;
+			push(s0, s1);
+		}
 	}
 
-	_ushort topStart = static_cast<_ushort>(vb.size());
-	for (int i = 0; i < segments; ++i)
-	{
-		float angle = DirectX::XM_2PI * i / segments;
-		float x = cosf(angle) * radius;
-		float z = sinf(angle) * radius;
-		vb.push_back({ { x, +halfHeight, z } });
-	}
 
-	for (int i = 0; i < segments; ++i)
-	{
-		_ushort a = topStart + i;
-		_ushort b = topStart + ((i + 1) % segments);
-		ib.push_back(a);
-		ib.push_back(b);
-	}
+	D3D11_BUFFER_DESC bd{};
+	bd.ByteWidth = static_cast<UINT>(vb.size() * sizeof(DebugVertex));
+	bd.Usage = D3D11_USAGE_IMMUTABLE;
+	bd.BindFlags = D3D11_BIND_VERTEX_BUFFER;
 
-	_ushort bottomStart = static_cast<_ushort>(vb.size());
-	for (int i = 0; i < segments; ++i)
-	{
-		float angle = DirectX::XM_2PI * i / segments;
-		float x = cosf(angle) * radius;
-		float z = sinf(angle) * radius;
-		vb.push_back({ { x, -halfHeight, z } });
-	}
+	D3D11_SUBRESOURCE_DATA sd{ vb.data(), 0, 0 };
+	ComPtr<ID3D11Buffer> vertexBuffer;
+	device->CreateBuffer(&bd, &sd, vertexBuffer.GetAddressOf());
+	m_CapsuleVB = vertexBuffer;
 
-	for (int i = 0; i < segments; ++i)
-	{
-		_ushort a = bottomStart + i;
-		_ushort b = bottomStart + ((i + 1) % segments);
-		ib.push_back(a);
-		ib.push_back(b);
-	}
+	//auto viBuffer = std::make_shared<VIBuffer>();
+	//viBuffer->NumVertexBuffers = 1;
+	//viBuffer->VertexStride = sizeof(DebugVertex);
+	//viBuffer->NumVertices = static_cast<UINT>(vb.size());
+	//viBuffer->IndexStride = sizeof(_ushort);
+	//viBuffer->NumIndices = static_cast<UINT>(ib.size());
+	//viBuffer->IndexFormat = DXGI_FORMAT_R16_UINT;
+	//viBuffer->PrimitiveTopology = D3D11_PRIMITIVE_TOPOLOGY_LINELIST;
 
-	auto viBuffer = std::make_shared<VIBuffer>();
-	viBuffer->NumVertexBuffers = 1;
-	viBuffer->VertexStride = sizeof(DebugVertex);
-	viBuffer->NumVertices = static_cast<UINT>(vb.size());
-	viBuffer->IndexStride = sizeof(_ushort);
-	viBuffer->NumIndices = static_cast<UINT>(ib.size());
-	viBuffer->IndexFormat = DXGI_FORMAT_R16_UINT;
-	viBuffer->PrimitiveTopology = D3D11_PRIMITIVE_TOPOLOGY_LINELIST;
+	//// VertexBuffer
+	//D3D11_BUFFER_DESC vbd{};
+	//vbd.Usage = D3D11_USAGE_DEFAULT;
+	//vbd.ByteWidth = viBuffer->VertexStride * viBuffer->NumVertices;
+	//vbd.BindFlags = D3D11_BIND_VERTEX_BUFFER;
+	//vbd.StructureByteStride = viBuffer->VertexStride;
 
-	// VertexBuffer
-	D3D11_BUFFER_DESC vbd{};
-	vbd.Usage = D3D11_USAGE_DEFAULT;
-	vbd.ByteWidth = viBuffer->VertexStride * viBuffer->NumVertices;
-	vbd.BindFlags = D3D11_BIND_VERTEX_BUFFER;
-	vbd.StructureByteStride = viBuffer->VertexStride;
+	//D3D11_SUBRESOURCE_DATA vbData{ vb.data() };
+	//HRESULT hr = device->CreateBuffer(&vbd, &vbData, viBuffer->VertexBuffer.GetAddressOf());
+	//if (FAILED(hr)) return hr;
 
-	D3D11_SUBRESOURCE_DATA vbData{ vb.data() };
-	HRESULT hr = device->CreateBuffer(&vbd, &vbData, viBuffer->VertexBuffer.GetAddressOf());
-	if (FAILED(hr)) return hr;
+	//// IndexBuffer
+	//D3D11_BUFFER_DESC ibd{};
+	//ibd.Usage = D3D11_USAGE_DEFAULT;
+	//ibd.ByteWidth = viBuffer->IndexStride * viBuffer->NumIndices;
+	//ibd.BindFlags = D3D11_BIND_INDEX_BUFFER;
+	//ibd.StructureByteStride = viBuffer->IndexStride;
 
-	// IndexBuffer
-	D3D11_BUFFER_DESC ibd{};
-	ibd.Usage = D3D11_USAGE_DEFAULT;
-	ibd.ByteWidth = viBuffer->IndexStride * viBuffer->NumIndices;
-	ibd.BindFlags = D3D11_BIND_INDEX_BUFFER;
-	ibd.StructureByteStride = viBuffer->IndexStride;
+	//D3D11_SUBRESOURCE_DATA ibData{ ib.data() };
+	//hr = device->CreateBuffer(&ibd, &ibData, viBuffer->IndexBuffer.GetAddressOf());
+	//if (FAILED(hr)) return hr;
 
-	D3D11_SUBRESOURCE_DATA ibData{ ib.data() };
-	hr = device->CreateBuffer(&ibd, &ibData, viBuffer->IndexBuffer.GetAddressOf());
-	if (FAILED(hr)) return hr;
-
-	m_CapsuleVIBuffer = viBuffer;
+	//m_CapsuleVIBuffer = viBuffer;
 
 	return S_OK;
+
 }

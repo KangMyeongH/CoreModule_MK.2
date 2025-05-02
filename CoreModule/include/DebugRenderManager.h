@@ -44,6 +44,7 @@ namespace engine
         SharedPtr<VIBuffer> m_BoxVIBuffer;
         SharedPtr<VIBuffer> m_SphereVIBuffer;
         SharedPtr<VIBuffer> m_CapsuleVIBuffer;
+        ComPtr<ID3D11Buffer> m_CapsuleVB;
         SharedPtr<Material> m_ColliderMaterial;
     };
 }

@@ -96,7 +96,10 @@ namespace engine
 
         // Box, Sphere, Capsule, Mesh
         _bool checkBoxBox(const SharedPtr<Collider>& a, const SharedPtr<Collider>& b, Contact& out);
-        _bool checkBoxCapsule(const SharedPtr<Collider>& a, const SharedPtr<Collider>& b, Contact& out);
+
+		_bool checkBoxCapsule(const SharedPtr<Collider>& a, const SharedPtr<Collider>& b, Contact& out);
+        _bool intersectCapsuleOBB(const Capsule& cap, const OBB& box, Contact& out);
+
         _bool checkBoxMesh(const SharedPtr<Collider>& a, const SharedPtr<Collider>& b, Contact& out);
         _bool checkBoxSphere(const SharedPtr<Collider>& a, const SharedPtr<Collider>& b, Contact& out);
         _bool checkCapsuleCapsule(const SharedPtr<Collider>& a, const SharedPtr<Collider>& b, Contact& out);

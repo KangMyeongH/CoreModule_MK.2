@@ -174,6 +174,14 @@ void engine::editor::EditorComponentManager::RenderUIComponent(const ComPtr<ID3D
 void engine::editor::EditorComponentManager::RenderCollider(const ComPtr<ID3D11DeviceContext>& context,
 	const _float4X4& viewMat, const _float4X4& projMat) const
 {
+	for (const auto& col : m_Colliders)
+	{
+		if (col->IsEnabled())
+		{
+			col->UpdateCollider();
+		}
+	}
+
 	DebugRenderManager::GetInstance().RenderCollider(m_Colliders, context, viewMat, projMat);
 }
 

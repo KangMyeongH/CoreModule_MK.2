@@ -20,6 +20,20 @@ namespace engine
     public:
         ColliderType GetColliderType() const override { return ColliderType_Capsule; }
 
+        Vector3 GetCenter() const { return m_Center; }
+        void SetCenter(const Vector3& center) { m_Center = center; }
+
+        _float GetRadius() const { return m_Radius; }
+        void SetRadius(const _float radius) { m_Radius = radius; }
+
+        _float GetHeight() const { return m_Height; }
+        void SetHeight(const _float height) { m_Height = height; }
+
+        _int GetDir() const { return m_Dir; }
+        void SetDir(const _int dir) { m_Dir = dir; }
+
+        Capsule GetCapsule() const { return m_Capsule; }
+
         //======================================//
         //				  method				//
         //======================================//
@@ -48,10 +62,6 @@ namespace engine
         Vector3 m_Center;
         _float  m_Radius;
         _float  m_Height;
-
-        // Debug Render
-        SharedPtr<Material> m_Material;
-        ComPtr<ID3D11Buffer> m_VertexBuffer;
-        std::vector<DebugVertex> m_Batch;
+        _int    m_Dir;
     };
 }

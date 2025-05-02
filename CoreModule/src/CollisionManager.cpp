@@ -1,6 +1,7 @@
 #include "CollisionManager.h"
 
 #include "BoxCollider.h"
+#include "CapsuleCollider.h"
 #include "Collider.h"
 #include "D3D11Manager.h"
 #include "DebugRenderManager.h"
@@ -415,7 +416,7 @@ engine::_bool engine::CollisionManager::checkCollider(const SharedPtr<Collider>&
 		switch (typeB)
 		{
 		case ColliderType_Box:
-			return checkBoxCapsule(b, a, out);
+			return checkBoxCapsule(a, b, out);
 		case ColliderType_Capsule:
 			return checkCapsuleCapsule(a, b, out);
 		case ColliderType_Mesh:
@@ -430,9 +431,9 @@ engine::_bool engine::CollisionManager::checkCollider(const SharedPtr<Collider>&
 		switch (typeB)
 		{
 		case ColliderType_Box:
-			return checkBoxMesh(b, a, out);
+			return checkBoxMesh(a, b, out);
 		case ColliderType_Capsule:
-			return checkCapsuleMesh(b, a, out);
+			return checkCapsuleMesh(a, b, out);
 		case ColliderType_Mesh:
 			return checkMeshMesh(a, b, out);
 		case ColliderType_Sphere:
@@ -445,11 +446,11 @@ engine::_bool engine::CollisionManager::checkCollider(const SharedPtr<Collider>&
 	{
 		switch (typeB) {
 		case ColliderType_Box:
-			return checkBoxSphere(b, a, out);
+			return checkBoxSphere(a, b, out);
 		case ColliderType_Capsule:
-			return checkCapsuleSphere(b, a, out);
+			return checkCapsuleSphere(a, b, out);
 		case ColliderType_Mesh:
-			return checkMeshSphere(b, a, out);
+			return checkMeshSphere(a, b, out);
 		case ColliderType_Sphere:
 			return checkSphereSphere(a, b, out);
 		}
@@ -464,7 +465,11 @@ engine::_bool engine::CollisionManager::checkBoxBox(const SharedPtr<Collider>& a
 {
 	using namespace DirectX;
 
-	const _float epsilon = 1e-5f;
+	const _float epsilon = 1e-6f;
+	const _float EDGE_BIAS = 1.05f;
+	const _float SAME_AXIS_EPS = 0.005f;
+	const _vector WORLD_UP = XMVectorSet(0.f, 1.f, 0.f, 0.f);
+
 
 	out.IsHit = false;
 
@@ -519,19 +524,60 @@ engine::_bool engine::CollisionManager::checkBoxBox(const SharedPtr<Collider>& a
 
 	_float minOverlap = FLT_MAX;
 	_int minType = -1;		// 0~2 : A축, 3~5 : B축, 6~14 : AXB 축
-	_int minIdxI = 0;	// 교차축용
-	_int minIdxJ = 0;	// 교차축용
+	_int minI = 0;	// 교차축용
+	_int minJ = 0;	// 교차축용
 	_int sign = 1;		// 노멀 방향
 
-	auto TestAxis = [&](_float overlap, _int type, _int i = 0, _int j = 0, _float s = 1.f)
+	_float faceOverlapMin = FLT_MAX;
+	_int faceAxis = -1;
+	_int faceSign = 1;
+
+	auto IsNearlyEq = [&](_float a, _float b) {return std::fabs(a - b) < SAME_AXIS_EPS; };
+
+	auto SaveAxis = [&](float overlap, int type, int i, int j, bool isFace)
 		{
-			if (overlap < minOverlap)
+			_vector axisCand = 	(type < 3) ? uA[type] :
+								(type < 6) ? uB[type - 3] :
+								XMVector3Cross(uA[i], uB[j]);
+
+			_float s = XMVectorGetX(XMVector3Dot(tV, axisCand));
+
+
+			bool prefer = false;
+
+			if (IsNearlyEq(overlap, minOverlap))
 			{
-				minOverlap = overlap;
-				minType = type;
-				minIdxI = i;
-				minIdxJ = j;
-				sign = (s >= 0.f) ? 1 : -1;
+				// tie break: 면축 우선, 또는 WORLD UP 기준 큰 축 우선
+				bool curFace = isFace;
+				bool prevFace = (minType < 6 ? true : false);
+				_vector axisCur = (type < 3) ? uA[type] :
+					(type < 6) ? uB[type - 3] :
+					XMVector3Cross(uA[i], uB[j]);
+
+				_vector axisPrev = (minType < 0) ? axisCur :    // 첫 저장
+					(minType < 3) ? uA[minType] :
+					(minType < 6) ? uB[minType - 3] :
+					XMVector3Cross(uA[minI], uB[minJ]);
+
+				if (curFace && !prevFace)                     prefer = true;
+				else if (curFace == prevFace)                 // 둘 다 face 또는 edge
+				{
+					float dotCur = std::fabs(XMVectorGetX(XMVector3Dot(axisCur, WORLD_UP)));
+					float dotPrev = std::fabs(XMVectorGetX(XMVector3Dot(axisPrev, WORLD_UP)));
+					if (dotCur > dotPrev + 0.2f)              prefer = true;
+				}
+			}
+			else if (overlap < minOverlap)                    prefer = true;
+
+			if (prefer)
+			{
+				minOverlap = overlap;  minType = type;
+				minI = i; minJ = j;  sign = (s >= 0.f) ? 1 : -1;
+			}
+
+			if (isFace && overlap < faceOverlapMin)
+			{
+				faceOverlapMin = overlap;  faceAxis = type;  faceSign = (s >= 0.f) ? 1 : -1;
 			}
 		};
 
@@ -545,11 +591,11 @@ engine::_bool engine::CollisionManager::checkBoxBox(const SharedPtr<Collider>& a
 		rb = hB[0] * absR[i][0] + hB[1] * absR[i][1] + hB[2] * absR[i][2];
 		proj = std::fabs(t[i]);
 		overlap = ra + rb - proj;
-		if (overlap < 0)
+		if (overlap < 0.f)
 		{
 			return false;
 		}
-		TestAxis(overlap, i, i, 0, (t[i] < 0.f) ? -1.f : 1.f);
+		SaveAxis(overlap, i, i, 0, true);
 	}
 
 	// B 축 3개
@@ -559,237 +605,232 @@ engine::_bool engine::CollisionManager::checkBoxBox(const SharedPtr<Collider>& a
 		rb = hB[j];
 		proj = std::fabs(t[0] * R[0][j] + t[1] * R[1][j] + t[2] * R[2][j]);
 		overlap = ra + rb - proj;
-		if (overlap < 0)
+		if (overlap < 0.f)
 		{
 			return false;
 		}
-		TestAxis(overlap, 3 + j, 0, j, ((t[0] * R[0][j] + t[1] * R[1][j] + t[2] * R[2][j]) < 0.f) ? -1.f : 1.f);
-	}
-
-#define EDGE_TEST(i, j, T0, T1, TaX, TaY, TbX, TbY)	 			\
-	ra = hA[T0] * absR[T1][j] + hA[T1] * absR[T0][j]; 			\
-	rb = hB[TbX] * absR[i][TbY] + hB[TbY] * absR[i][TbX]; 		\
-	proj = std::fabs(t[T0] * R[T1][j] - t[T1] * R[T0][j]); 		\
-	overlap = ra + rb - proj; 									\
-	if (overlap < 0) 											\
-	{															\
-		return false;											\
-	}															\
-	TestAxis(overlap, 6 + 3 * (i) + (j), i, j, ((t[T0] * R[T1][j] - t[T1] * R[T0][j]) < 0.f ? -1.f : 1.f));
-
-	// i=0
-	EDGE_TEST(0, 0, 1, 2, 1, 2, 1, 2);
-	EDGE_TEST(0, 1, 1, 2, 1, 2, 0, 2);
-	EDGE_TEST(0, 2, 1, 2, 1, 2, 0, 1);
-	// i=1
-	EDGE_TEST(1, 0, 0, 2, 0, 2, 1, 2);
-	EDGE_TEST(1, 1, 0, 2, 0, 2, 0, 2);
-	EDGE_TEST(1, 2, 0, 2, 0, 2, 0, 1);
-	// i=2
-	EDGE_TEST(2, 0, 0, 1, 0, 1, 1, 2);
-	EDGE_TEST(2, 1, 0, 1, 0, 1, 0, 2);
-	EDGE_TEST(2, 2, 0, 1, 0, 1, 0, 1);
-
-#undef EDGE_TEST
-
-	out.IsHit = true;
-	out.Penetration = minOverlap;
-
-	_vector n;
-
-	if (minType < 3)
-	{
-		n = uA[minType] * static_cast<_float>(sign);
-	}
-
-	else if (minType < 6)
-	{
-		n = uB[minType - 3] * static_cast<_float>(sign);
-	}
-
-	else
-	{
-		n = XMVector3Cross(uA[minIdxI], uB[minIdxJ]);
-		n = XMVector3Normalize(n) * static_cast<_float>(sign);
-	}
-
-	out.Normal = n;
-
-	_vector contactA = cA + XMVectorScale(n, hA[0]);
-	_vector contactB = contactA - XMVectorScale(n, out.Penetration);
-	out.PointA = contactA;
-	out.PointB = contactB;
-
-	//// 9개 축
-	//ra = hA[1] * absR[2][0] + hA[2] * absR[1][0];
-	//rb = hB[1] * absR[0][2] + hB[2] * absR[0][1];
-	//if (std::fabs(t[2] * R[1][0] - t[1] * R[2][0]) > ra + rb)
-	//{
-	//	return false;
-	//}
-
-	//ra = hA[1] * absR[2][1] + hA[2] * absR[1][1];
-	//rb = hB[0] * absR[0][2] + hB[2] * absR[0][0];
-	//if (std::fabs(t[2] * R[1][1] - t[1] * R[2][1]) > ra + rb)
-	//{
-	//	return false;
-	//}
-
-	//ra = hA[1] * absR[2][2] + hA[2] * absR[1][2];
-	//rb = hB[0] * absR[0][1] + hB[1] * absR[0][0];
-	//if (std::fabs(t[2] * R[1][2] - t[1] * R[2][2]) > ra + rb)
-	//{
-	//	return false;
-	//}
-
-	//ra = hA[0] * absR[2][0] + hA[2] * absR[0][0];
-	//rb = hB[1] * absR[1][2] + hB[2] * absR[1][1];
-	//if (std::fabs(t[0] * R[2][0] - t[2] * R[0][0]) > ra + rb)
-	//{
-	//	return false;
-	//}
-
-	//ra = hA[0] * absR[2][1] + hA[2] * absR[0][1];
-	//rb = hB[0] * absR[1][2] + hB[2] * absR[1][0];
-	//if (std::fabs(t[0] * R[2][1] - t[2] * R[0][1]) > ra + rb) 
-	//{
-	//	return false;
-	//}
-
-	//ra = hA[0] * absR[2][2] + hA[2] * absR[0][2];
-	//rb = hB[0] * absR[1][1] + hB[1] * absR[1][0];
-	//if (std::fabs(t[0] * R[2][2] - t[2] * R[0][2]) > ra + rb) 
-	//{
-	//	return false;
-	//}
-
-	//ra = hA[0] * absR[1][0] + hA[1] * absR[0][0];
-	//rb = hB[1] * absR[2][2] + hB[2] * absR[2][1];
-	//if (std::fabs(t[1] * R[0][0] - t[0] * R[1][0]) > ra + rb)
-	//{
-	//	return false;
-	//}
-
-	//ra = hA[0] * absR[1][1] + hA[1] * absR[0][1];
-	//rb = hB[0] * absR[2][2] + hB[2] * absR[2][0];
-	//if (std::fabs(t[1] * R[0][1] - t[0] * R[1][1]) > ra + rb)
-	//{
-	//	return false;
-	//}
-
-	//ra = hA[0] * absR[1][2] + hA[1] * absR[0][2];
-	//rb = hB[0] * absR[2][1] + hB[1] * absR[2][0];
-	//if (std::fabs(t[1] * R[0][2] - t[0] * R[1][2]) > ra + rb)
-	//{
-	//	return false;
-	//}
-
-	/*_float R[3][3], AbsR[3][3];
-	for (_int i = 0; i < 3; ++i)
-	{
-		Vector3 Ai = (i == 0 ? obbA.AxisX : (i == 1 ? obbA.AxisY : obbA.AxisZ));
-		for (int j = 0; j < 3; ++j)
-		{
-			Vector3 Bj = (j == 0 ? obbB.AxisX : (j == 1 ? obbB.AxisY : obbB.AxisZ));
-			R[i][j] = DirectX::XMVectorGetX(DirectX::XMVector3Dot(Ai.ToVector(), Bj.ToVector()));
-			AbsR[i][j] = fabs(R[i][j]) + 1e-6f;
-		}
-	}
-
-	Vector3 tV = obbB.Center - obbA.Center;
-	float t[3] = {
-		DirectX::XMVectorGetX(DirectX::XMVector3Dot(tV.ToVector(), obbA.AxisX.ToVector())),
-		DirectX::XMVectorGetX(DirectX::XMVector3Dot(tV.ToVector(), obbA.AxisY.ToVector())),
-		DirectX::XMVectorGetX(DirectX::XMVector3Dot(tV.ToVector(), obbA.AxisZ.ToVector()))
-	};
-
-	_float minPen = FLT_MAX;
-	Vector3 bestAxis = Vector3::Zero();
-
-	auto TestAxis = [&](const _float dist, const _float ra, const _float rb, const Vector3 axis)
-		{
-			const _float overlap = ra + rb - fabsf(dist);
-
-			if (overlap < 0.f)
-			{
-				return false;
-			}
-
-			if (overlap < minPen)
-			{
-				minPen = overlap;
-				bestAxis = axis;
-				if (dist < 0.f)
-				{
-					bestAxis = -bestAxis;
-				}
-			}
-
-			return true;
-		};
-
-	Vector3 aExt = obbA.Extents;
-	Vector3 bExt = obbB.Extents;
-
-	for (_int i = 0; i < 3; ++i)
-	{
-		_float ra = (&aExt.Value.x)[i];
-		_float rb = bExt.Value.x * AbsR[i][0] + bExt.Value.y * AbsR[i][1] + bExt.Value.z * AbsR[i][2];
-
-		if (!TestAxis(t[i], ra, rb, (i == 0 ? obbA.AxisX : (i == 1 ? obbA.AxisY : obbA.AxisZ))))
-		{
-			return false;
-		}
-	}
-
-	for (int j = 0; j < 3; ++j)
-	{
-		_float ra = aExt.Value.x * AbsR[0][j] + aExt.Value.y * AbsR[1][j] + aExt.Value.z * AbsR[2][j];
-		_float rb = (&bExt.Value.x)[j];
-		_float dist = t[0] * R[0][j] + t[1] * R[1][j] + t[2] * R[2][j];
-
-		if (!TestAxis(dist, ra, rb, (j == 0 ? obbB.AxisX : (j == 1 ? obbB.AxisY : obbB.AxisZ))))
-		{
-			return false;
-		}
+		SaveAxis(overlap, 3 + j, 0, j, true);
 	}
 
 	for (int i = 0; i < 3; ++i)
 	{
-		Vector3 Ai = (i == 0 ? obbA.AxisX : (i == 1 ? obbA.AxisY : obbA.AxisZ));
+		int ia = (i + 1) % 3, ib = (i + 2) % 3;
 		for (int j = 0; j < 3; ++j)
 		{
-			Vector3 Bj = (j == 0 ? obbB.AxisX : (j == 1 ? obbB.AxisY : obbB.AxisZ));
-			_vector axis = DirectX::XMVector3Cross(Ai.ToVector(), Bj.ToVector());
+			float parallel = std::fabs(R[i][j]);      
+			if (parallel > 0.95f)  continue;          
 
-			if (DirectX::XMVectorGetX(DirectX::XMVector3LengthSq(axis)) < 1e-6f)
-			{
-				continue;
-			}
+			_vector cross = XMVector3Cross(uA[i], uB[j]);
+			if (XMVectorGetX(XMVector3LengthSq(cross)) < 1e-6f) continue;
 
-			_float ra = aExt.Value.y * AbsR[(i + 1) % 3][j] + aExt.Value.z * AbsR[(i + 2) % 3][j];
-			_float rb = bExt.Value.y * AbsR[i][(j + 2) % 3] + bExt.Value.z * AbsR[i][(j + 1) % 3];
-			_float dist = fabsf( t[(i + 2) % 3] * R[(i + 1) % 3][j] - t[(i + 1) % 3] * R[(i + 2) % 3][j]);
-			if (!TestAxis(dist, ra, rb, Vector3::FromVector(DirectX::XMVector3Normalize(axis))))
-			{
-				return false;
-			}
+			//_vector cross = XMVector3Cross(uA[i], uB[j]);
+			//if (XMVectorGetX(XMVector3LengthSq(cross)) < 1e-8f) continue; // 거의 평행
+
+			int ja = (j + 1) % 3, jb = (j + 2) % 3;
+
+			ra = hA[ia] * absR[ib][j] + hA[ib] * absR[ia][j];
+			rb = hB[ja] * absR[i][jb] + hB[jb] * absR[i][ja];
+			proj = std::fabs(t[ib] * R[ia][j] - t[ia] * R[ib][j]);
+			overlap = ra + rb - proj;
+			if (overlap < 0.f) return false;
+
+			float s = (t[ib] * R[ia][j] - t[ia] * R[ib][j]);
+			SaveAxis(overlap, 6 + 3 * i + j, i, j, false);
 		}
 	}
 
-	outPenetration = minPen;
-	outNormal = bestAxis;*/
+	if (minType >= 6 && faceAxis >= 0 && faceOverlapMin < minOverlap * EDGE_BIAS)
+	{
+		minType = faceAxis;
+		minOverlap = faceOverlapMin;
+		sign = faceSign;
+	}
+
+	// Normal 계산
+	_vector n;
+	if (minType < 3)
+	{
+		n = XMVectorScale(uA[minType], static_cast<float>(sign));
+	}
+
+	else if (minType < 6)
+	{
+		n = XMVectorScale(uB[minType - 3], static_cast<float>(sign));
+	}
+
+	else
+	{
+		n = XMVector3Cross(uA[minI], uB[minJ]);
+		n = XMVector3Normalize(n) * static_cast<float>(sign);
+		// 평행 예외, face축으로 이미 교체됨
+	}
+
+	if (XMVectorGetX(XMVector3Dot(tV, n)) < 0.0f)
+	{
+		n = -n;
+		sign = -sign;
+	}
+
+	auto rigidA = a->GetGameObject().lock()->GetComponent<Rigidbody>();
+	auto rigidB = b->GetGameObject().lock()->GetComponent<Rigidbody>();
+
+	if (rigidA && rigidB)
+	{
+		_vector relVel = (rigidB->Velocity() - rigidA->Velocity()).ToVector();
+		if (XMVectorGetX(XMVector3Dot(relVel, n)) > 0.f) n = -n;
+	}
+
+	// (선택) 상대속도로 노멀 방향 확인
+/* if (RigidBody 정보가 있다면
+_vector relVel = XMLoadFloat3(&bBody.velocity) - XMLoadFloat3(&aBody.velocity);
+if (XMVectorGetX(XMVector3Dot(relVel, n)) > 0.f) n = -n;
+*/
+
+	float depthOnA =
+		std::fabs(XMVectorGetX(XMVector3Dot(n, uA[0]))) * hA[0] +
+		std::fabs(XMVectorGetX(XMVector3Dot(n, uA[1]))) * hA[1] +
+		std::fabs(XMVectorGetX(XMVector3Dot(n, uA[2]))) * hA[2];
+
+	_vector contactA = cA + XMVectorScale(n, depthOnA);
+	_vector contactB = contactA - XMVectorScale(n, minOverlap);
+
+	out.IsHit = true;
+	out.Penetration = minOverlap;
+	out.Normal = n;
+	out.PointA = contactA;
+	out.PointB = contactB;
 
 	return true;
 }
 
 engine::_bool engine::CollisionManager::checkBoxCapsule(const SharedPtr<Collider>& a, const SharedPtr<Collider>& b, Contact& out)
 {
+	using namespace DirectX;
+
+	const auto typeA = a->GetColliderType();
+	const auto typeB = b->GetColliderType();
+
+	if (typeA == ColliderType_Capsule && typeB == ColliderType_Box)
+	{
+		Capsule cap = std::static_pointer_cast<CapsuleCollider>(a)->GetCapsule();
+		OBB obb = std::static_pointer_cast<BoxCollider>(b)->GetOBB();
+
+		return intersectCapsuleOBB(cap, obb, out);
+	}
+
+	else if (typeA == ColliderType_Box && typeB == ColliderType_Capsule)
+	{
+		Capsule cap = std::static_pointer_cast<CapsuleCollider>(b)->GetCapsule();
+		OBB obb = std::static_pointer_cast<BoxCollider>(a)->GetOBB();
+		_bool hit = intersectCapsuleOBB(cap, obb, out);
+		if (!hit)
+		{
+			return false;
+		}
+
+		out.Normal.Value.x *= -1.f;
+		out.Normal.Value.y *= -1.f;
+		out.Normal.Value.z *= -1.f;
+		std::swap(out.PointA, out.PointB);
+		return true;
+	}
+
+	return false;
+}
+
+engine::_bool engine::CollisionManager::intersectCapsuleOBB(const Capsule& cap, const OBB& box, Contact& out)
+{
+	using namespace DirectX;
+	out.IsHit = false;
+
+	_matrix Rbox = XMMatrixSet(
+		box.AxisX.Value.x, box.AxisX.Value.y, box.AxisX.Value.z, 0,
+		box.AxisY.Value.x, box.AxisY.Value.y, box.AxisY.Value.z, 0,
+		box.AxisZ.Value.x, box.AxisZ.Value.y, box.AxisZ.Value.z, 0,
+		0, 0, 0, 1);
+	_matrix Tbox = XMMatrixTranslation(-box.Center.Value.x, -box.Center.Value.y, -box.Center.Value.z);
+	_matrix toLocal = Tbox * XMMatrixTranspose(Rbox);
+
+	_vector P0 = XMVector3Transform(cap.P0W.ToVector(), toLocal);
+	_vector P1 = XMVector3Transform(cap.P1W.ToVector(), toLocal);
+
+	const Vector3 h = box.Extents;
+	auto clamp = [&](float v, float lo, float hi) { return (v < lo) ? lo : (v > hi) ? hi : v; };
+
+	_vector d = P1 - P0;
+
+	_float tMin = 0.f, tMax = 1.f;
+	for (_int axis = 0; axis < 3; ++axis)
+	{
+		_float p = XMVectorGetByIndex(d, axis);
+		_float p0 = XMVectorGetByIndex(P0, axis);
+		if (std::fabs(p) < 1e-8f)
+		{
+			if (p0 < -(&h.Value.x)[axis] || p0 > (&h.Value.x)[axis])
+			{
+				return false;
+			}
+
+			else continue;
+		}
+		_float inv = 1.f / p;
+		_float t1 = (-(&h.Value.x)[axis] - p0) * inv;
+		_float t2 = ((&h.Value.x)[axis] - p0) * inv;
+		if (t1 > t2)
+		{
+			std::swap(t1, t2);
+		}
+		tMin = std::max(tMin, t1);
+		tMax = std::min(tMax, t2);
+		if (tMin > tMax)
+		{
+			return false;
+		}
+	}
+
+	_float tClamp = clamp((tMin > 0) ? tMin : (tMax < 1) ? tMax : 0, 0.f, 1.f);
+	_vector S = P0 + d * tClamp;
+
+	_float3 sL; XMStoreFloat3(&sL, S);
+	_float3 qL = { clamp(sL.x, -h.Value.x, h.Value.x), clamp(sL.y, -h.Value.y, h.Value.y), clamp(sL.z, -h.Value.z, h.Value.z) };
+	_vector Q = XMLoadFloat3(&qL);
+
+	_vector diff = S - Q;
+	_float dist2 = XMVectorGetX(XMVector3LengthSq(diff));
+	if (dist2 > cap.Radius * cap.Radius)
+	{
+		return false;
+	}
+
+	_float dist = std::sqrt(dist2);
+	_float overlap = cap.Radius - dist;
+
+	_vector normalL;
+	if (dist > 1e-6f)
+	{
+		normalL = diff / dist;
+	}
+
+	else
+	{
+		normalL = XMVectorSet(0.f, 1.f, 0.f, 0.f);
+	}
+
+	_vector normalW = XMVector3TransformNormal(normalL, Rbox);
+
+	_vector pointB_W = XMVector3TransformCoord(S, XMMatrixInverse(nullptr, toLocal));
+	_vector pointA_W = pointB_W - normalW * overlap;
+
+	out.IsHit = true;
+	out.Penetration = overlap;
+	out.Normal = normalW;
+	out.PointA = pointA_W;
+	out.PointB = pointB_W;
 	return true;
 }
 
 engine::_bool engine::CollisionManager::checkBoxMesh(const SharedPtr<Collider>& a, const SharedPtr<Collider>& b,
-	Contact& out)
+                                                     Contact& out)
 {
 	return true;
 }
@@ -854,9 +895,10 @@ void engine::CollisionManager::resolvePenetration(const SharedPtr<Rigidbody>& a,
 	}
 
 	_float correction = std::max(c.Penetration - slop, 0.f) * percent / totalInv;
-
+	//_float correction = c.Penetration;
 	Vector3 corr = c.Normal * correction;
 	std::cerr << "penetration : " << c.Penetration << "\n";
+	std::cerr << "Normal :  X : " << c.Normal.Value.x << ", Y : " << c.Normal.Value.y << ", Z : " << c.Normal.Value.z << "\n";
 	std::cerr << "X : " << corr.Value.x << ", Y : " << corr.Value.y << ", Z : " << corr.Value.z << "\n";
 
 	a->GetTransform()->Translate(-(corr * invMassA));

@@ -833,12 +833,11 @@ namespace engine
 
 	struct Capsule
 	{
-		Vector3 Center;
-		Vector3 Direction;
-		Vector3 TopCenter;
-		Vector3 BottomCenter;
-		_float Radius = 0.5f;
-		_float Height = 2.f;
+		Vector3 CenterW;
+		Vector3 AxisW;
+		Vector3 P0W, P1W;
+		_float HalfHeight;
+		_float Radius;
 	};
 
 	struct BVHNode
