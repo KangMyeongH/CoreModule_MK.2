@@ -377,6 +377,25 @@ void engine::editor::EditorComponentManager::FlushDestroyComponent()
 		}
 	}
 
+	for (auto it = m_Colliders.begin(); it != m_Colliders.end();)
+	{
+		const auto collider = *it;
+		if(collider->IsDestroyed())
+		{
+			if (const auto owner = (*it)->GetGameObject().lock())
+			{
+				owner->RemoveComponent(*it);
+			}
+
+			it = m_Colliders.erase(it);
+		}
+
+		else
+		{
+			++it;
+		}
+	}
+
 	for (auto& pair : m_UIMap)
 	{
 		for (auto it = pair.second.begin(); it != pair.second.end();)

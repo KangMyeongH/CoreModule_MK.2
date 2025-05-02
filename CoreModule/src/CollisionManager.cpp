@@ -269,7 +269,6 @@ void engine::CollisionManager::narrowPhase(
 		//Vector3 normal;
 		//_float penetration;
 
-		// 충돌 검사 일단은 BoxCollider끼리만
 		if (checkCollider(a, b, contact))
 		{
 			std::pair<SharedPtr<Collider>, SharedPtr<Collider>> key(a, b);
@@ -714,8 +713,17 @@ engine::_bool engine::CollisionManager::checkBoxCapsule(const SharedPtr<Collider
 	{
 		Capsule cap = std::static_pointer_cast<CapsuleCollider>(a)->GetCapsule();
 		OBB obb = std::static_pointer_cast<BoxCollider>(b)->GetOBB();
+		_bool hit = intersectCapsuleOBB(cap, obb, out);
+		if (!hit)
+		{
+			return false;
+		}
+		out.Normal.Value.x *= -1.f;
+		out.Normal.Value.y *= -1.f;
+		out.Normal.Value.z *= -1.f;
+		std::swap(out.PointA, out.PointB);
 
-		return intersectCapsuleOBB(cap, obb, out);
+		return true;
 	}
 
 	else if (typeA == ColliderType_Box && typeB == ColliderType_Capsule)
@@ -727,11 +735,6 @@ engine::_bool engine::CollisionManager::checkBoxCapsule(const SharedPtr<Collider
 		{
 			return false;
 		}
-
-		out.Normal.Value.x *= -1.f;
-		out.Normal.Value.y *= -1.f;
-		out.Normal.Value.z *= -1.f;
-		std::swap(out.PointA, out.PointB);
 		return true;
 	}
 
@@ -742,84 +745,74 @@ engine::_bool engine::CollisionManager::intersectCapsuleOBB(const Capsule& cap, 
 {
 	using namespace DirectX;
 	out.IsHit = false;
-
-	_matrix Rbox = XMMatrixSet(
+	
+	_matrix R = XMMatrixSet(
 		box.AxisX.Value.x, box.AxisX.Value.y, box.AxisX.Value.z, 0,
 		box.AxisY.Value.x, box.AxisY.Value.y, box.AxisY.Value.z, 0,
 		box.AxisZ.Value.x, box.AxisZ.Value.y, box.AxisZ.Value.z, 0,
 		0, 0, 0, 1);
-	_matrix Tbox = XMMatrixTranslation(-box.Center.Value.x, -box.Center.Value.y, -box.Center.Value.z);
-	_matrix toLocal = Tbox * XMMatrixTranspose(Rbox);
+	_matrix T = XMMatrixTranslation(-box.Center.Value.x, -box.Center.Value.y, -box.Center.Value.z);
+	_matrix toLocal = XMMatrixTranspose(R) * T;
+	_matrix toWorld = XMMatrixInverse(nullptr, toLocal);
 
-	_vector P0 = XMVector3Transform(cap.P0W.ToVector(), toLocal);
-	_vector P1 = XMVector3Transform(cap.P1W.ToVector(), toLocal);
+	_vector A = XMVector3Transform(cap.P0W.ToVector(), toLocal);
+	_vector B = XMVector3Transform(cap.P1W.ToVector(), toLocal);
+	_vector d = B - A;                                   // 방향
 
-	const Vector3 h = box.Extents;
-	auto clamp = [&](float v, float lo, float hi) { return (v < lo) ? lo : (v > hi) ? hi : v; };
+	const _float3 h = box.Extents.Value;                       // half extents (x,y,z)
 
-	_vector d = P1 - P0;
+	auto Clamp = [](_float v, _float lo, _float hi)
+		{ return (v < lo) ? lo : (v > hi) ? hi : v; };
 
-	_float tMin = 0.f, tMax = 1.f;
-	for (_int axis = 0; axis < 3; ++axis)
+	_float t = 0.f;
+	for (int axis = 0; axis < 3; ++axis)
 	{
-		_float p = XMVectorGetByIndex(d, axis);
-		_float p0 = XMVectorGetByIndex(P0, axis);
-		if (std::fabs(p) < 1e-8f)
-		{
-			if (p0 < -(&h.Value.x)[axis] || p0 > (&h.Value.x)[axis])
-			{
-				return false;
-			}
+		_float a = XMVectorGetByIndex(A, axis);
+		_float b = XMVectorGetByIndex(B, axis);
+		_float p = b - a;                               // d[axis]
+		_float lo = -(&h.x)[axis];
+		_float hi = (&h.x)[axis];
 
-			else continue;
-		}
-		_float inv = 1.f / p;
-		_float t1 = (-(&h.Value.x)[axis] - p0) * inv;
-		_float t2 = ((&h.Value.x)[axis] - p0) * inv;
-		if (t1 > t2)
-		{
-			std::swap(t1, t2);
-		}
-		tMin = std::max(tMin, t1);
-		tMax = std::min(tMax, t2);
-		if (tMin > tMax)
-		{
-			return false;
-		}
+		if (a < lo && p > 0)          // 밖 > 안
+			t = std::max(t, (lo - a) / p);
+		else if (a > hi && p < 0)     // 밖 > 안 (반대쪽)
+			t = std::max(t, (hi - a) / p);
 	}
+	t = Clamp(t, 0.f, 1.f);
 
-	_float tClamp = clamp((tMin > 0) ? tMin : (tMax < 1) ? tMax : 0, 0.f, 1.f);
-	_vector S = P0 + d * tClamp;
+	_vector S = A + d * t;
 
 	_float3 sL; XMStoreFloat3(&sL, S);
-	_float3 qL = { clamp(sL.x, -h.Value.x, h.Value.x), clamp(sL.y, -h.Value.y, h.Value.y), clamp(sL.z, -h.Value.z, h.Value.z) };
+	_float3 qL = { Clamp(sL.x,-h.x,h.x),
+				   Clamp(sL.y,-h.y,h.y),
+				   Clamp(sL.z,-h.z,h.z) };
 	_vector Q = XMLoadFloat3(&qL);
 
 	_vector diff = S - Q;
-	_float dist2 = XMVectorGetX(XMVector3LengthSq(diff));
-	if (dist2 > cap.Radius * cap.Radius)
-	{
-		return false;
-	}
+	_float  dist2 = XMVectorGetX(XMVector3LengthSq(diff));
+
+	if (dist2 > cap.Radius * cap.Radius) return false;   // 미충돌
 
 	_float dist = std::sqrt(dist2);
-	_float overlap = cap.Radius - dist;
+	_float overlap = cap.Radius - dist;                 // > 0
 
 	_vector normalL;
 	if (dist > 1e-6f)
-	{
 		normalL = diff / dist;
-	}
-
 	else
 	{
-		normalL = XMVectorSet(0.f, 1.f, 0.f, 0.f);
+		// 세로축 침투 등으로 dist=0 > 가장 깊은 방향으로
+		_float dx = std::max(0.f, std::fabs(sL.x) - h.x);
+		_float dy = std::max(0.f, std::fabs(sL.y) - h.y);
+		_float dz = std::max(0.f, std::fabs(sL.z) - h.z);
+		if (dx >= dy && dx >= dz) normalL = XMVectorSet((sL.x > 0) ? 1 : -1, 0, 0, 0);
+		else if (dy >= dz)        normalL = XMVectorSet(0, (sL.y > 0) ? 1 : -1, 0, 0);
+		else                      normalL = XMVectorSet(0, 0, (sL.z > 0) ? 1 : -1, 0);
 	}
+	_vector normalW = XMVector3TransformNormal(normalL, R);
 
-	_vector normalW = XMVector3TransformNormal(normalL, Rbox);
-
-	_vector pointB_W = XMVector3TransformCoord(S, XMMatrixInverse(nullptr, toLocal));
-	_vector pointA_W = pointB_W - normalW * overlap;
+	_vector pointB_W = XMVector3TransformCoord(S, toWorld);      // Capsule 면
+	_vector pointA_W = pointB_W - normalW * overlap;             // Box 면
 
 	out.IsHit = true;
 	out.Penetration = overlap;
@@ -832,49 +825,49 @@ engine::_bool engine::CollisionManager::intersectCapsuleOBB(const Capsule& cap, 
 engine::_bool engine::CollisionManager::checkBoxMesh(const SharedPtr<Collider>& a, const SharedPtr<Collider>& b,
                                                      Contact& out)
 {
-	return true;
+	return false;
 }
 
 engine::_bool engine::CollisionManager::checkBoxSphere(const SharedPtr<Collider>& a, const SharedPtr<Collider>& b,
 	Contact& out)
 {
-	return true;
+	return false;
 }
 
 engine::_bool engine::CollisionManager::checkCapsuleCapsule(const SharedPtr<Collider>& a, const SharedPtr<Collider>& b,
 	Contact& out)
 {
-	return true;
+	return false;
 }
 
 engine::_bool engine::CollisionManager::checkCapsuleMesh(const SharedPtr<Collider>& a, const SharedPtr<Collider>& b,
 	Contact& out)
 {
-	return true;
+	return false;
 }
 
 engine::_bool engine::CollisionManager::checkCapsuleSphere(const SharedPtr<Collider>& a, const SharedPtr<Collider>& b,
 	Contact& out)
 {
-	return true;
+	return false;
 }
 
 engine::_bool engine::CollisionManager::checkMeshMesh(const SharedPtr<Collider>& a, const SharedPtr<Collider>& b,
 	Contact& out)
 {
-	return true;
+	return false;
 }
 
 engine::_bool engine::CollisionManager::checkMeshSphere(const SharedPtr<Collider>& a, const SharedPtr<Collider>& b,
 	Contact& out)
 {
-	return true;
+	return false;
 }
 
 engine::_bool engine::CollisionManager::checkSphereSphere(const SharedPtr<Collider>& a, const SharedPtr<Collider>& b,
 	Contact& out)
 {
-	return true;
+	return false;
 }
 
 void engine::CollisionManager::resolvePenetration(const SharedPtr<Rigidbody>& a, const SharedPtr<Rigidbody>& b,
