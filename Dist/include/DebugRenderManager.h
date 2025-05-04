@@ -32,6 +32,8 @@ namespace engine
         HRESULT createOBBWireFrameVertices(const ComPtr<ID3D11Device>& device);
         HRESULT createSphereWireframe(const ComPtr<ID3D11Device>& device);
         HRESULT createCapsuleWireframe(const ComPtr<ID3D11Device>& device);
+        HRESULT createWireFrameRS(const ComPtr<ID3D11Device>& device);
+
 
         //======================================//
         //				 serialize				//
@@ -46,5 +48,6 @@ namespace engine
         SharedPtr<VIBuffer> m_CapsuleVIBuffer;
         ComPtr<ID3D11Buffer> m_CapsuleVB;
         SharedPtr<Material> m_ColliderMaterial;
+        ComPtr<ID3D11RasterizerState> m_WireFrameRS;
     };
 }

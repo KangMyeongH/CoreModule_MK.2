@@ -326,7 +326,7 @@ void engine::LoadManager::WriteModelDataToFile(const ModelData& model, const std
 	ofs.write(header, 4);
 
 	// Version
-	uint32_t version = 1;
+	uint32_t version = 2;
 	ofs.write(reinterpret_cast<const char*>(&version), sizeof(uint32_t));
 
 	WriteString(ofs, model.ModelName);
@@ -384,6 +384,16 @@ void engine::LoadManager::WriteModelDataToFile(const ModelData& model, const std
 				ofs.write(reinterpret_cast<const char*>(&bone.tx), sizeof(float) * 10); // tx~sz
 				ofs.write(reinterpret_cast<const char*>(bone.offsetMatrix), sizeof(float) * 16);
 			}
+		}
+
+		else if (!mesh.IsSkinned)
+		{
+			// ver 2.
+			uint32_t bvhNodeCount = static_cast<uint32_t>(mesh.BVHNodes.size());
+
+			ofs.write(reinterpret_cast<const char*>(&bvhNodeCount), sizeof(uint32_t));
+
+			ofs.write(reinterpret_cast<const char*>(mesh.BVHNodes.data()), sizeof(BVHNodeData) * bvhNodeCount);
 		}
 	}
 
@@ -515,7 +525,7 @@ engine::ModelData engine::LoadManager::ReadModelDataFromFile(const std::wstring&
 	uint32_t version = 0;
 	ifs.read(reinterpret_cast<char*>(&version), sizeof(uint32_t));
 
-	if (version != 1)
+	if (version > 2)
 	{
 		throw std::runtime_error("Unsupported model version: " + std::to_string(version));
 	}
@@ -705,6 +715,15 @@ engine::ModelData engine::LoadManager::ReadModelDataFromFile(const std::wstring&
 			}
 
 			mesh.VIBuffer = viBuffer;
+			// ver 2.
+			if (version > 1)
+			{
+				uint32_t bvhNodeCount;
+				ifs.read(reinterpret_cast<char*>(&bvhNodeCount), sizeof(uint32_t));
+
+				mesh.BVHNodes.resize(bvhNodeCount);
+				ifs.read(reinterpret_cast<char*>(mesh.BVHNodes.data()), sizeof(BVHNodeData)* bvhNodeCount);
+			}
 		}
 	}
 

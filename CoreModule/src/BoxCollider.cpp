@@ -93,64 +93,6 @@ engine::OBB engine::BoxCollider::calcWorldOBB()
 	obb.Center = centerW;
 	obb.Extents = Vector3(halfW);
 
-	//_vector axisX = worldMat.r[0];
-	//axisX = DirectX::XMVectorSetW(axisX, 0.f);
-	//_vector axisY = worldMat.r[1];
-	//axisY = DirectX::XMVectorSetW(axisY, 0.f);
-	//_vector axisZ = worldMat.r[2];
-	//axisZ = DirectX::XMVectorSetW(axisZ, 0.f);
-
-	//// 축별 스케일 길이 추출
-	//_float sx = DirectX::XMVectorGetX(DirectX::XMVector3Length(axisX));
-	//_float sy = DirectX::XMVectorGetX(DirectX::XMVector3Length(axisY));
-	//_float sz = DirectX::XMVectorGetX(DirectX::XMVector3Length(axisZ));
-
-
-	//// 단위 축으로 정규화
-	//const float kEps = 1e-6f;
-	//axisX = (sx > kEps) ? DirectX::XMVectorScale(axisX, 1.0f / sx) : DirectX::XMVectorZero();
-	//axisY = (sy > kEps) ? DirectX::XMVectorScale(axisY, 1.0f / sy) : DirectX::XMVectorZero();
-	//axisZ = (sz > kEps) ? DirectX::XMVectorScale(axisZ, 1.0f / sz) : DirectX::XMVectorZero();
-
-	//_matrix localCenterMat = DirectX::XMMatrixTranslationFromVector(m_Center.ToVector());
-	//_matrix worldCenterMat = localCenterMat * worldMat;
-	//_vector worldCenter =  XMVector3TransformCoord(DirectX::XMVectorZero(), worldCenterMat);
-	////_vector localCenter = DirectX::XMVectorSetW(m_Center.ToVector(), 1.f);
-
-	//obb.Center = worldCenter;      // 월드 공간 중심
-	//obb.AxisX = axisX;            // 단위 축 X
-	//obb.AxisY = axisY;            // 단위 축 Y
-	//obb.AxisZ = axisZ;            // 단위 축 Z
-
-	//obb.Extents.Value.x = m_Size.Value.x * sx * 0.5f;  // 반길이 = (로컬 크기 × 스케일) / 2
-	//obb.Extents.Value.y = m_Size.Value.y * sy * 0.5f;
-	//obb.Extents.Value.z = m_Size.Value.z * sz * 0.5f;
-
-	//_vector colX = DirectX::XMVectorSet(worldMat.r[0].m128_f32[0], worldMat.r[1].m128_f32[0], worldMat.r[2].m128_f32[0], 0.f); // _11, _21, _31
-	//_vector colY = DirectX::XMVectorSet(worldMat.r[0].m128_f32[1], worldMat.r[1].m128_f32[1], worldMat.r[2].m128_f32[1], 0.f); // _12, _22, _32
-	//_vector colZ = DirectX::XMVectorSet(worldMat.r[0].m128_f32[2], worldMat.r[1].m128_f32[2], worldMat.r[2].m128_f32[2], 0.f); // _13, _23, _33
-
-	//float sx = DirectX::XMVectorGetX(DirectX::XMVector3Length(colX));
-	//float sy = DirectX::XMVectorGetX(DirectX::XMVector3Length(colY));
-	//float sz = DirectX::XMVectorGetX(DirectX::XMVector3Length(colZ));
-
-	//_vector axisX = (sx > 1e-6f) ? DirectX::XMVectorScale(colX, 1.0f / sx) : DirectX::XMVectorZero();
-	//_vector axisY = (sy > 1e-6f) ? DirectX::XMVectorScale(colY, 1.0f / sy) : DirectX::XMVectorZero();
-	//_vector axisZ = (sz > 1e-6f) ? DirectX::XMVectorScale(colZ, 1.0f / sz) : DirectX::XMVectorZero();
-
-	//obb.AxisX = axisX;
-	//obb.AxisY = axisY;
-	//obb.AxisZ = axisZ;
-
-	//_vector center = m_Center.ToVector();
-	//_vector transformedCenter = XMVector3Transform(center, worldMat);
-	//// World 기준 Center 계산
-	//obb.Center = transformedCenter;
-
-	//obb.Extents.Value.x = m_Size.Value.x * sx * 0.5f;
-	//obb.Extents.Value.y = m_Size.Value.y * sy * 0.5f;
-	//obb.Extents.Value.z = m_Size.Value.z * sz * 0.5f;
-
 	m_OBB = obb;
 
 	return obb;

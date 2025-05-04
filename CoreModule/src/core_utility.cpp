@@ -139,76 +139,76 @@
 //	nodes[nodeIdx].Count = 0;            // interior
 //	nodes[nodeIdx].Right = rightOffset;  // right child index
 //}
-void engine::MeshCollider::Build(const std::vector<DirectX::XMFLOAT3>& verts, const std::vector<uint32_t>& idx)
-{
-    const uint32_t triCnt = static_cast<uint32_t>(idx.size() / 3);
-    mTris.resize(triCnt);
-    mLocal = AABB();
-
-    for (uint32_t i = 0; i < triCnt; ++i)
-    {
-        const DirectX::XMFLOAT3& v0 = verts[idx[i * 3 + 0]];
-        const DirectX::XMFLOAT3& v1 = verts[idx[i * 3 + 1]];
-        const DirectX::XMFLOAT3& v2 = verts[idx[i * 3 + 2]];
-        AABB box(v0, v0);
-        box.Expand(v1); box.Expand(v2);
-
-        TriangleAABB t;
-        t.Box = box;
-        t.Center = { (v0.x + v1.x + v2.x) / 3.f,
-                     (v0.y + v1.y + v2.y) / 3.f,
-                     (v0.z + v1.z + v2.z) / 3.f };
-
-        t.TriIndex = i;
-
-        t.V0 = v0;
-        t.V1 = v1;
-        t.V2 = v2;
-
-        mTris[i] = t;
-        mLocal = (i == 0) ? box : mLocal.Union(box);
-    }
-    mNodes.clear();
-    core_utility::BuildSAH(0, triCnt, mTris, mNodes);
-}
-
-bool engine::MeshCollider::Raycast(const Ray& ray, HitResult& outHit) const
-{
-    if (!core_utility::RayAABB(ray, mLocal, outHit.T, outHit.T)) return false;
-
-    struct StackItem { uint32_t idx; float t; };
-    std::stack<StackItem> st;
-    st.push({ 0u, 0.f });
-
-    bool found = false;
-    while (!st.empty())
-    {
-        StackItem top = st.top();
-        st.pop();
-        uint32_t idx = top.idx;
-        const BVHNode& n = mNodes[idx];
-        float tmin, tmax;
-        if (!core_utility::RayAABB(ray, n.Box, tmin, tmax) || (found && tmin >= outHit.T)) continue;
-
-        if (n.Count)        // leaf
-        {
-            for (uint32_t i = 0; i < n.Count; ++i)
-            {
-                const TriangleAABB& t = mTris[n.First + i];
-                float tHit;
-                if (core_utility::RayTriangle(ray, t.V0, t.V1, t.V2, tHit) && tHit < outHit.T)
-                {
-                    outHit.T = tHit;
-                    outHit.Tri = t.TriIndex;
-                    found = true;
-                }
-            }
-        }
-        else               // internal
-        {
-            st.push({ idx + 1, tmin });
-            st.push({ static_cast<uint32_t>(n.Right), tmin });
-        }
-    }
-    return found;
-}
+//void engine::MeshCollider::Build(const std::vector<DirectX::XMFLOAT3>& verts, const std::vector<uint32_t>& idx)
+//{
+//    const uint32_t triCnt = static_cast<uint32_t>(idx.size() / 3);
+//    mTris.resize(triCnt);
+//    mLocal = AABB();
+//
+//    for (uint32_t i = 0; i < triCnt; ++i)
+//    {
+//        const DirectX::XMFLOAT3& v0 = verts[idx[i * 3 + 0]];
+//        const DirectX::XMFLOAT3& v1 = verts[idx[i * 3 + 1]];
+//        const DirectX::XMFLOAT3& v2 = verts[idx[i * 3 + 2]];
+//        AABB box(v0, v0);
+//        box.Expand(v1); box.Expand(v2);
+//
+//        TriangleAABB t;
+//        t.Box = box;
+//        t.Center = { (v0.x + v1.x + v2.x) / 3.f,
+//                     (v0.y + v1.y + v2.y) / 3.f,
+//                     (v0.z + v1.z + v2.z) / 3.f };
+//
+//        t.TriIndex = i;
+//
+//        t.V0 = v0;
+//        t.V1 = v1;
+//        t.V2 = v2;
+//
+//        mTris[i] = t;
+//        mLocal = (i == 0) ? box : mLocal.Union(box);
+//    }
+//    mNodes.clear();
+//    core_utility::BuildSAH(0, triCnt, mTris, mNodes);
+//}
+//
+//bool engine::MeshCollider::Raycast(const Ray& ray, HitResult& outHit) const
+//{
+//    if (!core_utility::RayAABB(ray, mLocal, outHit.T, outHit.T)) return false;
+//
+//    struct StackItem { uint32_t idx; float t; };
+//    std::stack<StackItem> st;
+//    st.push({ 0u, 0.f });
+//
+//    bool found = false;
+//    while (!st.empty())
+//    {
+//        StackItem top = st.top();
+//        st.pop();
+//        uint32_t idx = top.idx;
+//        const BVHNode& n = mNodes[idx];
+//        float tmin, tmax;
+//        if (!core_utility::RayAABB(ray, n.Box, tmin, tmax) || (found && tmin >= outHit.T)) continue;
+//
+//        if (n.Count)        // leaf
+//        {
+//            for (uint32_t i = 0; i < n.Count; ++i)
+//            {
+//                const TriangleAABB& t = mTris[n.First + i];
+//                float tHit;
+//                if (core_utility::RayTriangle(ray, t.V0, t.V1, t.V2, tHit) && tHit < outHit.T)
+//                {
+//                    outHit.T = tHit;
+//                    outHit.Tri = t.TriIndex;
+//                    found = true;
+//                }
+//            }
+//        }
+//        else               // internal
+//        {
+//            st.push({ idx + 1, tmin });
+//            st.push({ static_cast<uint32_t>(n.Right), tmin });
+//        }
+//    }
+//    return found;
+//}

@@ -40,7 +40,7 @@ void engine::editor::EditorComponentManager::Render(const ComPtr<ID3D11DeviceCon
 	{
 		if (auto owner = renderer->GetGameObject().lock())
 		{
-			if (owner->IsActive())
+			if (renderer->IsEnabled())
 			{
 				auto materials = renderer->GetMaterials();
 

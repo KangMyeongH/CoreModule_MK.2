@@ -284,9 +284,6 @@
       <Filter>99. Defines</Filter>
     </ClInclude>
     <ClInclude Include="include\CapsuleRenderer.h" />
-    <ClInclude Include="include\DebugRenderManager.h">
-      <Filter>00. System\Graphic</Filter>
-    </ClInclude>
     <ClInclude Include="include\TextUI.h">
       <Filter>00. System\UI\Text</Filter>
     </ClInclude>
@@ -298,6 +295,9 @@
     </ClInclude>
     <ClInclude Include="include\EffectUI.h">
       <Filter>00. System\UI\Effect</Filter>
+    </ClInclude>
+    <ClInclude Include="include\DebugRenderManager.h">
+      <Filter>00. System\Graphic\Debug</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -426,9 +426,6 @@
       <Filter>99. Defines</Filter>
     </ClCompile>
     <ClCompile Include="src\CapsuleRenderer.cpp" />
-    <ClCompile Include="src\DebugRenderManager.cpp">
-      <Filter>00. System\Graphic</Filter>
-    </ClCompile>
     <ClCompile Include="src\TextUI.cpp">
       <Filter>00. System\UI\Text</Filter>
     </ClCompile>
@@ -440,6 +437,9 @@
     </ClCompile>
     <ClCompile Include="src\EffectUI.cpp">
       <Filter>00. System\UI\Effect</Filter>
+    </ClCompile>
+    <ClCompile Include="src\DebugRenderManager.cpp">
+      <Filter>00. System\Graphic\Debug</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

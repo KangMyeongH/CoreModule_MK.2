@@ -80,40 +80,8 @@ engine::Capsule engine::CapsuleCollider::calcWorldCapsule()
 	capsule.Radius = radiusW;
 
 	m_Capsule = capsule;
+
 	return capsule;
-
-	//Capsule capsule;
-
-	//auto transform = GetTransform();
-
-	//_matrix worldMat = transform->GetWorldMatrix();
-
-	//// Center 변환
-	//_vector rot = transform->Rotation().ToVector();
-	//capsule.Center = XMVector3TransformCoord(m_Center.ToVector(), worldMat);
-
-	//// Direction 변환
-	//_vector localDirVec = Vector3::Up().ToVector();
-	//capsule.Direction = DirectX::XMVector3Normalize(DirectX::XMVector3Rotate(localDirVec, rot));
-
-	//_float scaleX = transform->Scale().Value.x;
-	//_float scaleY = transform->Scale().Value.y;
-	//_float scaleZ = transform->Scale().Value.z;
-
-	//_float scaleRadius = (std::max)(scaleX, scaleZ);
-	//_float scaleDirection = scaleY;
-
-	//capsule.Radius = m_Radius * scaleRadius;
-	//capsule.Height = m_Height * scaleDirection;
-
-	//_float halfSegment = (std::max)(0.0f, (capsule.Height - 2.f * capsule.Radius) * 0.5f);
-
-	//capsule.TopCenter = capsule.Center + capsule.Direction * halfSegment;
-	//capsule.BottomCenter = capsule.Center - capsule.Direction * halfSegment;
-
-	//m_Capsule = capsule;
-
-	//return m_Capsule;
 }
 
 void engine::CapsuleCollider::calcWorldABB()

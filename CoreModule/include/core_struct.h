@@ -18,6 +18,8 @@ namespace engine
 {
 	struct TriangleAABB;
 	struct Contact;
+	struct BVHNode;
+	struct BVHNodeData;
 
 	struct Contact
 	{
@@ -727,7 +729,8 @@ namespace engine
 		std::vector<SkinnedData> SkinnedData;
 		std::vector<BoneData> Bones;
 
-		std::vector<TriangleAABB> AABBs;
+		std::vector<BVHNodeData> BVHNodes;
+
 		// 아래의 데이터는 바이너리화 할 때 들어가면 안됨.
 		std::unordered_map<_string, int> BoneMap;
 
@@ -814,6 +817,17 @@ namespace engine
 			Min.Value.y = (p.y < Min.Value.y) ? p.y : Min.Value.y;  Max.Value.y = (p.y > Max.Value.y) ? p.y : Max.Value.y;
 			Min.Value.z = (p.z < Min.Value.z) ? p.z : Min.Value.z;  Max.Value.z = (p.z > Max.Value.z) ? p.z : Max.Value.z;
 		}
+
+		void Expand(const AABB& other)
+		{
+			Min.Value.x = std::min(Min.Value.x, other.Min.Value.x);
+			Min.Value.y = std::min(Min.Value.y, other.Min.Value.y);
+			Min.Value.z = std::min(Min.Value.z, other.Min.Value.z);
+
+			Max.Value.x = std::max(Max.Value.x, other.Max.Value.x);
+			Max.Value.y = std::max(Max.Value.y, other.Max.Value.y);
+			Max.Value.z = std::max(Max.Value.z, other.Max.Value.z);
+		}
 	};
 
 	struct OBB
@@ -840,13 +854,13 @@ namespace engine
 		_float Radius;
 	};
 
-	struct BVHNode
-	{
-		AABB 		Box;			
-		uint32_t 	First;   	// leaf : primitive 시작 인덱스		
-		uint16_t 	Count;   	// leaf : 개수 + interior: 0
-		int32_t		Right;   	// interior: 우측 자식 인덱스
-	};
+	//struct BVHNode
+	//{
+	//	AABB 		Box;			
+	//	uint32_t 	First;   	// leaf : primitive 시작 인덱스		
+	//	uint16_t 	Count;   	// leaf : 개수 + interior: 0
+	//	int32_t		Right;   	// interior: 우측 자식 인덱스
+	//};
 
 	struct TriangleAABB
 	{
@@ -892,5 +906,43 @@ namespace engine
 		_float		Intensity;
 		_float     	Range;
 		_float     	SpotAngle;
+	};
+
+	struct BVHNode
+	{
+		AABB Bounds;
+		_int Left;
+		_int Right;
+	};
+
+	struct AABBData
+	{
+		_float3 Min;
+		_float3 Max;
+
+		void Expand(const _float3& p)
+		{
+			Min.x = (p.x < Min.x) ? p.x : Min.x;  Max.x = (p.x > Max.x) ? p.x : Max.x;
+			Min.y = (p.y < Min.y) ? p.y : Min.y;  Max.y = (p.y > Max.y) ? p.y : Max.y;
+			Min.z = (p.z < Min.z) ? p.z : Min.z;  Max.z = (p.z > Max.z) ? p.z : Max.z;
+		}
+
+		void Expand(const AABBData& other)
+		{
+			Min.x = std::min(Min.x, other.Min.x);
+			Min.y = std::min(Min.y, other.Min.y);
+			Min.z = std::min(Min.z, other.Min.z);
+
+			Max.x = std::max(Max.x, other.Max.x);
+			Max.y = std::max(Max.y, other.Max.y);
+			Max.z = std::max(Max.z, other.Max.z);
+		}
+	};
+
+	struct BVHNodeData
+	{
+		AABBData Bounds;
+		int32_t Left;
+		int32_t Right;
 	};
 }

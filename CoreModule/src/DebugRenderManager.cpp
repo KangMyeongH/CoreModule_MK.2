@@ -4,6 +4,7 @@
 #include "CapsuleCollider.h"
 #include "Collider.h"
 #include "Material.h"
+#include "MeshCollider.h"
 #include "SphereCollider.h"
 
 IMPLEMENT_SINGLETON(engine::DebugRenderManager)
@@ -16,6 +17,7 @@ void engine::DebugRenderManager::Initialize(const ComPtr<ID3D11Device>& device)
 	createCapsuleWireframe(device);
 	createOBBWireFrameVertices(device);
 	createSphereWireframe(device);
+	createWireFrameRS(device);
 
 	m_ColliderMaterial = Material::Create(nullptr);
 	m_ColliderMaterial->LoadShader(L"..\\GameEngine\\resource\\Shader\\Collider.hlsl");
@@ -189,6 +191,58 @@ void engine::DebugRenderManager::RenderCollider(const std::vector<SharedPtr<Coll
 			}
 				break;
 			case ColliderType_Mesh:
+			{
+				using namespace DirectX;
+				auto meshCol = std::static_pointer_cast<MeshCollider>(col);
+				_float4 color{};
+
+				if (col->IsHit())
+				{
+					color = { 1.f, 0.f, 0.f, 1.f };
+				}
+
+				else if (col->IsBoardHit())
+				{
+					color = { 0.f, 0.f, 1.f, 1.f };
+				}
+
+				else
+				{
+					color = { 0.f, 1.f, 0.f, 1.f };
+				}
+				_matrix worldMat = col->GetTransform()->GetWorldMatrix();
+				m_ColliderMaterial->SetFloat4("g_Color", color);
+				m_ColliderMaterial->SetMatrix("g_ViewMatrix", viewMat);
+				m_ColliderMaterial->SetMatrix("g_ProjMatrix", projMat);
+				m_ColliderMaterial->SetMatrix("g_WorldMatrix", worldMat);
+				m_ColliderMaterial->Bind(context.Get());
+
+				if (auto viBuffer = meshCol->GetVIBuffer())
+				{
+					ComPtr<ID3D11RasterizerState> preState;
+					context->RSGetState(preState.ReleaseAndGetAddressOf());
+					context->RSSetState(m_WireFrameRS.Get());
+
+					ID3D11Buffer* vertexBuffers[] = {
+						viBuffer->VertexBuffer.Get()
+					};
+
+					_uint vertexStrides[] = {
+						viBuffer->VertexStride
+					};
+
+					_uint offsets[] = {
+						0
+					};
+
+					context->IASetVertexBuffers(0, viBuffer->NumVertexBuffers, vertexBuffers, vertexStrides, offsets);
+					context->IASetIndexBuffer(viBuffer->IndexBuffer.Get(), viBuffer->IndexFormat, 0);
+					context->IASetPrimitiveTopology(viBuffer->PrimitiveTopology);
+					context->DrawIndexed(viBuffer->NumIndices, 0, 0);
+
+					context->RSSetState(preState.Get());
+				}
+			}
 				break;
 			}
 		}
@@ -402,39 +456,20 @@ HRESULT engine::DebugRenderManager::createCapsuleWireframe(const ComPtr<ID3D11De
 	device->CreateBuffer(&bd, &sd, vertexBuffer.GetAddressOf());
 	m_CapsuleVB = vertexBuffer;
 
-	//auto viBuffer = std::make_shared<VIBuffer>();
-	//viBuffer->NumVertexBuffers = 1;
-	//viBuffer->VertexStride = sizeof(DebugVertex);
-	//viBuffer->NumVertices = static_cast<UINT>(vb.size());
-	//viBuffer->IndexStride = sizeof(_ushort);
-	//viBuffer->NumIndices = static_cast<UINT>(ib.size());
-	//viBuffer->IndexFormat = DXGI_FORMAT_R16_UINT;
-	//viBuffer->PrimitiveTopology = D3D11_PRIMITIVE_TOPOLOGY_LINELIST;
-
-	//// VertexBuffer
-	//D3D11_BUFFER_DESC vbd{};
-	//vbd.Usage = D3D11_USAGE_DEFAULT;
-	//vbd.ByteWidth = viBuffer->VertexStride * viBuffer->NumVertices;
-	//vbd.BindFlags = D3D11_BIND_VERTEX_BUFFER;
-	//vbd.StructureByteStride = viBuffer->VertexStride;
-
-	//D3D11_SUBRESOURCE_DATA vbData{ vb.data() };
-	//HRESULT hr = device->CreateBuffer(&vbd, &vbData, viBuffer->VertexBuffer.GetAddressOf());
-	//if (FAILED(hr)) return hr;
-
-	//// IndexBuffer
-	//D3D11_BUFFER_DESC ibd{};
-	//ibd.Usage = D3D11_USAGE_DEFAULT;
-	//ibd.ByteWidth = viBuffer->IndexStride * viBuffer->NumIndices;
-	//ibd.BindFlags = D3D11_BIND_INDEX_BUFFER;
-	//ibd.StructureByteStride = viBuffer->IndexStride;
-
-	//D3D11_SUBRESOURCE_DATA ibData{ ib.data() };
-	//hr = device->CreateBuffer(&ibd, &ibData, viBuffer->IndexBuffer.GetAddressOf());
-	//if (FAILED(hr)) return hr;
-
-	//m_CapsuleVIBuffer = viBuffer;
-
 	return S_OK;
 
+}
+
+HRESULT engine::DebugRenderManager::createWireFrameRS(const ComPtr<ID3D11Device>& device)
+{
+	D3D11_RASTERIZER_DESC rasterDesc = {};
+	rasterDesc.FillMode = D3D11_FILL_WIREFRAME; // 와이어프레임 모드
+	rasterDesc.CullMode = D3D11_CULL_NONE;      // 양면 렌더링
+	rasterDesc.FrontCounterClockwise = FALSE;
+	rasterDesc.DepthClipEnable = TRUE;
+
+	
+	HRESULT hr = device->CreateRasterizerState(&rasterDesc, m_WireFrameRS.ReleaseAndGetAddressOf());
+
+	return hr;
 }

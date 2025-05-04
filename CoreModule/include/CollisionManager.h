@@ -4,6 +4,16 @@
 
 namespace engine
 {
+	class MeshCollider;
+}
+
+namespace engine
+{
+	class BoxCollider;
+}
+
+namespace engine
+{
 	class Rigidbody;
 }
 
@@ -101,7 +111,12 @@ namespace engine
         _bool intersectCapsuleOBB(const Capsule& cap, const OBB& box, Contact& out);
 
         _bool checkBoxMesh(const SharedPtr<Collider>& a, const SharedPtr<Collider>& b, Contact& out);
-        _bool checkBoxSphere(const SharedPtr<Collider>& a, const SharedPtr<Collider>& b, Contact& out);
+        _bool intersectOBBMesh(const SharedPtr<BoxCollider>& box, const SharedPtr<MeshCollider>& mesh, Contact& out);
+        _bool intersectCapsuleMesh();
+
+
+
+		_bool checkBoxSphere(const SharedPtr<Collider>& a, const SharedPtr<Collider>& b, Contact& out);
         _bool checkCapsuleCapsule(const SharedPtr<Collider>& a, const SharedPtr<Collider>& b, Contact& out);
         _bool checkCapsuleMesh(const SharedPtr<Collider>& a, const SharedPtr<Collider>& b, Contact& out);
         _bool checkCapsuleSphere(const SharedPtr<Collider>& a, const SharedPtr<Collider>& b, Contact& out);
@@ -111,6 +126,10 @@ namespace engine
 
         void resolvePenetration(const SharedPtr<Rigidbody>& a, const SharedPtr<Rigidbody>& b, const Contact& c, _float percent = 0.8f, _float slop = 0.001f);
         void applyImpulse(const SharedPtr<Rigidbody>& a, const SharedPtr<Rigidbody>& b, const Contact& c, _float restitution = 0.2f);
+
+        OBB worldOBBToLocalOBB(const OBB& worldBox, const _matrix& meshWorld);
+        _bool AABBvsOBB(const AABBData& aabb, const OBB& obb);
+        _bool triangleOBBIntersect(const OBB& box, const _vector& v0, const _vector& v1, const _vector& v2);
 
         //======================================//
         //				  fields				//
