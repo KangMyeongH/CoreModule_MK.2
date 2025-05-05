@@ -20,6 +20,7 @@ void engine::MeshCollider::SetMesh(const _wstring& modelPath, const _int meshIdx
 	auto modelData = LoadManager::GetInstance().ReadModelDataFromFile(modelPath);
 
 	m_Mesh = modelData.Meshes[meshIdx];
+	m_Path = modelPath;
 	m_MeshIdx = meshIdx;
 	m_bDirty = true;
 

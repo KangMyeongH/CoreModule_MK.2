@@ -4,6 +4,11 @@
 
 namespace engine
 {
+	class CapsuleCollider;
+}
+
+namespace engine
+{
 	class MeshCollider;
 }
 
@@ -112,14 +117,13 @@ namespace engine
 
         _bool checkBoxMesh(const SharedPtr<Collider>& a, const SharedPtr<Collider>& b, Contact& out);
         _bool intersectOBBMesh(const SharedPtr<BoxCollider>& box, const SharedPtr<MeshCollider>& mesh, Contact& out);
-        _bool intersectCapsuleMesh();
-
-
 
 		_bool checkBoxSphere(const SharedPtr<Collider>& a, const SharedPtr<Collider>& b, Contact& out);
         _bool checkCapsuleCapsule(const SharedPtr<Collider>& a, const SharedPtr<Collider>& b, Contact& out);
         _bool checkCapsuleMesh(const SharedPtr<Collider>& a, const SharedPtr<Collider>& b, Contact& out);
-        _bool checkCapsuleSphere(const SharedPtr<Collider>& a, const SharedPtr<Collider>& b, Contact& out);
+        _bool intersectCapsuleMesh(const SharedPtr<CapsuleCollider>& capsuleCol, const SharedPtr<MeshCollider>& meshCol, Contact& out);
+
+		_bool checkCapsuleSphere(const SharedPtr<Collider>& a, const SharedPtr<Collider>& b, Contact& out);
         _bool checkMeshMesh(const SharedPtr<Collider>& a, const SharedPtr<Collider>& b, Contact& out);
         _bool checkMeshSphere(const SharedPtr<Collider>& a, const SharedPtr<Collider>& b, Contact& out);
         _bool checkSphereSphere(const SharedPtr<Collider>& a, const SharedPtr<Collider>& b, Contact& out);
@@ -129,7 +133,13 @@ namespace engine
 
         OBB worldOBBToLocalOBB(const OBB& worldBox, const _matrix& meshWorld);
         _bool AABBvsOBB(const AABBData& aabb, const OBB& obb);
-        _bool triangleOBBIntersect(const OBB& box, const _vector& v0, const _vector& v1, const _vector& v2);
+        _bool triangleOBBIntersect(const OBB& box, const _vector& v0, const _vector& v1, const _vector& v2, _vector& outAxis, _float& outDepth);
+
+        _bool segmentAABBIntersect(DirectX::XMVECTOR p0, DirectX::XMVECTOR p1, const AABBData& box, float radius);
+        _float segmentTriangleDistSq(_vector segA, _vector segB, _vector v0, _vector v1, _vector v2, _vector& outSeg, _vector& outTri);
+
+        _vector closestPtPointTriangle(_vector p, _vector a, _vector b, _vector c);
+        _float closestPtSegmentSegment(_vector p1, _vector q1, _vector p2, _vector q2, _vector& c1, _vector& c2);
 
         //======================================//
         //				  fields				//

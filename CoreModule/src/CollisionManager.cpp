@@ -843,11 +843,6 @@ engine::_bool engine::CollisionManager::checkBoxMesh(const SharedPtr<Collider>& 
 			return false;
 		}
 
-		out.Normal.Value.x *= -1.f;
-		out.Normal.Value.y *= -1.f;
-		out.Normal.Value.z *= -1.f;
-		std::swap(out.PointA, out.PointB);
-
 		return true;
 	}
 
@@ -862,6 +857,11 @@ engine::_bool engine::CollisionManager::checkBoxMesh(const SharedPtr<Collider>& 
 			return false;
 		}
 
+		out.Normal.Value.x *= -1.f;
+		out.Normal.Value.y *= -1.f;
+		out.Normal.Value.z *= -1.f;
+		std::swap(out.PointA, out.PointB);
+
 		return true;
 	}
 
@@ -873,51 +873,203 @@ engine::_bool engine::CollisionManager::intersectOBBMesh(const SharedPtr<BoxColl
 {
 	using namespace DirectX;
 
+	OBB worldBox = box->GetOBB();
 	OBB localBox = worldOBBToLocalOBB(box->GetOBB(), meshCol->GetTransform()->GetWorldMatrix());
-	auto mesh = meshCol->GetMesh();
+	_matrix meshWorld = meshCol->GetTransform()->GetWorldMatrix();
+	_matrix invW = XMMatrixInverse(nullptr, meshWorld);
 
-	std::function<_bool(_int)> Recurse = [&](_int nodeIdx)->_bool
+	const auto& mesh = meshCol->GetMesh();
+	const auto& nodes = mesh.BVHNodes;
+	const auto& triOrder = mesh.BVHTriangles;
+	const auto& indices = mesh.Indices;
+	const auto& vertices = mesh.Vertices;
+
+	out.IsHit = false;
+	out.Penetration = 0.f;
+	_float bestDepth = 0.f;
+	_vector bestNormal = XMVectorZero();
+	_vector bestPointA = XMVectorZero();
+	_vector bestPointB = XMVectorZero();
+	_float invScale = XMVectorGetX(XMVector3Length(invW.r[0]));
+
+	std::function<void(int)> traverse = [&](int nodeIdx)
 		{
-			const BVHNodeData& node = mesh.BVHNodes[nodeIdx];
+			const BVHNodeData& node = nodes[nodeIdx];
+			
 			if (!AABBvsOBB(node.Bounds, localBox))
-			{
-				return false;
-			}
+				return;
+
 
 			if (node.Left < 0)
 			{
-				_int start = ~node.Left, cnt = ~node.Right;
-				for (_int i = 0; i < cnt; ++i)
+				int start = ~node.Left;
+				int cnt = ~node.Right;
+				for (int i = 0; i < cnt; ++i)
 				{
-					_int ti = start + i;
-					auto v0 = XMLoadFloat3(&mesh.Vertices[mesh.Indices[ti * 3 + 0]].Position);
-					auto v1 = XMLoadFloat3(&mesh.Vertices[mesh.Indices[ti * 3 + 1]].Position);
-					auto v2 = XMLoadFloat3(&mesh.Vertices[mesh.Indices[ti * 3 + 2]].Position);
-					if (triangleOBBIntersect(localBox, v0, v1, v2))
+					int ti = triOrder[start + i];
+
+					XMVECTOR v0 = XMLoadFloat3(&vertices[indices[ti * 3 + 0]].Position);
+					XMVECTOR v1 = XMLoadFloat3(&vertices[indices[ti * 3 + 1]].Position);
+					XMVECTOR v2 = XMLoadFloat3(&vertices[indices[ti * 3 + 2]].Position);
+
+					XMVECTOR axisLocal;
+					float   depthLocal;
+					if (!triangleOBBIntersect(localBox, v0, v1, v2, axisLocal, depthLocal))
+						continue;
+
+					XMVECTOR worldNormal = XMVector3Normalize(
+						XMVector3TransformNormal(axisLocal, meshWorld)
+					);
+
+					XMVECTOR wv0 = XMVector3TransformCoord(v0, meshWorld);
+					XMVECTOR wv1 = XMVector3TransformCoord(v1, meshWorld);
+					XMVECTOR wv2 = XMVector3TransformCoord(v2, meshWorld);
+
+					float d0 = XMVectorGetX(XMVector3Dot(wv0, worldNormal));
+					float d1 = XMVectorGetX(XMVector3Dot(wv1, worldNormal));
+					float d2 = XMVectorGetX(XMVector3Dot(wv2, worldNormal));
+					XMVECTOR pB = (d1 < d0 ? wv1 : wv0);
+					float    minD = std::min(d0, d1);
+					if (d2 < minD) { minD = d2; pB = wv2; }
+
+					XMVECTOR wc = worldBox.Center.ToVector();
+					XMVECTOR BA[3] = {
+						worldBox.AxisX.ToVector(),
+						worldBox.AxisY.ToVector(),
+						worldBox.AxisZ.ToVector()
+					};
+					float ext[3] = {
+						worldBox.Extents.Value.x,
+						worldBox.Extents.Value.y,
+						worldBox.Extents.Value.z
+					};
+					float R =
+						ext[0] * fabsf(XMVectorGetX(XMVector3Dot(worldNormal, BA[0]))) +
+						ext[1] * fabsf(XMVectorGetX(XMVector3Dot(worldNormal, BA[1]))) +
+						ext[2] * fabsf(XMVectorGetX(XMVector3Dot(worldNormal, BA[2])));
+					XMVECTOR pA = wc - worldNormal * R;
+
+					XMVECTOR localPen = axisLocal * depthLocal;
+					XMVECTOR worldPen = XMVector3TransformNormal(localPen, meshWorld);
+					float   depthWorld = XMVectorGetX(XMVector3Length(worldPen));
+
+					if (!out.IsHit || depthWorld > bestDepth)
 					{
-						// TODO : out에 contact정보 채우기
-						return true;
+						out.IsHit = true;
+						bestDepth = depthWorld;
+						bestNormal = worldNormal;
+						bestPointA = pA;
+						bestPointB = pB;
 					}
 				}
-
-				return false;
 			}
-
-			return Recurse(node.Left) || Recurse(node.Right);
+			else
+			{
+				traverse(node.Left);
+				traverse(node.Right);
+			}
 		};
 
-	_bool hit = Recurse(0);
-	if (!hit)
+	traverse(0);
+
+	if (out.IsHit)
 	{
-		return false;
+		out.Normal = Vector3::FromVector(bestNormal);
+		out.Penetration = bestDepth / invScale;
+		out.PointA = Vector3::FromVector(bestPointA);
+		out.PointB = Vector3::FromVector(bestPointB);
+		return true;
 	}
 
-	return true;
-}
-
-engine::_bool engine::CollisionManager::intersectCapsuleMesh()
-{
 	return false;
+
+	//std::function<_bool(_int)> Recurse = [&](_int nodeIdx)->_bool
+	//	{
+	//		const BVHNodeData& node = nodes[nodeIdx];
+
+	//		if (!AABBvsOBB(node.Bounds, localBox))
+	//		{
+	//			return false;
+	//		}
+
+	//		if (node.Left < 0)
+	//		{
+	//			_int start = ~node.Left, cnt = ~node.Right;
+
+	//			for (_int i = 0; i < cnt; ++i)
+	//			{
+	//				_int ti = triOrder[start + i];
+	//				auto v0 = XMLoadFloat3(&vertices[indices[ti * 3 + 0]].Position);
+	//				auto v1 = XMLoadFloat3(&vertices[indices[ti * 3 + 1]].Position);
+	//				auto v2 = XMLoadFloat3(&vertices[indices[ti * 3 + 2]].Position);
+	//				_vector axisLocal;
+	//				_float depthLocal;
+	//				if (!triangleOBBIntersect(localBox, v0, v1, v2, axisLocal, depthLocal))
+	//				{
+	//					continue;
+	//				}
+
+	//				_vector worldNormal = XMVector3Normalize(XMVector3TransformCoord(axisLocal, meshCol->GetTransform()->GetWorldMatrix()));
+	//				XMVECTOR wv[3] = {
+	//					XMVector3Transform(XMLoadFloat3(&vertices[indices[ti * 3 + 0]].Position),
+	//				   meshCol->GetTransform()->GetWorldMatrix()),
+	//					XMVector3Transform(XMLoadFloat3(&vertices[indices[ti * 3 + 1]].Position),
+	//				   meshCol->GetTransform()->GetWorldMatrix()),
+	//					XMVector3Transform(XMLoadFloat3(&vertices[indices[ti * 3 + 2]].Position),
+	//				   meshCol->GetTransform()->GetWorldMatrix())
+	//				};
+
+	//				_float bestDot = FLT_MAX;
+	//				_vector pB = XMVectorZero();
+	//				for (auto& vw : wv)
+	//				{
+	//					_float d = XMVectorGetX(XMVector3Dot(vw, worldNormal));
+	//					if (d < bestDot)
+	//					{
+	//						bestDot = d;
+	//						pB = vw;
+	//					}
+	//				}
+
+	//				_vector wc = worldBox.Center.ToVector();
+	//				XMVECTOR BA[3] = {
+	//					worldBox.AxisX.ToVector(),
+	//					worldBox.AxisY.ToVector(),
+	//					worldBox.AxisZ.ToVector()
+	//				};
+
+	//				_float R =
+	//					worldBox.Extents.Value.x * fabsf(XMVectorGetX(XMVector3Dot(worldNormal, BA[0]))) +
+	//					worldBox.Extents.Value.y * fabsf(XMVectorGetX(XMVector3Dot(worldNormal, BA[1]))) +
+	//					worldBox.Extents.Value.z * fabsf(XMVectorGetX(XMVector3Dot(worldNormal, BA[2])));
+	//				_vector pA = wc - worldNormal * R;
+
+	//				out.IsHit = true;
+	//				out.Normal = Vector3::FromVector(worldNormal);
+	//				out.Penetration = depthLocal;
+	//				out.PointA = Vector3::FromVector(pA);
+	//				out.PointB = Vector3::FromVector(pB);
+
+	//				std::cerr << "Normal X : " << out.Normal.Value.x << ", Y : " << out.Normal.Value.y << ", Z : " << out.Normal.Value.z << "\n";
+	//				std::cerr << "Penetration : " << out.Penetration << "\n";
+
+	//				return true;
+	//			}
+
+	//			return false;
+	//		}
+
+	//		return Recurse(node.Left) || Recurse(node.Right);
+	//	};
+
+	//_bool hit = Recurse(0);
+
+	//if (!hit)
+	//{
+	//	return false;
+	//}
+
+	return true;
 }
 
 engine::_bool engine::CollisionManager::checkBoxSphere(const SharedPtr<Collider>& a, const SharedPtr<Collider>& b,
@@ -1043,11 +1195,163 @@ engine::_bool engine::CollisionManager::checkCapsuleCapsule(const SharedPtr<Coll
 engine::_bool engine::CollisionManager::checkCapsuleMesh(const SharedPtr<Collider>& a, const SharedPtr<Collider>& b,
 	Contact& out)
 {
+	using namespace DirectX;
+
+	const auto typeA = a->GetColliderType();
+	const auto typeB = b->GetColliderType();
+
+	if (typeA == ColliderType_Capsule && typeB == ColliderType_Mesh)
+	{
+		auto capsule = std::static_pointer_cast<CapsuleCollider>(a);
+		auto mesh = std::static_pointer_cast<MeshCollider>(b);
+		_bool hit = intersectCapsuleMesh(capsule, mesh, out);
+
+		if (!hit)
+		{
+			return false;
+		}
+
+		out.Normal.Value.x *= -1.f;
+		out.Normal.Value.y *= -1.f;
+		out.Normal.Value.z *= -1.f;
+		std::swap(out.PointA, out.PointB);
+
+		return true;
+	}
+
+	if (typeA == ColliderType_Mesh && typeB == ColliderType_Capsule)
+	{
+		auto capsule = std::static_pointer_cast<CapsuleCollider>(b);
+		auto mesh = std::static_pointer_cast<MeshCollider>(a);
+		_bool hit = intersectCapsuleMesh(capsule, mesh, out);
+
+		if (!hit)
+		{
+			return false;
+		}
+
+		return true;
+	}
+
 	return false;
 }
 
+engine::_bool engine::CollisionManager::intersectCapsuleMesh(const SharedPtr<CapsuleCollider>& capsuleCol,
+	const SharedPtr<MeshCollider>& meshCol, Contact& out)
+{
+	using namespace DirectX;
+
+	auto worldMat = meshCol->GetTransform()->GetWorldMatrix();
+	_matrix invW = XMMatrixInverse(nullptr, worldMat);
+	const auto& capsule = capsuleCol->GetCapsule();
+
+
+	_vector worldP0 = capsule.P0W.ToVector();
+	_vector worldP1 = capsule.P1W.ToVector();
+	_float worldR = capsule.Radius;
+
+	_vector localP0 = XMVector3TransformCoord(worldP0, invW);
+	_vector localP1 = XMVector3TransformCoord(worldP1, invW);
+
+	_float invScale = XMVectorGetX(XMVector3Length(invW.r[0]));
+	_float localR = worldR * invScale;
+
+	const auto& nodes = meshCol->GetMesh().BVHNodes;
+	const auto& triOrder = meshCol->GetMesh().BVHTriangles;
+	const auto& idx = meshCol->GetMesh().Indices;
+	const auto& vtx = meshCol->GetMesh().Vertices;
+
+	out.IsHit = false;
+	_float bestPen = FLT_MAX;
+	XMVECTOR bestN = XMVectorZero();
+	XMVECTOR bestPA = XMVectorZero(), bestPB = XMVectorZero();
+
+	std::function<void(int)> Traverse = [&](int nodeIdx)
+		{
+			const auto& N = nodes[nodeIdx];
+			// 광역 테스트: 세그먼트 vs 확장 AABB
+			if (!segmentAABBIntersect(localP0, localP1, N.Bounds, localR))
+				return;
+
+			if (N.Left < 0)
+			{
+				// 리프: 삼각형 하나씩 검사
+				int start = ~N.Left, cnt = ~N.Right;
+				for (int i = 0; i < cnt; ++i)
+				{
+					int ti = triOrder[start + i];
+					XMVECTOR v0 = XMLoadFloat3(&vtx[idx[ti * 3 + 0]].Position);
+					XMVECTOR v1 = XMLoadFloat3(&vtx[idx[ti * 3 + 1]].Position);
+					XMVECTOR v2 = XMLoadFloat3(&vtx[idx[ti * 3 + 2]].Position);
+
+					XMVECTOR pSeg, pTri;
+					_float   d2 = segmentTriangleDistSq(localP0, localP1, v0, v1, v2, pSeg, pTri);
+					
+					if (d2 > localR * localR)
+						continue;
+
+					// 3) 충돌 깊이·법선·접촉점 계산
+					_float dist = std::sqrt(d2);
+					_float pen = localR - dist;
+					XMVECTOR diff = pSeg - pTri;
+
+					XMVECTOR normalLoc;
+					if (XMVectorGetX(XMVector3LengthSq(diff)) > 1e-8f) 
+					{
+						normalLoc = XMVector3Normalize(diff);
+					}
+					else 
+					{
+						// 삼각형 법선 또는 세그먼트 축으로 대체
+						normalLoc = XMVector3Normalize(XMVector3Cross(v1 - v0, v2 - v0));
+					}
+
+
+					// 로컬 > 월드 변환
+					XMVECTOR worldNormal = XMVector3Normalize(XMVector3TransformNormal(normalLoc, worldMat));
+					XMVECTOR worldSeg = XMVector3TransformCoord(pSeg, worldMat);
+					XMVECTOR worldTri = XMVector3TransformCoord(pTri, worldMat);
+					XMVECTOR worldPA = worldSeg - worldNormal * pen;  // 캡슐 표면 위
+					XMVECTOR worldPB = worldTri;             // 삼각형 상의 점
+					_float	worldPen = pen / invScale;
+
+					//XMVECTOR worldPB = XMVector3TransformCoord(pTri, worldMat);
+					//// 캡슐 표면 접촉점: segment 방향으로 radius 만큼 들어간 점
+					//XMVECTOR worldPA = worldPB + worldNormal * worldR;
+
+					if (!out.IsHit || worldPen > bestPen)
+					{
+						out.IsHit = true;
+						bestPen = worldPen;
+						bestN = worldNormal;
+						bestPA = worldPA;
+						bestPB = worldPB;
+					}
+				}
+			}
+			else
+			{
+				Traverse(N.Left);
+				Traverse(N.Right);
+			}
+		};
+
+	Traverse(0);
+
+	if (!out.IsHit)
+	{
+		return false;
+	}
+
+	out.Normal = Vector3::FromVector(bestN);
+	out.Penetration = bestPen;
+	out.PointA = Vector3::FromVector(bestPA);
+	out.PointB = Vector3::FromVector(bestPB);
+	return true;
+}
+
 engine::_bool engine::CollisionManager::checkCapsuleSphere(const SharedPtr<Collider>& a, const SharedPtr<Collider>& b,
-	Contact& out)
+                                                           Contact& out)
 {
 	return false;
 }
@@ -1086,9 +1390,12 @@ void engine::CollisionManager::resolvePenetration(const SharedPtr<Rigidbody>& a,
 	{
 		return;
 	}
-
+	std::cerr << "Penetration : " << c.Penetration << "\n";
 	_float correction = std::max(c.Penetration - slop, 0.f) * percent / totalInv;
 	Vector3 corr = c.Normal * correction;
+
+	std::cerr << "Correction : " << correction << "\n";
+
 
 	a->GetTransform()->Translate(-(corr * invMassA));
 	b->GetTransform()->Translate(corr * invMassB);
@@ -1255,12 +1562,17 @@ engine::_bool engine::CollisionManager::AABBvsOBB(const AABBData& aabb, const OB
 }
 
 engine::_bool engine::CollisionManager::triangleOBBIntersect(const OBB& box, const _vector& v0, const _vector& v1,
-	const _vector& v2)
+	const _vector& v2, _vector& outAxis, _float& outDepth)
 {
 	using namespace DirectX;
+	const float EPSILON = 1e-6f;
+
+	_float bestOverlap = FLT_MAX;
+	_vector bestAxis = XMVectorZero();
 
 	// 삼각형 정점 -> 박스 센터 기준으로 이동
 	XMVECTOR C = box.Center.ToVector();
+
 	XMVECTOR tv0 = v0 - C;
 	XMVECTOR tv1 = v1 - C;
 	XMVECTOR tv2 = v2 - C;
@@ -1284,30 +1596,61 @@ engine::_bool engine::CollisionManager::triangleOBBIntersect(const OBB& box, con
 	for (int i = 0; i < 3; ++i) 
 	{
 		// 삼각형을 U[i] 축에 투영
-		float minT = XMVectorGetX(XMVector3Dot(U[i], tv0));
-		float maxT = minT;
-		for (auto tv : { tv1, tv2 }) 
+		float p0 = XMVectorGetX(XMVector3Dot(U[i], tv0));
+		float p1 = XMVectorGetX(XMVector3Dot(U[i], tv1));
+		float p2 = XMVectorGetX(XMVector3Dot(U[i], tv2));
+		float triMin = std::min({ p0, p1, p2 });
+		float triMax = std::max({ p0, p1, p2 });
+
+		// 박스를 이 축에 투영한 간격은 [-e[i], +e[i]]
+		float overlap = std::min(triMax, e[i])
+			- std::max(triMin, -e[i]);
+
+		if (overlap < 0)
 		{
-			float p = XMVectorGetX(XMVector3Dot(U[i], tv));
-			minT = std::min(minT, p);
-			maxT = std::max(maxT, p);
+			return false;  // 분리축 발견
 		}
-		if (minT > e[i] || maxT < -e[i])
+
+		if (overlap < bestOverlap)
 		{
-			return false;
+			bestOverlap = overlap;
+			// 어느 쪽이 더 짧게 빠져나오는지에 따라 축 방향 결정
+			bestAxis = (e[i] - triMax < triMin + e[i])
+				? U[i]
+				: XMVectorNegate(U[i]);
 		}
 	}
 
 	// 삼각형 법선 축 테스트
 	XMVECTOR N = XMVector3Cross(E[0], E[1]);
+	_float len2 = XMVectorGetX(XMVector3LengthSq(N));
+
+	if (len2 < EPSILON)
+	{
+		return false;
+	}
+
+	XMVECTOR triN = XMVector3Normalize(N);
+
 	// plane distance
-	float d = XMVectorGetX(XMVector3Dot(N, tv0));
+	float d = XMVectorGetX(XMVector3Dot(triN, tv0));
 	// box 투영 반경
 	float r =
-		e[0] * fabsf(XMVectorGetX(XMVector3Dot(N, U[0]))) +
-		e[1] * fabsf(XMVectorGetX(XMVector3Dot(N, U[1]))) +
-		e[2] * fabsf(XMVectorGetX(XMVector3Dot(N, U[2])));
-	if (d > r || d < -r) return false;
+		e[0] * fabsf(XMVectorGetX(XMVector3Dot(triN, U[0]))) +
+		e[1] * fabsf(XMVectorGetX(XMVector3Dot(triN, U[1]))) +
+		e[2] * fabsf(XMVectorGetX(XMVector3Dot(triN, U[2])));
+	_float overlapN = r - fabsf(d);
+	if (overlapN < 0)
+	{
+		return false;
+	}
+
+	if (overlapN < bestOverlap)
+	{
+		bestOverlap = overlapN;
+		// 법선 방향은 삼각형이 박스 안으로 침투된 방향
+		bestAxis = (d < 0) ? XMVectorNegate(triN) : triN;
+	}
 
 	// 크로스 축 9개 테스트
 	for (int i = 0; i < 3; ++i) 
@@ -1315,35 +1658,269 @@ engine::_bool engine::CollisionManager::triangleOBBIntersect(const OBB& box, con
 		for (int j = 0; j < 3; ++j) 
 		{
 			XMVECTOR axis = XMVector3Cross(U[i], E[j]);
-			float len2 = XMVectorGetX(XMVector3LengthSq(axis));
-			if (len2 < 1e-6f)
+			_float l2 = XMVectorGetX(XMVector3LengthSq(axis));
+			if (l2 < 1e-6f)
 			{
 				continue;
 			}
-			axis = XMVectorScale(axis, 1.0f / sqrtf(len2));
+			axis = XMVectorScale(axis, 1.0f / sqrtf(l2));
+
 
 			// 삼각형 투영
-			float minT = XMVectorGetX(XMVector3Dot(axis, tv0));
-			float maxT = minT;
-			for (auto tv : { tv1, tv2 }) 
-			{
-				float p = XMVectorGetX(XMVector3Dot(axis, tv));
-				minT = std::min(minT, p);
-				maxT = std::max(maxT, p);
-			}
-			// 박스 투영 반경
-			float rr =
+			_float t0 = XMVectorGetX(XMVector3Dot(axis, tv0));
+			_float t1 = XMVectorGetX(XMVector3Dot(axis, tv1));
+			_float t2 = XMVectorGetX(XMVector3Dot(axis, tv2));
+			_float triMin = std::min({ t0, t1, t2 });
+			_float triMax = std::max({ t0, t1, t2 });
+
+			// 박스 반경
+			_float r_cross =
 				e[0] * fabsf(XMVectorGetX(XMVector3Dot(axis, U[0]))) +
 				e[1] * fabsf(XMVectorGetX(XMVector3Dot(axis, U[1]))) +
 				e[2] * fabsf(XMVectorGetX(XMVector3Dot(axis, U[2])));
-			if (minT > rr || maxT < -rr)
+
+			_float overlap = std::min(triMax, r_cross) - std::max(triMin, -r_cross);
+			if (overlap < 0)
 			{
 				return false;
+			}
+
+
+			if (overlap < bestOverlap)
+			{
+				bestOverlap = overlap;
+				bestAxis = (r_cross - triMax < triMin + r_cross)
+					? axis
+					: XMVectorNegate(axis);
 			}
 		}
 	}
 
+	outAxis = bestAxis;
+	outDepth = bestOverlap;
+
 	return true;
+}
+
+engine::_bool engine::CollisionManager::segmentAABBIntersect(DirectX::XMVECTOR p0, DirectX::XMVECTOR p1,
+	const AABBData& box, float radius)
+{
+	using namespace DirectX;
+
+	// AABB 확장
+	AABBData b = box;
+	b.Min.x -= radius; b.Min.y -= radius; b.Min.z -= radius;
+	b.Max.x += radius; b.Max.y += radius; b.Max.z += radius;
+
+	// 세그먼트 엔드포인트 최소/최대
+	XMFLOAT3 f0, f1, mn, mx;
+	XMStoreFloat3(&f0, p0);
+	XMStoreFloat3(&f1, p1);
+	mn.x = std::min(f0.x, f1.x);
+	mn.y = std::min(f0.y, f1.y);
+	mn.z = std::min(f0.z, f1.z);
+	mx.x = std::max(f0.x, f1.x);
+	mx.y = std::max(f0.y, f1.y);
+	mx.z = std::max(f0.z, f1.z);
+
+	// 축별 분리축 체크
+	if (mx.x < b.Min.x || mn.x > b.Max.x) return false;
+	if (mx.y < b.Min.y || mn.y > b.Max.y) return false;
+	if (mx.z < b.Min.z || mn.z > b.Max.z) return false;
+
+	return true;
+}
+
+engine::_float engine::CollisionManager::segmentTriangleDistSq(_vector segA, _vector segB, _vector v0, _vector v1,
+	_vector v2, _vector& outSeg, _vector& outTri)
+{
+	using namespace DirectX;
+
+	// 1) 삼각형 평면과 세그먼트의 교차점 검사
+	XMVECTOR ab = v1 - v0;
+	XMVECTOR ac = v2 - v0;
+	XMVECTOR n = XMVector3Cross(ab, ac);
+	float nLen2 = XMVectorGetX(XMVector3LengthSq(n));
+	if (nLen2 > 1e-8f)
+	{
+		XMVECTOR nN = XMVector3Normalize(n);
+		XMVECTOR dir = segB - segA;
+		float denom = XMVectorGetX(XMVector3Dot(nN, dir));
+		if (fabsf(denom) > 1e-6f)
+		{
+			float t = XMVectorGetX(XMVector3Dot(nN, v0 - segA)) / denom;
+			if (t >= 0.0f && t <= 1.0f)
+			{
+				XMVECTOR ip = segA + dir * t;
+				// 삼각형 내부 검사 (바리센트릭)
+				XMVECTOR v0p = ip - v0;
+				float d00 = XMVectorGetX(XMVector3Dot(ab, ab));
+				float d01 = XMVectorGetX(XMVector3Dot(ab, ac));
+				float d11 = XMVectorGetX(XMVector3Dot(ac, ac));
+				float d20 = XMVectorGetX(XMVector3Dot(v0p, ab));
+				float d21 = XMVectorGetX(XMVector3Dot(v0p, ac));
+				float denom2 = d00 * d11 - d01 * d01;
+				float v = (d11 * d20 - d01 * d21) / denom2;
+				float w = (d00 * d21 - d01 * d20) / denom2;
+				float u = 1.0f - v - w;
+				if (u >= 0 && v >= 0 && w >= 0)
+				{
+					outSeg = ip;
+					outTri = ip;
+					return 0.0f;
+				}
+			}
+		}
+	}
+
+	// 2) 교차점 없으면, 다음 후보들 중 최소를 고른다.
+	float best = FLT_MAX;
+
+	// 2a) 세그먼트 엔드포인트 -> 삼각형
+	{
+		XMVECTOR c0 = closestPtPointTriangle(segA, v0, v1, v2);
+		float d0 = XMVectorGetX(XMVector3LengthSq(segA - c0));
+		if (d0 < best) { best = d0; outSeg = segA; outTri = c0; }
+	}
+	{
+		XMVECTOR c1 = closestPtPointTriangle(segB, v0, v1, v2);
+		float d1 = XMVectorGetX(XMVector3LengthSq(segB - c1));
+		if (d1 < best) { best = d1; outSeg = segB; outTri = c1; }
+	}
+
+	// 2b) 세그먼트 <-> 삼각형 엣지 세그먼트
+	{
+		XMVECTOR cS, cT;
+		float d = closestPtSegmentSegment(segA, segB, v0, v1, cS, cT);
+		if (d < best) { best = d; outSeg = cS; outTri = cT; }
+	}
+	{
+		XMVECTOR cS, cT;
+		float d = closestPtSegmentSegment(segA, segB, v1, v2, cS, cT);
+		if (d < best) { best = d; outSeg = cS; outTri = cT; }
+	}
+	{
+		XMVECTOR cS, cT;
+		float d = closestPtSegmentSegment(segA, segB, v2, v0, cS, cT);
+		if (d < best) { best = d; outSeg = cS; outTri = cT; }
+	}
+
+	return best;
+}
+
+engine::_vector engine::CollisionManager::closestPtPointTriangle(_vector p, _vector a, _vector b, _vector c)
+{
+	using namespace DirectX;
+
+	// from Christer Ericson, Real Time Collision Detection, p.141
+	XMVECTOR ab = b - a;
+	XMVECTOR ac = c - a;
+	XMVECTOR ap = p - a;
+
+	float d1 = XMVectorGetX(XMVector3Dot(ab, ap));
+	float d2 = XMVectorGetX(XMVector3Dot(ac, ap));
+	if (d1 <= 0 && d2 <= 0) return a;              // region A
+
+	XMVECTOR bp = p - b;
+	float d3 = XMVectorGetX(XMVector3Dot(ab, bp));
+	float d4 = XMVectorGetX(XMVector3Dot(ac, bp));
+	if (d3 >= 0 && d4 <= d3) return b;             // region B
+
+	float vc = d1 * d4 - d3 * d2;
+	if (vc <= 0 && d1 >= 0 && d3 <= 0)             // edge AB
+	{
+		float v = d1 / (d1 - d3);
+		return a + ab * v;
+	}
+
+	XMVECTOR cp = p - c;
+	float d5 = XMVectorGetX(XMVector3Dot(ab, cp));
+	float d6 = XMVectorGetX(XMVector3Dot(ac, cp));
+	if (d6 >= 0 && d5 <= d6) return c;             // region C
+
+	float vb = d5 * d2 - d1 * d6;
+	if (vb <= 0 && d2 >= 0 && d6 <= 0)             // edge AC
+	{
+		float w = d2 / (d2 - d6);
+		return a + ac * w;
+	}
+
+	float va = d3 * d6 - d5 * d4;
+	if (va <= 0 && (d4 - d3) >= 0 && (d5 - d6) >= 0) // edge BC
+	{
+		float w = (d4 - d3) / ((d4 - d3) + (d5 - d6));
+		return b + (c - b) * w;
+	}
+
+	// region inside face
+	XMVECTOR normal = XMVector3Cross(ab, ac);
+	normal = XMVector3Normalize(normal);
+	float dist = XMVectorGetX(XMVector3Dot(p - a, normal));
+	return p - normal * dist;
+}
+
+engine::_float engine::CollisionManager::closestPtSegmentSegment(_vector p1, _vector q1, _vector p2, _vector q2,
+	_vector& c1, _vector& c2)
+{
+	using namespace DirectX;
+
+	// from Christer Ericson, Real Time Collision Detection, p.149
+	XMVECTOR d1 = q1 - p1; // segment1 direction
+	XMVECTOR d2 = q2 - p2; // segment2 direction
+	XMVECTOR r = p1 - p2;
+	float a = XMVectorGetX(XMVector3Dot(d1, d1));
+	float e = XMVectorGetX(XMVector3Dot(d2, d2));
+	float f = XMVectorGetX(XMVector3Dot(d2, r));
+
+	float s, t;
+	if (a <= 1e-6f && e <= 1e-6f)
+	{
+		// both segments degenerate to points
+		s = t = 0.0f;
+		c1 = p1;
+		c2 = p2;
+	}
+	else if (a <= 1e-6f)
+	{
+		// first segment degenerate to point
+		s = 0.0f;
+		t = f / e;
+		t = Clamp(t, 0.0f, 1.0f);
+	}
+	else
+	{
+		float c = XMVectorGetX(XMVector3Dot(d1, r));
+		if (e <= 1e-6f)
+		{
+			// second segment degenerate
+			t = 0.0f;
+			s = Clamp(-c / a, 0.0f, 1.0f);
+		}
+		else
+		{
+			float b = XMVectorGetX(XMVector3Dot(d1, d2));
+			float denom = a * e - b * b;
+			if (denom != 0.0f)
+				s = Clamp((b * f - c * e) / denom, 0.0f, 1.0f);
+			else
+				s = 0.0f;
+			t = (b * s + f) / e;
+			if (t < 0.0f)
+			{
+				t = 0.0f;
+				s = Clamp(-c / a, 0.0f, 1.0f);
+			}
+			else if (t > 1.0f)
+			{
+				t = 1.0f;
+				s = Clamp((b - c) / a, 0.0f, 1.0f);
+			}
+		}
+	}
+
+	c1 = p1 + d1 * s;
+	c2 = p2 + d2 * t;
+	return XMVectorGetX(XMVector3LengthSq(c1 - c2));
 }
 
 IMPLEMENT_SINGLETON(engine::CollisionManager)

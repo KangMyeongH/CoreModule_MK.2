@@ -729,7 +729,8 @@ namespace engine
 		std::vector<SkinnedData> SkinnedData;
 		std::vector<BoneData> Bones;
 
-		std::vector<BVHNodeData> BVHNodes;
+		std::vector<BVHNodeData> 	BVHNodes;
+		std::vector<_int> 			BVHTriangles;
 
 		// 아래의 데이터는 바이너리화 할 때 들어가면 안됨.
 		std::unordered_map<_string, int> BoneMap;
