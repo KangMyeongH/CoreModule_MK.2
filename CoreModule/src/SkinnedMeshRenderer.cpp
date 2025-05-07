@@ -20,6 +20,19 @@ engine::SkinnedMeshRenderer::SkinnedMeshRenderer(const SkinnedMeshRenderer& rhs)
 {
 }
 
+engine::AnimationClip engine::SkinnedMeshRenderer::GetCurrentClip()
+{
+	if (m_AnimState.CurrentClip.empty())
+	{
+		return AnimationClip{};
+	}
+
+	else
+	{
+		return m_Animation[m_AnimState.CurrentClip];
+	}
+}
+
 void engine::SkinnedMeshRenderer::Bind(const ComPtr<ID3D11DeviceContext>& context)
 {
 	if (m_Mesh)
@@ -186,6 +199,12 @@ void engine::SkinnedMeshRenderer::SetNextAnimation(const _string& animName, cons
 	m_AnimState.NextClip = animName;
 	m_AnimState.NextFadeDuration = fadeDuration;
 	m_AnimState.NextIsLoop = isLoop;
+
+	// 이벤트 활성화 초기화.
+	for (auto& event : m_Animation[animName].Events)
+	{
+		event.IsActive = false;
+	}
 }
 
 void engine::SkinnedMeshRenderer::SetAnimationTime(const _float time)

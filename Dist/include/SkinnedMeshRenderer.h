@@ -24,6 +24,7 @@ namespace engine
         void SetMesh(const SharedPtr<Mesh>& mesh) { m_Mesh = mesh; }
 
         std::unordered_map<_string, AnimationClip>* GetAnimations() { return &m_Animation; }
+        AnimationClip GetCurrentClip();
 
         void SetAnimation(const std::unordered_map<_string, AnimationClip>& animationMap) { m_Animation = animationMap; }
         void SetSkeleton(const Skeleton& skeleton) { m_Skeleton = skeleton; }

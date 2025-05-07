@@ -274,14 +274,16 @@ void engine::CollisionManager::narrowPhase(
 		{
 			std::pair<SharedPtr<Collider>, SharedPtr<Collider>> key(a, b);
 			const CollisionData data(a, b, contact);
-
-			SharedPtr<Rigidbody> rigidA = a->GetGameObject().lock()->GetComponent<Rigidbody>();
-			SharedPtr<Rigidbody> rigidB = b->GetGameObject().lock()->GetComponent<Rigidbody>();
-
-			if (rigidA && rigidB)
+			if (!a->IsTrigger() && !b->IsTrigger())
 			{
-				resolvePenetration(rigidA, rigidB, contact);
-				applyImpulse(rigidA, rigidB, contact);
+				SharedPtr<Rigidbody> rigidA = a->GetGameObject().lock()->GetComponent<Rigidbody>();
+				SharedPtr<Rigidbody> rigidB = b->GetGameObject().lock()->GetComponent<Rigidbody>();
+
+				if (rigidA && rigidB)
+				{
+					resolvePenetration(rigidA, rigidB, contact);
+					applyImpulse(rigidA, rigidB, contact);
+				}
 			}
 
 			newCollisionMap[key] = data;
@@ -1157,7 +1159,7 @@ engine::_bool engine::CollisionManager::checkCapsuleCapsule(const SharedPtr<Coll
 	_vector CP1 = P1.ToVector() + d1 * s;
 	_vector CP2 = P2.ToVector() + d2 * t;
 
-	_vector diff = CP1 - CP2;
+	_vector diff = CP2 - CP1;
 	_float dist2 = XMVectorGetX(XMVector3LengthSq(diff));
 	_float sumR = capA.Radius + capB.Radius;
 
@@ -1180,8 +1182,8 @@ engine::_bool engine::CollisionManager::checkCapsuleCapsule(const SharedPtr<Coll
 		normal = XMVectorSet(1.f, 0.f, 0.f, 0.f);
 	}
 
-	_vector pointA = CP1 - normal * capA.Radius;
-	_vector pointB = CP2 + normal * capB.Radius;
+	_vector pointA = CP1 + normal * capA.Radius;
+	_vector pointB = CP2 - normal * capB.Radius;
 
 	out.IsHit = true;
 	out.Penetration = penetration;
@@ -1390,11 +1392,11 @@ void engine::CollisionManager::resolvePenetration(const SharedPtr<Rigidbody>& a,
 	{
 		return;
 	}
-	std::cerr << "Penetration : " << c.Penetration << "\n";
+	//std::cerr << "Penetration : " << c.Penetration << "\n";
 	_float correction = std::max(c.Penetration - slop, 0.f) * percent / totalInv;
 	Vector3 corr = c.Normal * correction;
 
-	std::cerr << "Correction : " << correction << "\n";
+	//std::cerr << "Correction : " << correction << "\n";
 
 
 	a->GetTransform()->Translate(-(corr * invMassA));
@@ -1421,6 +1423,11 @@ void engine::CollisionManager::applyImpulse(const SharedPtr<Rigidbody>& a, const
 	}
 
 	_float invMassSum = a->GetInvMass() + b->GetInvMass();
+
+	if (invMassSum == 0.f)
+	{
+		return;
+	}
 	_float j = -(1.f + restitution) * velAlongN / invMassSum;
 
 	Vector3 impulse = c.Normal * j;

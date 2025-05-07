@@ -30,7 +30,13 @@ void engine::GameObject::SetActive(const bool active)
 	if (m_bActiveSelf != active)
 	{
 		m_bActiveSelf = active;
-
+		for (const auto& pair : m_Components)
+		{
+			for (const auto& component : pair.second)
+			{
+				
+			}
+		}
 		updateActiveHierarchy();
 	}
 }

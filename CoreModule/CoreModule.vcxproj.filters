@@ -130,6 +130,12 @@
     <Filter Include="00. System\UI\Effect">
       <UniqueIdentifier>{53400629-9e06-4744-8b7b-879e256fd92b}</UniqueIdentifier>
     </Filter>
+    <Filter Include="00. System\Boss">
+      <UniqueIdentifier>{4341c80f-c53f-47cd-afa2-4a6ccb5892ef}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="00. System\Boss\Gamakichi">
+      <UniqueIdentifier>{1c76356a-5044-4db6-b63c-330d3f2deeb7}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="include\core_defines.h">
