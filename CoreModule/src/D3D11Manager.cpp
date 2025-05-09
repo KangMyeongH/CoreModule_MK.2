@@ -598,6 +598,11 @@ void engine::D3D11Manager::SetUIAlphaBlendMode()
 	m_DeviceContext->OMSetDepthStencilState(m_UIAlphaDepthStencilState.Get(), 0);
 }
 
+void engine::D3D11Manager::SetEffectAlphaBlendMode()
+{
+
+}
+
 void engine::D3D11Manager::PostProcessForceAlphaOnePass()
 {
 	ComPtr<ID3D11BlendState> prevBlendState;
@@ -1169,4 +1174,9 @@ HRESULT engine::D3D11Manager::readyVIBuffers()
 
 
 	return S_OK;
+}
+
+HRESULT engine::D3D11Manager::createDiffuseRenderTarget()
+{
+
 }

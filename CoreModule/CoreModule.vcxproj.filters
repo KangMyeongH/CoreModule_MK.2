@@ -136,6 +136,12 @@
     <Filter Include="00. System\Boss\Gamakichi">
       <UniqueIdentifier>{1c76356a-5044-4db6-b63c-330d3f2deeb7}</UniqueIdentifier>
     </Filter>
+    <Filter Include="00. System\Graphic\Effect">
+      <UniqueIdentifier>{9a1c6284-a59b-42ea-980d-eda9308a6578}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="00. System\Graphic\RenderTarget">
+      <UniqueIdentifier>{88d4d940-0478-464a-a0a7-3f5499e34223}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="include\core_defines.h">
@@ -305,6 +311,12 @@
     <ClInclude Include="include\DebugRenderManager.h">
       <Filter>00. System\Graphic\Debug</Filter>
     </ClInclude>
+    <ClInclude Include="include\MeshEffect.h">
+      <Filter>00. System\Graphic\Effect</Filter>
+    </ClInclude>
+    <ClInclude Include="include\RenderTarget.h">
+      <Filter>00. System\Graphic\RenderTarget</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\GameObject.cpp">
@@ -446,6 +458,12 @@
     </ClCompile>
     <ClCompile Include="src\DebugRenderManager.cpp">
       <Filter>00. System\Graphic\Debug</Filter>
+    </ClCompile>
+    <ClCompile Include="src\MeshEffect.cpp">
+      <Filter>00. System\Graphic\Effect</Filter>
+    </ClCompile>
+    <ClCompile Include="src\RenderTarget.cpp">
+      <Filter>00. System\Graphic\RenderTarget</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

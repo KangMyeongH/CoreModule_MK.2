@@ -64,6 +64,8 @@ namespace engine
 
         void    SetUIAlphaBlendMode();
 
+        void    SetEffectAlphaBlendMode();
+
         void 	PostProcessForceAlphaOnePass();
 
     	void 	Release();
@@ -81,6 +83,9 @@ namespace engine
         HRESULT createForceAlphaOne();
 
         HRESULT readyVIBuffers();
+
+        HRESULT createDiffuseRenderTarget();
+
 
     private:
         //======================================//
