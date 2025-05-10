@@ -290,6 +290,13 @@ xcopy /Y "$(SolutionDir)bin\Debug\*.pdb" "$(SolutionDir)Dist\bin\"</Command>
  echo "No .h files found in $(ProjectDir)."
 )</Command>
     </PreBuildEvent>
+    <PostBuildEvent>
+      <Command>xcopy /Y "$(ProjectDir)include\*.h" "$(SolutionDir)Dist\include\"
+xcopy /Y "$(ProjectDir)include\*.hpp" "$(SolutionDir)Dist\include\"
+xcopy /Y "$(SolutionDir)bin\Release\*.dll" "$(SolutionDir)Dist\bin\"
+xcopy /Y "$(SolutionDir)bin\Release\*.lib" "$(SolutionDir)Dist\bin\"
+xcopy /Y "$(SolutionDir)bin\Release\*.pdb" "$(SolutionDir)Dist\bin\"</Command>
+    </PostBuildEvent>
   </ItemDefinitionGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
