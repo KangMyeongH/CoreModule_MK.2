@@ -5,6 +5,8 @@
 
 namespace engine
 {
+	class Light;
+	class Renderer;
 	class Collider;
 	class Transform;
 }
@@ -152,6 +154,247 @@ namespace engine
 				std::copy(std::begin(rhs.Reflects), std::end(rhs.Reflects), std::begin(Reflects));
 			}
 		}
+
+		void SetFloat(const _string& name, const _float value)
+		{
+			for (_uint i = 0; i < ShaderTypeEnd; ++i)
+			{
+				for (const auto& pair : Reflects[i].CBuffers)
+				{
+					const auto& cbDesc = pair.second;
+					auto varIt = cbDesc.Variables.find(name);
+
+					if (varIt != cbDesc.Variables.end())
+					{
+						const auto& varInfo = varIt->second;
+						const auto& cbr = CBuffers[i][cbDesc.Name];
+						auto& dataVec = cbr->LocalData;
+
+						if (varInfo.Size != sizeof(_float))
+						{
+							std::cerr << "ERROR : Type mismatch in SetValue." << "Property : " << name.c_str() << '\n';
+
+							return;
+						}
+
+						if (dataVec.size() < cbDesc.BufferSize)
+						{
+							dataVec.resize(cbDesc.BufferSize, 0);
+						}
+
+						memcpy(dataVec.data() + varInfo.StartOffset, &value, sizeof(_float));
+
+						cbr->DirtyFlag = true;
+
+						break;
+					}
+				}
+			}
+		}
+		void SetFloat2(const _string& name, const _float2 value)
+		{
+			for (_uint i = 0; i < ShaderTypeEnd; ++i)
+			{
+				for (const auto& pair : Reflects[i].CBuffers)
+				{
+					const auto& cbDesc = pair.second;
+					auto varIt = cbDesc.Variables.find(name);
+
+					if (varIt != cbDesc.Variables.end())
+					{
+						const auto& varInfo = varIt->second;
+						const auto& cbr = CBuffers[i][cbDesc.Name];
+						auto& dataVec = cbr->LocalData;
+
+						if (varInfo.Size != sizeof(_float2))
+						{
+							std::cerr << "ERROR : Type mismatch in SetValue." << "Property : " << name.c_str() << '\n';
+
+							return;
+						}
+
+						if (dataVec.size() < cbDesc.BufferSize)
+						{
+							dataVec.resize(cbDesc.BufferSize, 0);
+						}
+
+						memcpy(dataVec.data() + varInfo.StartOffset, &value, sizeof(_float2));
+
+						cbr->DirtyFlag = true;
+
+						break;
+					}
+				}
+			}
+		}
+		void SetFloat3(const _string& name, const _float3 value)
+		{
+			for (_uint i = 0; i < ShaderTypeEnd; ++i)
+			{
+				for (const auto& pair : Reflects[i].CBuffers)
+				{
+					const auto& cbDesc = pair.second;
+					auto varIt = cbDesc.Variables.find(name);
+
+					if (varIt != cbDesc.Variables.end())
+					{
+						const auto& varInfo = varIt->second;
+						const auto& cbr = CBuffers[i][cbDesc.Name];
+						auto& dataVec = cbr->LocalData;
+
+						if (varInfo.Size != sizeof(_float3))
+						{
+							std::cerr << "ERROR : Type mismatch in SetValue." << "Property : " << name.c_str() << '\n';
+
+							return;
+						}
+
+						if (dataVec.size() < cbDesc.BufferSize)
+						{
+							dataVec.resize(cbDesc.BufferSize, 0);
+						}
+
+						memcpy(dataVec.data() + varInfo.StartOffset, &value, sizeof(_float3));
+
+						cbr->DirtyFlag = true;
+
+						break;
+					}
+				}
+			}
+		}
+		void SetFloat4(const _string& name, const _float4 value)
+		{
+			for (_uint i = 0; i < ShaderTypeEnd; ++i)
+			{
+				for (const auto& pair : Reflects[i].CBuffers)
+				{
+					auto& cbDesc = pair.second;
+					auto varIt = cbDesc.Variables.find(name);
+
+					if (varIt != cbDesc.Variables.end())
+					{
+						const auto& varInfo = varIt->second;
+						const auto& cbr = CBuffers[i][cbDesc.Name];
+						auto& dataVec = cbr->LocalData;
+
+						if (varInfo.Size != sizeof(_float4))
+						{
+							std::cerr << "ERROR : Type mismatch in SetValue." << "Property : " << name.c_str() << '\n';
+
+							return;
+						}
+
+						if (dataVec.size() < cbDesc.BufferSize)
+						{
+							dataVec.resize(cbDesc.BufferSize, 0);
+						}
+
+						memcpy(dataVec.data() + varInfo.StartOffset, &value, sizeof(_float4));
+
+						cbr->DirtyFlag = true;
+
+						break;
+					}
+				}
+			}
+		}
+		void SetMatrix(const _string& name, const _float4X4& value)
+		{
+			for (_uint i = 0; i < ShaderTypeEnd; ++i)
+			{
+				for (const auto& pair : Reflects[i].CBuffers)
+				{
+					const auto& cbDesc = pair.second;
+					auto varIt = cbDesc.Variables.find(name);
+
+					if (varIt != cbDesc.Variables.end())
+					{
+						const auto& varInfo = varIt->second;
+						const auto& cbr = CBuffers[i][cbDesc.Name];
+						auto& dataVec = cbr->LocalData;
+
+						if (varInfo.Size != sizeof(_float4X4))
+						{
+							std::cerr << "ERROR : Type mismatch in SetValue." << "Property : " << name.c_str() << '\n';
+
+							return;
+						}
+
+
+						if (dataVec.size() < cbDesc.BufferSize)
+						{
+							dataVec.resize(cbDesc.BufferSize, 0);
+						}
+
+						memcpy(dataVec.data() + varInfo.StartOffset, &value, sizeof(_float4X4));
+
+						cbr->DirtyFlag = true;
+
+						break;
+					}
+				}
+			}
+		}
+		void SetMatrix(const _string& name, const _matrix& matrix)
+		{
+			_float4X4 mat;
+			DirectX::XMStoreFloat4x4(&mat, matrix);
+			SetMatrix(name, mat);
+		}
+		void SetTexture(const _string& name, const ComPtr<ID3D11ShaderResourceView>& texture)
+		{
+			for (_uint i = 0; i < ShaderTypeEnd; ++i)
+			{
+				auto& texMap = Reflects[i].Textures;
+				auto texIt = texMap.find(name);
+				if (texIt != texMap.end())
+				{
+					SharedPtr<TextureRuntime> textureRuntime = std::make_shared<TextureRuntime>();
+
+					textureRuntime->Texture = texture;
+					textureRuntime->BindPoint = texIt->second.BindPoint;
+
+					Textures[i][name] = textureRuntime;
+
+					break;
+				}
+			}
+		}
+		void SetSampler(const _string& name, const ComPtr<ID3D11SamplerState>& sampler)
+		{
+			for (_uint i = 0; i < ShaderTypeEnd; ++i)
+			{
+				auto& texMap = Reflects[i].Samplers;
+				auto texIt = texMap.find(name);
+				if (texIt != texMap.end())
+				{
+					SharedPtr<SamplerRuntime> samplerRuntime(new SamplerRuntime);
+
+					samplerRuntime->Sampler = sampler;
+					samplerRuntime->BindPoint = texIt->second.BindPoint;
+
+					Samplers[i][name] = samplerRuntime;
+
+					break;
+				}
+			}
+		}
+		void SetValue(const std::vector<_float4X4>& value)
+		{
+			auto& cbr = CBuffers[VS]["Bones"];
+			auto& dataVec = cbr->LocalData;
+
+			if (dataVec.size() < sizeof(_float4X4) * value.size())
+			{
+				dataVec.resize(sizeof(_float4X4) * value.size(), 0);
+			}
+
+			memcpy(dataVec.data(), value.data(), sizeof(_float4X4) * value.size());
+
+			cbr->DirtyFlag = true;
+		}
+
 
 		void UploadConstantBuffers(ID3D11DeviceContext* context)
 		{
@@ -945,5 +1188,41 @@ namespace engine
 		AABBData Bounds;
 		int32_t Left;
 		int32_t Right;
+	};
+
+	struct SkyPassData
+	{
+		_float4X4 ViewMat;
+		_float4X4 ProjMat;
+		Vector3 CameraPosition;
+		_float3 SunDir;
+	};
+
+	struct PrePassData
+	{
+		std::vector<SharedPtr<Renderer>>* Renderers;
+		_float4X4 ViewMat;
+		_float4X4 ProjMat;
+	};
+
+	struct BasePassData
+	{
+		std::vector<SharedPtr<Renderer>>* Renderers;
+		_float4X4 ViewMat;
+		_float4X4 ProjMat;
+		_float4 CameraPosition;
+		_float4 NearFarPlane;
+	};
+
+	struct LightPassData
+	{
+		std::vector<SharedPtr<Light>>* Lights;
+
+		_float4X4 	ViewMat;
+		_float4X4 	ProjMat;
+		_float4X4 	InvViewMat;
+		_float4X4 	InvProjMat;
+		_float4 	CameraPosition;
+		_float4 	NearFarPlane;
 	};
 }

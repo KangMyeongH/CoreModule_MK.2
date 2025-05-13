@@ -31,6 +31,28 @@ void engine::Mesh::Destroy()
 {
 }
 
+void engine::Mesh::InputAssembler(ID3D11DeviceContext* context) const
+{
+	if (m_VIBuffer)
+	{
+		ID3D11Buffer* vertexBuffers[] = {
+			m_VIBuffer->VertexBuffer.Get()
+		};
+
+		_uint vertexStrides[] = {
+			m_VIBuffer->VertexStride
+		};
+
+		_uint offsets[] = {
+			0
+		};
+
+		context->IASetVertexBuffers(0, m_VIBuffer->NumVertexBuffers, vertexBuffers, vertexStrides, offsets);
+		context->IASetIndexBuffer(m_VIBuffer->IndexBuffer.Get(), m_VIBuffer->IndexFormat, 0);
+		context->IASetPrimitiveTopology(m_VIBuffer->PrimitiveTopology);
+	}
+}
+
 void engine::Mesh::SetSubMesh(const std::vector<SubMesh>& subMeshes)
 {
 	m_SubMeshes = subMeshes;

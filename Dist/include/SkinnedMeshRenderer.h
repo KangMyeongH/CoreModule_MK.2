@@ -34,8 +34,10 @@ namespace engine
         //				  method				//
         //======================================//
 	public:
-        void Bind(const ComPtr<ID3D11DeviceContext>& context) override;
-        void Render(const ComPtr<ID3D11DeviceContext>& context) override;
+        void InputAssembler(ID3D11DeviceContext* context) override;
+        void Bind(ID3D11DeviceContext* context) override;
+        void Render(ID3D11DeviceContext* context) override;
+        void PreRender(ID3D11DeviceContext* context, const _float4X4& viewMat, const _float4X4& projMat) override;
 
         Keyframe SampleBoneTrack(const BoneKeyFrames& track, _float currTime);
 
@@ -89,6 +91,7 @@ namespace engine
         //======================================//
     private:
         SharedPtr<Mesh> m_Mesh;
+        SharedPtr<Shader> m_PrePassShader;
         Skeleton m_Skeleton;
         AnimationState m_AnimState;
         std::unordered_map<_string, AnimationClip> m_Animation;

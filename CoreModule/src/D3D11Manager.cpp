@@ -259,7 +259,7 @@ HRESULT engine::D3D11Manager::CreateShader(const _wstring& path)
 			const _string& shaderModel = ep.second;
 
 			ComPtr<ID3DBlob> shaderBlob;
-			HRESULT hr = compileShaderFromFile(path, entryName, shaderModel, shaderBlob);
+			HRESULT hr = CompileShaderFromFile(path, entryName, shaderModel, shaderBlob);
 
 			if (SUCCEEDED(hr))
 			{
@@ -288,7 +288,6 @@ HRESULT engine::D3D11Manager::CreateShader(const _wstring& path)
 						}
 
 						reflectBufferFromReflector(reflector, newShader->Reflects[VS]);
-						//createConstantBuffer(newShader->Reflects[VS], newShader->CBuffers[VS]);
 					}
 				}
 
@@ -398,7 +397,7 @@ HRESULT engine::D3D11Manager::CreateShader(const _wstring& path, SharedPtr<Shade
 			const _string& shaderModel = ep.second;
 
 			ComPtr<ID3DBlob> shaderBlob;
-			HRESULT hr = compileShaderFromFile(path, entryName, shaderModel, shaderBlob);
+			HRESULT hr = CompileShaderFromFile(path, entryName, shaderModel, shaderBlob);
 
 			if (SUCCEEDED(hr))
 			{
@@ -520,6 +519,17 @@ HRESULT engine::D3D11Manager::CreateSampler(const D3D11_SAMPLER_DESC& desc, ComP
 	return S_OK;
 }
 
+HRESULT engine::D3D11Manager::BindMainRTV()
+{
+	ID3D11RenderTargetView* RTVs[] =
+	{
+		m_BackBufferRTV.Get()
+	};
+
+	m_DeviceContext->OMSetRenderTargets(1, RTVs, m_DepthStencilView.Get());
+	return S_OK;
+}
+
 HRESULT engine::D3D11Manager::ClearBackBufferView(_float4 clearColor)
 {
 	if (!m_DeviceContext)
@@ -527,7 +537,10 @@ HRESULT engine::D3D11Manager::ClearBackBufferView(_float4 clearColor)
 		return E_FAIL;
 	}
 
-	m_DeviceContext->ClearRenderTargetView(m_BackBufferRTV.Get(), reinterpret_cast<_float*>(&clearColor));
+	ID3D11RenderTargetView* backBufferRTV = m_BackBufferRTV.Get();
+	ID3D11DepthStencilView* dsv = m_DepthStencilView.Get();
+	m_DeviceContext->OMSetRenderTargets(1, &backBufferRTV, dsv);
+	m_DeviceContext->ClearRenderTargetView(backBufferRTV, reinterpret_cast<_float*>(&clearColor));
 
 	return S_OK;
 }
@@ -550,6 +563,8 @@ HRESULT engine::D3D11Manager::Present()
 	{
 		return E_FAIL;
 	}
+
+	m_DeviceContext->OMSetRenderTargets(0, nullptr, nullptr);
 
 	return m_SwapChain->Present(0, 0);
 }
@@ -789,7 +804,7 @@ HRESULT engine::D3D11Manager::readyDepthStencilView(const _uint winSizeX, const 
 	return S_OK;
 }
 
-HRESULT engine::D3D11Manager::compileShaderFromFile(const _wstring& path, const _string& entryPoint, const _string& targetProfile, ComPtr<ID3DBlob>& outBlob)
+HRESULT engine::D3D11Manager::CompileShaderFromFile(const _wstring& path, const _string& entryPoint, const _string& targetProfile, ComPtr<ID3DBlob>& outBlob)
 {
 	ComPtr<ID3DBlob> errorBlob;
 	HRESULT hr = D3DCompileFromFile(path.c_str(), nullptr, D3D_COMPILE_STANDARD_FILE_INCLUDE, entryPoint.c_str(), targetProfile.c_str(), 0, 0, outBlob.GetAddressOf(), errorBlob.GetAddressOf());
@@ -1174,9 +1189,4 @@ HRESULT engine::D3D11Manager::readyVIBuffers()
 
 
 	return S_OK;
-}
-
-HRESULT engine::D3D11Manager::createDiffuseRenderTarget()
-{
-
 }

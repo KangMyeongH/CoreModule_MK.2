@@ -142,6 +142,9 @@
     <Filter Include="00. System\Graphic\RenderTarget">
       <UniqueIdentifier>{88d4d940-0478-464a-a0a7-3f5499e34223}</UniqueIdentifier>
     </Filter>
+    <Filter Include="00. System\Graphic\RenderPass">
+      <UniqueIdentifier>{b0e6dd67-b732-4559-a638-d584c19b6f7c}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="include\core_defines.h">
@@ -317,6 +320,21 @@
     <ClInclude Include="include\RenderTarget.h">
       <Filter>00. System\Graphic\RenderTarget</Filter>
     </ClInclude>
+    <ClInclude Include="include\PrePass.h">
+      <Filter>00. System\Graphic\RenderPass</Filter>
+    </ClInclude>
+    <ClInclude Include="include\RenderPass.h">
+      <Filter>00. System\Graphic\RenderPass</Filter>
+    </ClInclude>
+    <ClInclude Include="include\SkyPass.h">
+      <Filter>00. System\Graphic\RenderPass</Filter>
+    </ClInclude>
+    <ClInclude Include="include\BasePass.h">
+      <Filter>00. System\Graphic\RenderPass</Filter>
+    </ClInclude>
+    <ClInclude Include="include\LightingPass.h">
+      <Filter>00. System\Graphic\RenderPass</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\GameObject.cpp">
@@ -464,6 +482,21 @@
     </ClCompile>
     <ClCompile Include="src\RenderTarget.cpp">
       <Filter>00. System\Graphic\RenderTarget</Filter>
+    </ClCompile>
+    <ClCompile Include="src\PrePass.cpp">
+      <Filter>00. System\Graphic\RenderPass</Filter>
+    </ClCompile>
+    <ClCompile Include="src\RenderPass.cpp">
+      <Filter>00. System\Graphic\RenderPass</Filter>
+    </ClCompile>
+    <ClCompile Include="src\SkyPass.cpp">
+      <Filter>00. System\Graphic\RenderPass</Filter>
+    </ClCompile>
+    <ClCompile Include="src\BasePass.cpp">
+      <Filter>00. System\Graphic\RenderPass</Filter>
+    </ClCompile>
+    <ClCompile Include="src\LightingPass.cpp">
+      <Filter>00. System\Graphic\RenderPass</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

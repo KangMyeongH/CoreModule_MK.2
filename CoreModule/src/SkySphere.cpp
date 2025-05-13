@@ -87,8 +87,8 @@ void engine::SkySphere::Render(const ComPtr<ID3D11DeviceContext>& context, const
 		_float3 finalSunDir;
 		_vector vSunDir = DirectX::XMVector3Normalize(XMLoadFloat3(&originSunDir));
 		_matrix rotMat = DirectX::XMMatrixRotationQuaternion(Quaternion::Euler(0.f, 0.f, 0.f).ToVector());
-		_vector rotatedSunDir = DirectX::XMVector3TransformNormal(vSunDir, rotMat);
-		DirectX::XMStoreFloat3(&finalSunDir, rotatedSunDir);
+		_vector rotatedSunDir = XMVector3TransformNormal(vSunDir, rotMat);
+		XMStoreFloat3(&finalSunDir, rotatedSunDir);
 
 
 		m_Material->SetFloat3("SunLightDir", finalSunDir);
@@ -107,7 +107,7 @@ void engine::SkySphere::Render(const ComPtr<ID3D11DeviceContext>& context, const
 		m_Material->SetMatrix("g_ProjMatrix", proj);
 	}
 
-	m_Mesh->Bind(context.Get());
+	m_Mesh->InputAssembler(context.Get());
 	m_Material->Bind(context.Get());
 	auto& subMeshes = m_Mesh->GetSubMeshes();
 
@@ -115,8 +115,6 @@ void engine::SkySphere::Render(const ComPtr<ID3D11DeviceContext>& context, const
 	{
 		context->DrawIndexed(subMeshes[i].IndexCount, subMeshes[i].IndexOffset, 0);
 	}
-
-
 }
 
 engine::SharedPtr<engine::SkySphere> engine::SkySphere::Create()

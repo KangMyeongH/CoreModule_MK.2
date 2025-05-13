@@ -21,6 +21,7 @@
   <ItemGroup>
     <!-- src 폴더의 모든 CPP 파일을 포함 -->
     <ClCompile Include="src\AssetManager.cpp" />
+    <ClCompile Include="src\BasePass.cpp" />
     <ClCompile Include="src\Behaviour.cpp" />
     <ClCompile Include="src\BoxCollider.cpp" />
     <ClCompile Include="src\Camera.cpp" />
@@ -44,6 +45,7 @@
     <ClCompile Include="src\Hierarchy.cpp" />
     <ClCompile Include="src\InputManager.cpp" />
     <ClCompile Include="src\Light.cpp" />
+    <ClCompile Include="src\LightingPass.cpp" />
     <ClCompile Include="src\LoadManager.cpp" />
     <ClCompile Include="src\Material.cpp" />
     <ClCompile Include="src\Mesh.cpp" />
@@ -54,14 +56,17 @@
     <ClCompile Include="src\PhysicsManager.cpp" />
     <ClCompile Include="src\Prefab.cpp" />
     <ClCompile Include="src\PrefabManager.cpp" />
+    <ClCompile Include="src\PrePass.cpp" />
     <ClCompile Include="src\Renderer.cpp" />
     <ClCompile Include="src\RenderManager.cpp" />
+    <ClCompile Include="src\RenderPass.cpp" />
     <ClCompile Include="src\RenderTarget.cpp" />
     <ClCompile Include="src\Rigidbody.cpp" />
     <ClCompile Include="src\Scene.cpp" />
     <ClCompile Include="src\ScriptBehaviour.cpp" />
     <ClCompile Include="src\ScriptBehaviourManager.cpp" />
     <ClCompile Include="src\SkinnedMeshRenderer.cpp" />
+    <ClCompile Include="src\SkyPass.cpp" />
     <ClCompile Include="src\SkySphere.cpp" />
     <ClCompile Include="src\SphereCollider.cpp" />
     <ClCompile Include="src\TextUI.cpp" />
@@ -74,6 +79,7 @@
   <ItemGroup>
     <!-- include 폴더의 모든 헤더 파일을 포함 -->
     <ClInclude Include="include\AssetManager.h" />
+    <ClInclude Include="include\BasePass.h" />
     <ClInclude Include="include\Behaviour.h" />
     <ClInclude Include="include\BoxCollider.h" />
     <ClInclude Include="include\Camera.h" />
@@ -108,6 +114,7 @@
     <ClInclude Include="include\InputManager.h" />
     <ClInclude Include="include\json.hpp" />
     <ClInclude Include="include\Light.h" />
+    <ClInclude Include="include\LightingPass.h" />
     <ClInclude Include="include\LoadManager.h" />
     <ClInclude Include="include\Material.h" />
     <ClInclude Include="include\Mesh.h" />
@@ -118,14 +125,17 @@
     <ClInclude Include="include\PhysicsManager.h" />
     <ClInclude Include="include\Prefab.h" />
     <ClInclude Include="include\PrefabManager.h" />
+    <ClInclude Include="include\PrePass.h" />
     <ClInclude Include="include\Renderer.h" />
     <ClInclude Include="include\RenderManager.h" />
+    <ClInclude Include="include\RenderPass.h" />
     <ClInclude Include="include\RenderTarget.h" />
     <ClInclude Include="include\Rigidbody.h" />
     <ClInclude Include="include\Scene.h" />
     <ClInclude Include="include\ScriptBehaviour.h" />
     <ClInclude Include="include\ScriptBehaviourManager.h" />
     <ClInclude Include="include\SkinnedMeshRenderer.h" />
+    <ClInclude Include="include\SkyPass.h" />
     <ClInclude Include="include\SkySphere.h" />
     <ClInclude Include="include\SphereCollider.h" />
     <ClInclude Include="include\TextUI.h" />

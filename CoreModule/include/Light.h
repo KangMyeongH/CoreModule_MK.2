@@ -41,6 +41,8 @@ namespace engine
     public:
         void BindLight(const SharedPtr<Material>& material);
 
+        void Render(ID3D11DeviceContext* context, const SharedPtr<Shader>& shader);
+
         void Destroy() override;
 
     protected:

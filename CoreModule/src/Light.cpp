@@ -59,6 +59,33 @@ void engine::Light::BindLight(const SharedPtr<Material>& material)
 	}
 }
 
+void engine::Light::Render(ID3D11DeviceContext* context, const SharedPtr<Shader>& shader)
+{
+	const auto& desc = GetLightDesc();
+
+	switch (m_Type)
+	{
+	case LightType_Directional:
+		{
+		shader->SetFloat4("DireLight_Dir", desc.Dir);
+		shader->SetFloat4("DirLight_Diffuse", desc.Color);
+		shader->SetFloat4("DirLight_Ambient", _float4(1.f, 1.f, 1.f, 1.f));
+		shader->SetFloat4("DirLight_Specular", _float4(1.f, 1.f, 1.f, 1.f));
+		}
+		break;
+	case LightType_Point:
+		{
+			
+		}
+		break;
+	default:
+		break;
+	}
+
+	shader->Bind(context);
+	context->Draw(3, 0);
+}
+
 void engine::Light::Destroy()
 {
 	m_bDestroyed = true;

@@ -33,77 +33,85 @@ engine::AnimationClip engine::SkinnedMeshRenderer::GetCurrentClip()
 	}
 }
 
-void engine::SkinnedMeshRenderer::Bind(const ComPtr<ID3D11DeviceContext>& context)
+void engine::SkinnedMeshRenderer::InputAssembler(ID3D11DeviceContext* context)
 {
 	if (m_Mesh)
 	{
-		UpdateAnimation(TimeManager::GetInstance().GetDeltaTime());
-		m_Mesh->Bind(context);
+		m_Mesh->InputAssembler(context);
+	}
+}
 
-		for (auto& mat : m_Material)
+void engine::SkinnedMeshRenderer::Bind(ID3D11DeviceContext* context)
+{
+	if (m_Mesh)
+	{
+		// TODO : 아래는 임시코드 임 지워야함.
+		//=============================================================
+		D3D11_SAMPLER_DESC samplerDesc = {};
+		samplerDesc.Filter = D3D11_FILTER_ANISOTROPIC;           // Anisotropic 필터링 사용
+		samplerDesc.AddressU = D3D11_TEXTURE_ADDRESS_WRAP;         // U 좌표 랩 모드
+		samplerDesc.AddressV = D3D11_TEXTURE_ADDRESS_WRAP;         // V 좌표 랩 모드
+		samplerDesc.AddressW = D3D11_TEXTURE_ADDRESS_WRAP;         // W 좌표 랩 모드
+		samplerDesc.MipLODBias = 0.0f;
+		samplerDesc.MaxAnisotropy = 16;                            // 최대 이방성 정도 (품질에 따라 조정)
+		samplerDesc.ComparisonFunc = D3D11_COMPARISON_ALWAYS;      // 비교 함수 설정
+		samplerDesc.BorderColor[0] = 0;
+		samplerDesc.BorderColor[1] = 0;
+		samplerDesc.BorderColor[2] = 0;
+		samplerDesc.BorderColor[3] = 0;
+		samplerDesc.MinLOD = 0;
+		samplerDesc.MaxLOD = D3D11_FLOAT32_MAX;
+
+		ComPtr<ID3D11SamplerState> sampler;
+
+		D3D11Manager::GetInstance().CreateSampler(samplerDesc, sampler);
+
+		for (auto material : m_Material)
 		{
-			mat.second->SetValue(m_BoneMatrix);
+			if (material.second->GetShader())
+			{
+				material.second->SetValue(m_BoneMatrix);
+				material.second->SetSampler("Sampler", sampler);
+				material.second->SetColor("DirLight_Ambient", _float4(1.f, 1.f, 1.f, 1.f));
+				material.second->SetColor("DirLight_Specular", _float4(1.f, 1.f, 1.f, 1.f));
+				material.second->SetMatrix("g_WorldMatrix", GetTransform()->GetWorldMatrix());
+			}
 		}
 	}
 }
 
-void engine::SkinnedMeshRenderer::Render(const ComPtr<ID3D11DeviceContext>& context)
+void engine::SkinnedMeshRenderer::Render(ID3D11DeviceContext* context)
 {
-	// TODO : 아래는 임시코드 임 지워야함.
-	//=============================================================
-	D3D11_SAMPLER_DESC samplerDesc = {};
-	samplerDesc.Filter = D3D11_FILTER_ANISOTROPIC;           // Anisotropic 필터링 사용
-	samplerDesc.AddressU = D3D11_TEXTURE_ADDRESS_WRAP;         // U 좌표 랩 모드
-	samplerDesc.AddressV = D3D11_TEXTURE_ADDRESS_WRAP;         // V 좌표 랩 모드
-	samplerDesc.AddressW = D3D11_TEXTURE_ADDRESS_WRAP;         // W 좌표 랩 모드
-	samplerDesc.MipLODBias = 0.0f;
-	samplerDesc.MaxAnisotropy = 16;                            // 최대 이방성 정도 (품질에 따라 조정)
-	samplerDesc.ComparisonFunc = D3D11_COMPARISON_ALWAYS;      // 비교 함수 설정
-	samplerDesc.BorderColor[0] = 0;
-	samplerDesc.BorderColor[1] = 0;
-	samplerDesc.BorderColor[2] = 0;
-	samplerDesc.BorderColor[3] = 0;
-	samplerDesc.MinLOD = 0;
-	samplerDesc.MaxLOD = D3D11_FLOAT32_MAX;
-
-	ComPtr<ID3D11SamplerState> sampler;
-
-	D3D11Manager::GetInstance().CreateSampler(samplerDesc, sampler);
-
-	for (auto material : m_Material)
-	{
-		if (material.second->GetShader())
-		{
-			material.second->SetSampler("Sampler", sampler);
-			/*material.second->SetFloat4("DirLight_Dir", _float4(1.f, -1.f, 1.f, 0.f));
-			material.second->SetColor("DirLight_Diffuse", _float4(1.f, 1.f, 1.f, 1.f));
-			*/material.second->SetColor("DirLight_Ambient", _float4(1.f, 1.f, 1.f, 1.f));
-			material.second->SetColor("DirLight_Specular", _float4(1.f, 1.f, 1.f, 1.f));
-
-			//material.second->SetColor("Ambient", _float4(0.8f, 0.8f, 0.8f, 0.8f));
-			//material.second->SetColor("Specular", _float4(1.f, 1.f, 1.f, 1.f));
-
-			material.second->SetMatrix("g_WorldMatrix", GetTransform()->GetWorldMatrix());
-		}
-	}
-	//=============================================================
-
-	//_float4X4 worldMat;
-	//XMStoreFloat4x4(&worldMat, XMMatrixTranspose(GetTransform()->GetWorldMatrix()));
-
-	Bind(context);
-
 	auto& subMeshes = m_Mesh->GetSubMeshes();
 
 	for (auto i = 0; i < subMeshes.size(); ++i)
 	{
 		if (m_Material[subMeshes[i].MaterialIndex]->GetShader())
 		{
-			m_Material[subMeshes[i].MaterialIndex]->Bind(context.Get());
-
+			m_Material[subMeshes[i].MaterialIndex]->Bind(context);
 			context->DrawIndexed(subMeshes[i].IndexCount, subMeshes[i].IndexOffset, 0);
 		}
 	}
+}
+
+void engine::SkinnedMeshRenderer::PreRender(ID3D11DeviceContext* context, const _float4X4& viewMat, const _float4X4& projMat)
+{
+	UpdateAnimation(TimeManager::GetInstance().GetDeltaTime());
+	for (auto material : m_Material)
+	{
+		if (material.second->GetShader())
+		{
+			material.second->SetValue(m_BoneMatrix);
+		}
+	}
+
+	m_PrePassShader->SetValue(m_BoneMatrix);
+	m_PrePassShader->SetMatrix("g_WorldMatrix", GetTransform()->GetWorldMatrix());
+	m_PrePassShader->SetMatrix("g_ViewMatrix", viewMat);
+	m_PrePassShader->SetMatrix("g_ProjMatrix", projMat);
+	m_Mesh->InputAssembler(context);
+	m_PrePassShader->Bind(context);
+	context->DrawIndexed(m_Mesh->GetIndexCount(), 0, 0);
 }
 
 engine::Keyframe engine::SkinnedMeshRenderer::SampleBoneTrack(const BoneKeyFrames& track, const _float currTime)
@@ -414,6 +422,7 @@ void engine::SkinnedMeshRenderer::Destroy()
 void engine::SkinnedMeshRenderer::registerComponent(ApplicationMode mode)
 {
 	Renderer::registerComponent(mode);
+	D3D11Manager::GetInstance().CreateShader(L"..\\GameEngine\\resource\\Shader\\SkinningDepthOnly.hlsl", m_PrePassShader);
 }
 
 void engine::SkinnedMeshRenderer::to_json(nlohmann::ordered_json& j)

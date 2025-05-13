@@ -52,6 +52,8 @@ namespace engine
         HRESULT CreateSampler(const D3D11_SAMPLER_DESC& desc, ComPtr<ID3D11SamplerState>& sampler) const;
         HRESULT CreateMesh(const _string& name);
 
+        HRESULT BindMainRTV();
+
         HRESULT ClearBackBufferView(_float4 clearColor);
         HRESULT ClearDepthStencilView();
 
@@ -70,11 +72,12 @@ namespace engine
 
     	void 	Release();
 
+        HRESULT CompileShaderFromFile(const _wstring& path, const _string& entryPoint, const _string& targetProfile, ComPtr<ID3DBlob>& outBlob);
+
     private:
         HRESULT readySwapChain(HWND hWnd, _bool isWindowed, _uint winSizeX, _uint winSizeY);
         HRESULT readyBackBufferRenderTargetView();
         HRESULT readyDepthStencilView(_uint winSizeX, _uint winSizeY);
-        HRESULT compileShaderFromFile(const _wstring& path, const _string& entryPoint, const _string& targetProfile, ComPtr<ID3DBlob>& outBlob);
         void	compileInputLayoutFromReflector(std::vector<D3D11_INPUT_ELEMENT_DESC>* inputDesc, const ComPtr<ID3D11ShaderReflection>& reflector);
         void    reflectBufferFromReflector(const ComPtr<ID3D11ShaderReflection>& reflector, ReflectResult& outResult);
         bool    createConstantBuffer(const ReflectResult& reflectResult, std::unordered_map<_string, SharedPtr<CBufferRuntime>>& outResult);
@@ -83,9 +86,6 @@ namespace engine
         HRESULT createForceAlphaOne();
 
         HRESULT readyVIBuffers();
-
-        HRESULT createDiffuseRenderTarget();
-
 
     private:
         //======================================//

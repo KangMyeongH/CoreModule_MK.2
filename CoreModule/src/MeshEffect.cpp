@@ -27,7 +27,11 @@ void engine::MeshEffect::SetMesh(const _wstring& modelPath, _int meshIdx)
 	m_Mesh = mesh;
 }
 
-void engine::MeshEffect::Bind(const ComPtr<ID3D11DeviceContext>& context)
+void engine::MeshEffect::InputAssembler(ID3D11DeviceContext* context)
+{
+}
+
+void engine::MeshEffect::Bind(ID3D11DeviceContext* context)
 {
 	if (m_Mesh)
 	{
@@ -35,11 +39,29 @@ void engine::MeshEffect::Bind(const ComPtr<ID3D11DeviceContext>& context)
 	}
 }
 
-void engine::MeshEffect::Render(const ComPtr<ID3D11DeviceContext>& context)
+void engine::MeshEffect::Render(ID3D11DeviceContext* context)
 {
 
 }
 
+void engine::MeshEffect::PreRender(ID3D11DeviceContext* context, const _float4X4& viewMat, const _float4X4& projMat)
+{
+	
+}
+
 void engine::MeshEffect::Destroy()
+{
+}
+
+void engine::MeshEffect::registerComponent(ApplicationMode mode)
+{
+	Renderer::registerComponent(mode);
+}
+
+void engine::MeshEffect::to_json(nlohmann::ordered_json& j)
+{
+}
+
+void engine::MeshEffect::from_json(const nlohmann::ordered_json& j)
 {
 }

@@ -30,9 +30,7 @@ namespace engine
 
     	static SharedPtr<RenderTarget> Create(const ComPtr<ID3D11Device>& device, const ComPtr<ID3D11DeviceContext>& context, _uint sizeX, _uint sizeY, DXGI_FORMAT pixelFormat, const _float4& clearColor);
 
-        HRESULT ReadyDebug(_float x, _float y, _float sizeX, _float sizeY);
 
-        HRESULT Render(ID3D11DeviceContext* context);
 
     	void Destroy() override {}
 
@@ -44,9 +42,5 @@ namespace engine
         ComPtr<ID3D11RenderTargetView> 		m_RTV;
         ComPtr<ID3D11ShaderResourceView>	m_SRV;
         _float4                             m_ClearColor;
-        _float4X4                           m_WorldMat;
-
-        SharedPtr<Shader>	                m_Shader;
-        SharedPtr<VIBuffer>                 m_VIBuffer;
     };
 }

@@ -32,8 +32,10 @@ namespace engine
         //				  method				//
         //======================================//
     public:
-        void Bind(const ComPtr<ID3D11DeviceContext>& context) override;
-        void Render(const ComPtr<ID3D11DeviceContext>& context) override;
+        void InputAssembler(ID3D11DeviceContext* context) override;
+        void Bind(ID3D11DeviceContext* context) override;
+        void Render(ID3D11DeviceContext* context) override;
+        void PreRender(ID3D11DeviceContext* context, const _float4X4& viewMat, const _float4X4& projMat) override;
 
         void Destroy() override;
 
@@ -71,7 +73,7 @@ namespace engine
         //======================================//
     private:
         SharedPtr<Mesh> m_Mesh;
-
+        SharedPtr<Shader> m_PrePassShader;
         static ComponentRegistrar registrar_MeshRenderer;
     };
 }

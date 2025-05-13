@@ -59,7 +59,9 @@ void engine::editor::EditorComponentManager::Render(const ComPtr<ID3D11DeviceCon
 					}
 				}
 
-				renderer->Render(context);
+				renderer->InputAssembler(context.Get());
+				renderer->Bind(context.Get());
+				renderer->Render(context.Get());
 			}
 		}
 	}
