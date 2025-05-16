@@ -106,3 +106,6 @@ private: 																										\
 #pragma endregion Singleton
 
 #define LOG_FAIL(msg)  do{ std::cout << "VALIDATE ERROR: " << msg << '\n'; }while(0)
+
+constexpr UINT NUM_CASCADES = 4;
+constexpr UINT SHADOW_SIZE 	= 2048;
