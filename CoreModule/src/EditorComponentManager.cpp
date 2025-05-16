@@ -1,20 +1,27 @@
 #include "EditorComponentManager.h"
 
+#include "BasePass.h"
 #include "Camera.h"
 #include "Collider.h"
 #include "D3D11Manager.h"
 #include "DebugRenderManager.h"
+#include "DeferredPass.h"
 #include "EditorCore.h"
 #include "GameObject.h"
 #include "Light.h"
+#include "LightingPass.h"
 #include "Material.h"
+#include "OutLinePass.h"
+#include "PrePass.h"
 #include "Renderer.h"
+#include "SkyPass.h"
 #include "SkySphere.h"
 #include "TextUI.h"
 #include "UI.h"
 #include "UIManager.h"
 
-engine::editor::EditorComponentManager::EditorComponentManager() : m_ViewMat(), m_ProjMat(), m_DirtyFlag(true)
+engine::editor::EditorComponentManager::EditorComponentManager() : m_MaxSort(0), m_MinSort(0), m_ViewMat(), m_ProjMat(),
+                                                                   m_DirtyFlag(true)
 {
 }
 
@@ -27,50 +34,76 @@ void engine::editor::EditorComponentManager::Initialize()
 {
 	AddFont(L"HUGoth150", L"..\\Client\\Assets\\Resource\\Font\\HUGoth150.spritefont");
 	m_Batch = UIManager::GetInstance().GetBatch();
+
+	ID3D11Device* pDevice = D3D11Manager::GetInstance().GetDevice().Get();
+	ID3D11DeviceContext* pContext = D3D11Manager::GetInstance().GetContext().Get();
+
+	// SkyPass Initialize
+	m_SkyPass = std::make_unique<engine::SkyPass>();
+	m_SkyPass->Initialize(pDevice, pContext);
+
+	// PrePass Initialize
+	m_PrePass = std::make_unique<engine::PrePass>();
+	m_PrePass->Initialize(pDevice, pContext);
+
+	// BasePass Initialize
+	m_BasePass = std::make_unique<engine::BasePass>();
+	m_BasePass->Initialize(pDevice, pContext);
+
+	// LightingPass
+	m_LightingPass = std::make_unique<engine::LightingPass>();
+	m_LightingPass->Initialize(pDevice, pContext);
+
+	// DeferredPass
+	m_DeferredPass = std::make_unique<engine::DeferredPass>();
+	m_DeferredPass->Initialize(pDevice, pContext);
+
+	// OutlinePass
+	m_OutlinePass = std::make_unique<engine::OutLinePass>();
+	m_OutlinePass->Initialize(pDevice, pContext);
 }
 
 // TODO : Render Pipeline 수정해야함.
 // 이거 안하면 컨텐츠도 없는거임.
 
 
-void engine::editor::EditorComponentManager::Render(const ComPtr<ID3D11DeviceContext>& context, const _float4X4& viewMat, const _float4X4& projMat)
+void engine::editor::EditorComponentManager::Render(const ComPtr<ID3D11DeviceContext>& context, CamData* camData, _bool isGame)
 {
-	Vector3 camPos = EditorCore::GetInstance().GetEditorCamera().GetCameraPos();
-	_float4 finalCamPos = { camPos.Value.x, camPos.Value.y, camPos.Value.z, 1.f };
+	using namespace DirectX;
+	_float4 camPos = camData->Position;
 
-	//RenderSkySphere(context);
+	PrePassData preData{};
+	preData.ProjMat = camData->ProjMat;
+	preData.ViewMat = camData->ViewMat;
 
-	for (const auto& renderer : m_Renderers)
-	{
-		if (auto owner = renderer->GetGameObject().lock())
-		{
-			if (renderer->IsEnabled())
-			{
-				auto materials = renderer->GetMaterials();
+	SkyPassData skyData{};
+	skyData.ProjMat = camData->ProjMat;
+	skyData.ViewMat = camData->ViewMat;
+	skyData.CameraPosition = Vector3(camPos.x, camPos.y, camPos.z);
+	
+	BasePassData baseData{};
+	baseData.ProjMat = camData->ProjMat;
+	baseData.ViewMat = camData->ViewMat;
+	baseData.CameraPosition = camPos;
+	baseData.NearFarPlane = camData->NearFarPlane;
 
-				for (auto material : materials)
-				{
-					if (material.second->GetShader())
-					{
-						for (auto light : m_Lights)
-						{
-							light->BindLight(material.second);
-						}
+	LightPassData lightData{};
+	lightData.ProjMat = camData->ProjMat;
+	lightData.ViewMat = camData->ViewMat;
+	lightData.CameraPosition = camPos;
+	XMStoreFloat4x4(&lightData.InvProjMat, XMMatrixInverse(nullptr, XMLoadFloat4x4(&camData->ProjMat)));
+	XMStoreFloat4x4(&lightData.InvViewMat, XMMatrixInverse(nullptr, XMLoadFloat4x4(&camData->ViewMat)));
+	lightData.NearFarPlane = camData->NearFarPlane;
 
-						material.second->SetMatrix("g_ViewMatrix", viewMat);
-						material.second->SetMatrix("g_ProjMatrix", projMat);
-						material.second->SetFloat4("CameraPosition", finalCamPos);
-					}
-				}
+	PrePass(context, &preData, isGame);
+	BasePass(context, &baseData, isGame);
+	LightingPass(context, &lightData, isGame);
+	OutlinePass(context, nullptr, isGame);
+	DeferredPass(context, nullptr, isGame);
+	SkyPass(context, &skyData, isGame);
 
-				renderer->InputAssembler(context.Get());
-				renderer->Bind(context.Get());
-				renderer->Render(context.Get());
-			}
-		}
-	}
 
-	RenderCollider(context, viewMat, projMat);
+	RenderCollider(context, camData->ViewMat, camData->ProjMat);
 
 	RenderUIComponent(context);
 }
@@ -358,6 +391,65 @@ void engine::editor::EditorComponentManager::RenderSkySphere(const ComPtr<ID3D11
 	skySphere->Render(context, m_ViewMat, m_ProjMat, camPos, sunDir);
 
 	context->OMSetDepthStencilState(prevState.Get(), ref);
+}
+
+HRESULT engine::editor::EditorComponentManager::SkyPass(const ComPtr<ID3D11DeviceContext>& context, void* data, _bool isGame)
+{
+	auto passData = static_cast<SkyPassData*>(data);
+
+	for (const auto& light : m_Lights)
+	{
+		if (light->GetType() == LightType_Directional)
+		{
+			_float4 dir = light->GetLightDesc().Dir;
+			passData->SunDir = { dir.x, dir.y, dir.z };
+		}
+	}
+
+	m_SkyPass->RenderEditor(context.Get(), passData, isGame);
+
+	return S_OK;
+}
+
+HRESULT engine::editor::EditorComponentManager::PrePass(const ComPtr<ID3D11DeviceContext>& context, void* data, _bool isGame)
+{
+	auto passData = static_cast<PrePassData*>(data);
+	passData->Renderers = &m_Renderers;
+	m_PrePass->RenderEditor(context.Get(), passData, isGame);
+	return S_OK;
+}
+
+HRESULT engine::editor::EditorComponentManager::BasePass(const ComPtr<ID3D11DeviceContext>& context, void* data, _bool isGame)
+{
+	auto passData = static_cast<BasePassData*>(data);
+	passData->Renderers = &m_Renderers;
+	m_BasePass->RenderEditor(context.Get(), passData, isGame);
+
+	return S_OK;
+}
+
+HRESULT engine::editor::EditorComponentManager::LightingPass(const ComPtr<ID3D11DeviceContext>& context, void* data, _bool isGame)
+{
+	using namespace DirectX;
+	auto passData = static_cast<LightPassData*>(data);
+	passData->Lights = &m_Lights;
+	
+	m_LightingPass->RenderEditor(context.Get(), passData, isGame);
+
+	return S_OK;
+}
+
+HRESULT engine::editor::EditorComponentManager::DeferredPass(const ComPtr<ID3D11DeviceContext>& context, void* data, _bool isGame)
+{
+	m_DeferredPass->RenderEditor(context.Get(), nullptr, isGame);
+
+	return S_OK;
+}
+
+HRESULT engine::editor::EditorComponentManager::OutlinePass(const ComPtr<ID3D11DeviceContext>& context, void* data, _bool isGame)
+{
+	m_OutlinePass->RenderEditor(context.Get(), nullptr, isGame);
+	return S_OK;
 }
 
 

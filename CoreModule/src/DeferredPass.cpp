@@ -1,6 +1,7 @@
 #include "DeferredPass.h"
 
 #include "D3D11Manager.h"
+#include "EditorCore.h"
 #include "RenderManager.h"
 #include "RenderTarget.h"
 
@@ -44,6 +45,63 @@ HRESULT engine::DeferredPass::Render(ID3D11DeviceContext* context, void* data)
 	context->OMSetDepthStencilState(prevState.Get(), ref);
 
 	return S_OK;
+}
+
+HRESULT engine::DeferredPass::RenderEditor(ID3D11DeviceContext* context, void* data, _bool isGame)
+{
+	if (!isGame)
+	{
+		editor::EditorCore* editorCore = &editor::EditorCore::GetInstance();
+
+		ComPtr<ID3D11DepthStencilState> prevState;
+		UINT ref;
+		context->OMGetDepthStencilState(prevState.ReleaseAndGetAddressOf(), &ref);
+
+		context->OMSetDepthStencilState(m_DeferredDSState.Get(), 0);
+
+		const auto& shadeMap = editorCore->FindRenderTarget("Target_Shade", isGame)->GetSRV();
+		const auto& specularMap = editorCore->FindRenderTarget("Target_Specular", isGame)->GetSRV();
+		const auto& diffuseMap = editorCore->FindRenderTarget("Target_Diffuse", isGame)->GetSRV();
+		const auto& outlineMap = editorCore->FindRenderTarget("Target_Outline", isGame)->GetSRV();
+
+		m_DeferredShader->SetTexture("g_DiffuseMap", diffuseMap);
+		m_DeferredShader->SetTexture("g_ShadeMap", shadeMap);
+		m_DeferredShader->SetTexture("g_SpecularMap", specularMap);
+		m_DeferredShader->SetTexture("g_OutlineMap", outlineMap);
+		m_DeferredShader->Bind(context);
+		context->Draw(3, 0);
+
+		context->OMSetDepthStencilState(prevState.Get(), ref);
+
+		return S_OK;
+	}
+
+	else
+	{
+		editor::EditorCore* editorCore = &editor::EditorCore::GetInstance();
+
+		ComPtr<ID3D11DepthStencilState> prevState;
+		UINT ref;
+		context->OMGetDepthStencilState(prevState.ReleaseAndGetAddressOf(), &ref);
+
+		context->OMSetDepthStencilState(m_DeferredDSState.Get(), 0);
+
+		const auto& shadeMap = editorCore->FindRenderTarget("Target_Shade", isGame)->GetSRV();
+		const auto& specularMap = editorCore->FindRenderTarget("Target_Specular", isGame)->GetSRV();
+		const auto& diffuseMap = editorCore->FindRenderTarget("Target_Diffuse", isGame)->GetSRV();
+		const auto& outlineMap = editorCore->FindRenderTarget("Target_Outline", isGame)->GetSRV();
+
+		m_DeferredShader->SetTexture("g_DiffuseMap", diffuseMap);
+		m_DeferredShader->SetTexture("g_ShadeMap", shadeMap);
+		m_DeferredShader->SetTexture("g_SpecularMap", specularMap);
+		m_DeferredShader->SetTexture("g_OutlineMap", outlineMap);
+		m_DeferredShader->Bind(context);
+		context->Draw(3, 0);
+
+		context->OMSetDepthStencilState(prevState.Get(), ref);
+
+		return S_OK;
+	}
 }
 
 void engine::DeferredPass::Release()

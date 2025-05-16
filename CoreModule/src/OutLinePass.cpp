@@ -1,6 +1,7 @@
 #include "OutLinePass.h"
 
 #include "D3D11Manager.h"
+#include "EditorCore.h"
 #include "RenderManager.h"
 #include "RenderTarget.h"
 
@@ -56,6 +57,63 @@ HRESULT engine::OutLinePass::Render(ID3D11DeviceContext* context, void* data)
 
 	context->OMSetDepthStencilState(prevState.Get(), prevRef);
 	return S_OK;
+}
+
+HRESULT engine::OutLinePass::RenderEditor(ID3D11DeviceContext* context, void* data, _bool isGame)
+{
+	if (!isGame)
+	{
+		editor::EditorCore* editorCore = &editor::EditorCore::GetInstance();
+
+		editorCore->BeginMRT("Outline-Pass", isGame);
+
+		ComPtr<ID3D11DepthStencilState> prevState;
+		UINT prevRef;
+
+		context->OMGetDepthStencilState(prevState.ReleaseAndGetAddressOf(), &prevRef);
+		context->OMSetDepthStencilState(m_DepthStencilState.Get(), 0);
+
+		const auto& depthMap = editorCore->FindRenderTarget("Target_Depth", isGame)->GetSRV();
+		const auto& normalMap = editorCore->FindRenderTarget("Target_Normal", isGame)->GetSRV();
+
+		m_Shader->SetTexture("g_DepthMap", depthMap);
+		m_Shader->SetTexture("g_NormalMap", normalMap);
+
+		m_Shader->Bind(context);
+		context->Draw(3, 0);
+
+		editorCore->EndMRT(isGame);
+
+		context->OMSetDepthStencilState(prevState.Get(), prevRef);
+		return S_OK;
+	}
+
+	else
+	{
+		editor::EditorCore* editorCore = &editor::EditorCore::GetInstance();
+
+		editorCore->BeginMRT("Outline-Pass", isGame);
+
+		ComPtr<ID3D11DepthStencilState> prevState;
+		UINT prevRef;
+
+		context->OMGetDepthStencilState(prevState.ReleaseAndGetAddressOf(), &prevRef);
+		context->OMSetDepthStencilState(m_DepthStencilState.Get(), 0);
+
+		const auto& depthMap = editorCore->FindRenderTarget("Target_Depth", isGame)->GetSRV();
+		const auto& normalMap = editorCore->FindRenderTarget("Target_Normal", isGame)->GetSRV();
+
+		m_Shader->SetTexture("g_DepthMap", depthMap);
+		m_Shader->SetTexture("g_NormalMap", normalMap);
+
+		m_Shader->Bind(context);
+		context->Draw(3, 0);
+
+		editorCore->EndMRT(isGame);
+
+		context->OMSetDepthStencilState(prevState.Get(), prevRef);
+		return S_OK;
+	}
 }
 
 void engine::OutLinePass::Release()

@@ -1235,4 +1235,12 @@ namespace engine
 		_matrix Proj;
 
 	};
+
+	struct CamData
+	{
+		_float4X4 ViewMat;
+		_float4X4 ProjMat;
+		_float4 NearFarPlane;
+		_float4 Position;
+	};
 }

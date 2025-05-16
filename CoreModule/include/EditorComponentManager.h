@@ -46,7 +46,7 @@ namespace engine
         public:
             void Initialize();
 
-            void Render(const ComPtr<ID3D11DeviceContext>& context, const _float4X4& viewMat, const _float4X4& projMat);
+            void Render(const ComPtr<ID3D11DeviceContext>& context, CamData* camData, _bool isGame);
             void RenderUIComponent(const ComPtr<ID3D11DeviceContext>& context);
             void RenderCollider(const ComPtr<ID3D11DeviceContext>& context, const _float4X4& viewMat, const _float4X4& projMat) const;
             void AddComponent(const SharedPtr<GameObject>& owner, const SharedPtr<Component>& component);
@@ -56,6 +56,13 @@ namespace engine
             void OnSortingChanged(const SharedPtr<UI>& ui, _int oldSort, _int newSort, _bool isText);
 
             void RenderSkySphere(const ComPtr<ID3D11DeviceContext>& context);
+
+            HRESULT SkyPass(const ComPtr<ID3D11DeviceContext>& context, void* data, _bool isGame);
+            HRESULT PrePass(const ComPtr<ID3D11DeviceContext>& context, void* data, _bool isGame);
+            HRESULT BasePass(const ComPtr<ID3D11DeviceContext>& context, void* data, _bool isGame);
+            HRESULT LightingPass(const ComPtr<ID3D11DeviceContext>& context, void* data, _bool isGame);
+            HRESULT DeferredPass(const ComPtr<ID3D11DeviceContext>& context, void* data, _bool isGame);
+            HRESULT OutlinePass(const ComPtr<ID3D11DeviceContext>& context, void* data, _bool isGame);
 
             //template <typename T>
             //SharedPtr<T> CreateComponent(const SharedPtr<GameObject>& owner)
@@ -106,6 +113,13 @@ namespace engine
             _float4X4           m_ProjMat;
 
         	bool                m_DirtyFlag;
+
+            std::unique_ptr<RenderPass> m_SkyPass;
+            std::unique_ptr<RenderPass> m_PrePass;
+            std::unique_ptr<RenderPass> m_BasePass;
+            std::unique_ptr<RenderPass> m_LightingPass;
+            std::unique_ptr<RenderPass> m_DeferredPass;
+            std::unique_ptr<RenderPass> m_OutlinePass;
         };
 
     }

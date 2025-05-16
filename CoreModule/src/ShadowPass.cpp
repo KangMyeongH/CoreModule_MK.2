@@ -179,6 +179,11 @@ HRESULT engine::ShadowPass::Render(ID3D11DeviceContext* context, void* data)
 	return S_OK;
 }
 
+HRESULT engine::ShadowPass::RenderEditor(ID3D11DeviceContext* context, void* data, _bool isGame)
+{
+	return S_OK;
+}
+
 void engine::ShadowPass::Release()
 {
 }

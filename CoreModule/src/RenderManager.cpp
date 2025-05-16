@@ -385,7 +385,6 @@ HRESULT engine::RenderManager::BeginMRT(const _string& tag)
 
 		renderTargets[numRenderTargets++] = renderTarget->GetRTV().Get();
 	}
-
 	ID3D11DepthStencilView* dsv = D3D11Manager::GetInstance().GetDepthStencilView().Get();
 
 	context->OMSetRenderTargets(numRenderTargets, renderTargets, dsv);

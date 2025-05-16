@@ -1,6 +1,7 @@
 #include "PrePass.h"
 
 #include "D3D11Manager.h"
+#include "EditorCore.h"
 #include "Renderer.h"
 
 HRESULT engine::PrePass::Initialize(ID3D11Device* device, ID3D11DeviceContext* context)
@@ -94,6 +95,86 @@ HRESULT engine::PrePass::Render(ID3D11DeviceContext* context, void* data)
 	context->OMSetRenderTargets(1, &mainRTV, dsv);
 	context->OMSetDepthStencilState(prevState.Get(), ref);
 	context->OMSetBlendState(prevBlendState.Get(), prevBF, prevSampleMask);
+
+	return S_OK;
+}
+
+HRESULT engine::PrePass::RenderEditor(ID3D11DeviceContext* context, void* data, _bool isGame)
+{
+	if (!data)
+	{
+		return E_INVALIDARG;
+	}
+
+	const PrePassData* passData = static_cast<PrePassData*>(data);  
+
+	// 0. 이전 상태 보존 -----------------------------------------------
+	ComPtr<ID3D11DepthStencilState> prevState;
+	UINT ref;
+	ComPtr<ID3D11BlendState> prevBlendState;
+	_float prevBF[4];
+	UINT prevSampleMask;
+	context->OMGetDepthStencilState(prevState.ReleaseAndGetAddressOf(), &ref);
+	context->OMGetBlendState(prevBlendState.ReleaseAndGetAddressOf(), prevBF, &prevSampleMask);
+
+	if (!isGame)
+	{
+		// 1. 상태 세팅 ----------------------------------------------------
+		ID3D11RenderTargetView* dummyRTV = nullptr;
+		ID3D11DepthStencilView* dsv = editor::EditorCore::GetInstance().GetSceneDSV().Get();
+
+		context->OMSetRenderTargets(0, &dummyRTV, dsv);
+		context->OMSetDepthStencilState(m_PrePassDSState.Get(), 0);
+		context->OMSetBlendState(m_PrePassBlendState.Get(), nullptr, 0xffffffff);
+
+		// 2. PrePass Draw ----------------------------------------------
+		for (const auto& renderer : *passData->Renderers)
+		{
+			if (const auto& owner = renderer->GetGameObject().lock())
+			{
+				if (owner->IsActive())
+				{
+					renderer->PreRender(context, passData->ViewMat, passData->ProjMat);
+				}
+			}
+		}
+
+		// 3. 상태 복원 --------------------------------------------------
+		ID3D11RenderTargetView* mainRTV = editor::EditorCore::GetInstance().GetSceneRTV().Get();
+		context->OMSetRenderTargets(1, &mainRTV, dsv);
+		context->OMSetDepthStencilState(prevState.Get(), ref);
+		context->OMSetBlendState(prevBlendState.Get(), prevBF, prevSampleMask);
+	}
+
+	else
+	{
+		// 1. 상태 세팅 ----------------------------------------------------
+		ID3D11RenderTargetView* dummyRTV = nullptr;
+		ID3D11DepthStencilView* dsv = editor::EditorCore::GetInstance().GetGameDSV().Get();
+
+		context->OMSetRenderTargets(0, &dummyRTV, dsv);
+		context->OMSetDepthStencilState(m_PrePassDSState.Get(), 0);
+		context->OMSetBlendState(m_PrePassBlendState.Get(), nullptr, 0xffffffff);
+		//D3D11Manager::GetInstance().SetCW();
+
+		// 2. PrePass Draw ----------------------------------------------
+		for (const auto& renderer : *passData->Renderers)
+		{
+			if (const auto& owner = renderer->GetGameObject().lock())
+			{
+				if (owner->IsActive())
+				{
+					renderer->PreRender(context, passData->ViewMat, passData->ProjMat);
+				}
+			}
+		}
+
+		// 3. 상태 복원 --------------------------------------------------
+		ID3D11RenderTargetView* mainRTV = editor::EditorCore::GetInstance().GetGameRTV().Get();
+		context->OMSetRenderTargets(1, &mainRTV, dsv);
+		context->OMSetDepthStencilState(prevState.Get(), ref);
+		context->OMSetBlendState(prevBlendState.Get(), prevBF, prevSampleMask);
+	}
 
 	return S_OK;
 }

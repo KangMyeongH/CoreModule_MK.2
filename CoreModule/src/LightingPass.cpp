@@ -1,6 +1,7 @@
 #include "LightingPass.h"
 
 #include "D3D11Manager.h"
+#include "EditorCore.h"
 #include "Light.h"
 #include "RenderManager.h"
 #include "RenderTarget.h"
@@ -116,6 +117,173 @@ HRESULT engine::LightingPass::Render(ID3D11DeviceContext* context, void* data)
 	context->OMSetBlendState(prevBlendState.Get(), prevBlendFactor, prevSampleMask);
 
 	return S_OK;
+}
+
+HRESULT engine::LightingPass::RenderEditor(ID3D11DeviceContext* context, void* data, _bool isGame)
+{
+	if (!isGame)
+	{
+		LightPassData* passData = static_cast<LightPassData*>(data);
+
+		editor::EditorCore* editorCore = &editor::EditorCore::GetInstance();
+
+		editorCore->BeginMRT("Light-Pass", isGame);
+
+		ComPtr<ID3D11DepthStencilState> prevState;
+		UINT ref;
+		ComPtr<ID3D11BlendState> prevBlendState;
+		_float prevBlendFactor[4];
+		UINT prevSampleMask;
+
+		_float blendFactor[4] = { 0.f, 0.f,0.f,0.f };
+		UINT sampleMask = 0xFFFFFFFF;
+
+
+		context->OMGetDepthStencilState(prevState.ReleaseAndGetAddressOf(), &ref);
+		context->OMGetBlendState(prevBlendState.ReleaseAndGetAddressOf(), prevBlendFactor, &prevSampleMask);
+
+		context->OMSetDepthStencilState(m_LightDSState.Get(), 0);
+		context->OMSetBlendState(m_BlendState.Get(), blendFactor, sampleMask);
+
+		const auto& worldPosMap = editorCore->FindRenderTarget("Target_Position", isGame)->GetSRV();
+		const auto& diffuseMap = editorCore->FindRenderTarget("Target_Diffuse", isGame)->GetSRV();
+		const auto& normalMap = editorCore->FindRenderTarget("Target_Normal", isGame)->GetSRV();
+		const auto& depthMap = editorCore->FindRenderTarget("Target_Depth", isGame)->GetSRV();
+
+		for (const auto& light : *passData->Lights)
+		{
+			const auto& desc = light->GetLightDesc();
+
+			switch (desc.Type)
+			{
+			case LightType_Directional:
+			{
+				m_DirLight->SetTexture("g_WorldPositionMap", worldPosMap);
+				m_DirLight->SetTexture("g_DiffuseMap", diffuseMap);
+				m_DirLight->SetTexture("g_NormalMap", normalMap);
+				m_DirLight->SetTexture("g_DepthMap", depthMap);
+
+				m_DirLight->SetMatrix("g_ViewMatrix", passData->ViewMat);
+				m_DirLight->SetMatrix("g_ProjMatrix", passData->ProjMat);
+				m_DirLight->SetMatrix("g_ViewMatrixInverse", passData->InvViewMat);
+				m_DirLight->SetMatrix("g_ProjMatrixInverse", passData->InvProjMat);
+				m_DirLight->SetFloat4("CameraPosition", passData->CameraPosition);
+
+				light->Render(context, m_DirLight);
+			}
+			break;
+
+			case LightType_Point:
+			{
+				m_PointLight->SetTexture("g_WorldPositionMap", worldPosMap);
+				m_PointLight->SetTexture("g_DiffuseMap", diffuseMap);
+				m_PointLight->SetTexture("g_NormalMap", normalMap);
+				m_PointLight->SetTexture("g_DepthMap", depthMap);
+
+				m_PointLight->SetMatrix("g_ViewMatrix", passData->ViewMat);
+				m_PointLight->SetMatrix("g_ProjMatrix", passData->ProjMat);
+				m_PointLight->SetMatrix("g_ViewMatrixInverse", passData->InvViewMat);
+				m_PointLight->SetMatrix("g_ProjMatrixInverse", passData->InvProjMat);
+				m_PointLight->SetFloat4("CameraPosition", passData->CameraPosition);
+
+				light->Render(context, m_PointLight);
+			}
+			break;
+
+			default:
+				break;
+			}
+		}
+
+		editorCore->EndMRT(isGame);
+
+		context->OMSetDepthStencilState(prevState.Get(), ref);
+		context->OMSetBlendState(prevBlendState.Get(), prevBlendFactor, prevSampleMask);
+
+		return S_OK;
+	}
+
+	else
+	{
+		LightPassData* passData = static_cast<LightPassData*>(data);
+
+		editor::EditorCore* editorCore = &editor::EditorCore::GetInstance();
+
+		editorCore->BeginMRT("Light-Pass", isGame);
+
+		ComPtr<ID3D11DepthStencilState> prevState;
+		UINT ref;
+		ComPtr<ID3D11BlendState> prevBlendState;
+		_float prevBlendFactor[4];
+		UINT prevSampleMask;
+
+		_float blendFactor[4] = { 0.f, 0.f,0.f,0.f };
+		UINT sampleMask = 0xFFFFFFFF;
+
+
+		context->OMGetDepthStencilState(prevState.ReleaseAndGetAddressOf(), &ref);
+		context->OMGetBlendState(prevBlendState.ReleaseAndGetAddressOf(), prevBlendFactor, &prevSampleMask);
+
+		context->OMSetDepthStencilState(m_LightDSState.Get(), 0);
+		context->OMSetBlendState(m_BlendState.Get(), blendFactor, sampleMask);
+
+		const auto& worldPosMap = editorCore->FindRenderTarget("Target_Position", isGame)->GetSRV();
+		const auto& diffuseMap = editorCore->FindRenderTarget("Target_Diffuse", isGame)->GetSRV();
+		const auto& normalMap = editorCore->FindRenderTarget("Target_Normal", isGame)->GetSRV();
+		const auto& depthMap = editorCore->FindRenderTarget("Target_Depth", isGame)->GetSRV();
+
+		for (const auto& light : *passData->Lights)
+		{
+			const auto& desc = light->GetLightDesc();
+
+			switch (desc.Type)
+			{
+			case LightType_Directional:
+			{
+				m_DirLight->SetTexture("g_WorldPositionMap", worldPosMap);
+				m_DirLight->SetTexture("g_DiffuseMap", diffuseMap);
+				m_DirLight->SetTexture("g_NormalMap", normalMap);
+				m_DirLight->SetTexture("g_DepthMap", depthMap);
+
+				m_DirLight->SetMatrix("g_ViewMatrix", passData->ViewMat);
+				m_DirLight->SetMatrix("g_ProjMatrix", passData->ProjMat);
+				m_DirLight->SetMatrix("g_ViewMatrixInverse", passData->InvViewMat);
+				m_DirLight->SetMatrix("g_ProjMatrixInverse", passData->InvProjMat);
+				m_DirLight->SetFloat4("CameraPosition", passData->CameraPosition);
+
+				light->Render(context, m_DirLight);
+			}
+			break;
+
+			case LightType_Point:
+			{
+				m_PointLight->SetTexture("g_WorldPositionMap", worldPosMap);
+				m_PointLight->SetTexture("g_DiffuseMap", diffuseMap);
+				m_PointLight->SetTexture("g_NormalMap", normalMap);
+				m_PointLight->SetTexture("g_DepthMap", depthMap);
+
+				m_PointLight->SetMatrix("g_ViewMatrix", passData->ViewMat);
+				m_PointLight->SetMatrix("g_ProjMatrix", passData->ProjMat);
+				m_PointLight->SetMatrix("g_ViewMatrixInverse", passData->InvViewMat);
+				m_PointLight->SetMatrix("g_ProjMatrixInverse", passData->InvProjMat);
+				m_PointLight->SetFloat4("CameraPosition", passData->CameraPosition);
+
+				light->Render(context, m_PointLight);
+			}
+			break;
+
+			default:
+				break;
+			}
+		}
+
+		editorCore->EndMRT(isGame);
+
+		context->OMSetDepthStencilState(prevState.Get(), ref);
+		context->OMSetBlendState(prevBlendState.Get(), prevBlendFactor, prevSampleMask);
+
+		return S_OK;
+	}
 }
 
 void engine::LightingPass::Release()

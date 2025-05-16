@@ -23,6 +23,8 @@ namespace engine
             void 	SetAspectRatio(const _float aspectRatio) { m_AspectRatio = aspectRatio; }
             _float 	GetAspectRatio() const { return m_AspectRatio; }
 
+            _float GetNearPlane() const { return m_NearPlane; }
+            _float GetFarPlane() const { return m_FarPlane; }
 
             //======================================//
             //				  method				//

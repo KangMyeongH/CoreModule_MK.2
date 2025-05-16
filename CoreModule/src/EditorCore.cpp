@@ -6,6 +6,8 @@
 #include "EditorComponentManager.h"
 #include "Grid.h"
 #include "Material.h"
+#include "RenderTarget.h"
+#include "Transform.h"
 
 engine::editor::EditorCore::EditorCore() : m_EditorComponentManager(nullptr), m_OffscreenWidth(0), m_OffscreenHeight(0),
                                            m_bEditorMode(true)
@@ -28,6 +30,7 @@ HRESULT engine::editor::EditorCore::Initialize(HWND hwnd)
 	m_Grid->InitGrid(D3D11Manager::GetInstance().GetDevice(), 400);
 
 	m_EditorComponentManager->Initialize();
+
 
 	return S_OK;
 }
@@ -94,7 +97,15 @@ void engine::editor::EditorCore::RenderScene(const ComPtr<ID3D11DeviceContext>& 
 			m_Grid->Bind(context, viewMat, projMat);
 			m_Grid->RenderGird(context);
 
-			m_EditorComponentManager->Render(context, viewMat, projMat);
+			_float3 camPos = m_EditorCamera.GetCameraPos().Value;
+
+			CamData data{};
+			data.Position = { camPos.x, camPos.y, camPos.z, 1.f };
+			data.ViewMat = viewMat;
+			data.ProjMat = projMat;
+			data.NearFarPlane = { m_EditorCamera.GetNearPlane(), m_EditorCamera.GetFarPlane(), 0.f, 0.f };
+
+			m_EditorComponentManager->Render(context, &data, false);
 
 			D3D11Manager::GetInstance().PostProcessForceAlphaOnePass();
 		}
@@ -113,6 +124,8 @@ void engine::editor::EditorCore::ReadySceneView(int width, int height)
 		m_SceneTargetView.Reset();
 		m_SceneResourceView.Reset();
 		m_SceneDepthStencilView.Reset();
+		m_SceneRenderTargets.clear();
+		m_SceneMRTs.clear();
 
 		return;
 	}
@@ -131,6 +144,7 @@ void engine::editor::EditorCore::ReadySceneView(int width, int height)
 		rtDesc.BindFlags = D3D11_BIND_RENDER_TARGET | D3D11_BIND_SHADER_RESOURCE;
 
 		auto device = D3D11Manager::GetInstance().GetDevice();
+		auto context = D3D11Manager::GetInstance().GetContext();
 
 		// Texture2D 생성
 		ComPtr<ID3D11Texture2D> renderTexture;
@@ -192,6 +206,29 @@ void engine::editor::EditorCore::ReadySceneView(int width, int height)
 		m_OffscreenHeight = height;
 
 		m_EditorCamera.SetAspectRatio(static_cast<float>(width) / static_cast<float>(height));
+
+		m_SceneRenderTargets.clear();
+		m_SceneMRTs.clear();
+
+		// Scene View RTVs
+		AddRenderTarget("Target_Position", device, context, width, height, DXGI_FORMAT_R32G32B32A32_FLOAT, _float4(0.f, 0.f, 0.f, 0.f), false);
+		AddRenderTarget("Target_Diffuse", device, context, width, height, DXGI_FORMAT_R8G8B8A8_UNORM, _float4(1.f, 1.f, 1.f, 0.f), false);
+		AddRenderTarget("Target_Normal", device, context, width, height, DXGI_FORMAT_R16G16B16A16_UNORM, _float4(1.f, 1.f, 1.f, 1.f), false);
+		AddRenderTarget("Target_Depth", device, context, width, height, DXGI_FORMAT_R32G32B32A32_FLOAT, _float4(0.f, 0.f, 0.f, 0.f), false);
+		AddRenderTarget("Target_Outline", device, context, width, height, DXGI_FORMAT_R8G8B8A8_UNORM, _float4(0.f, 0.f, 0.f, 0.f), false);
+
+		AddRenderTarget("Target_Shade", device, context, width, height, DXGI_FORMAT_R16G16B16A16_UNORM, _float4(0.f, 0.f, 0.f, 0.f), false);
+		AddRenderTarget("Target_Specular", device, context, width, height, DXGI_FORMAT_R16G16B16A16_UNORM, _float4(0.f, 0.f, 0.f, 0.f), false);
+
+		AddMRT("G-Buffer", "Target_Position", false);
+		AddMRT("G-Buffer", "Target_Diffuse", false);
+		AddMRT("G-Buffer", "Target_Normal", false);
+		AddMRT("G-Buffer", "Target_Depth", false);
+
+		AddMRT("Light-Pass", "Target_Shade", false);
+		AddMRT("Light-Pass", "Target_Specular", false);
+
+		AddMRT("Outline-Pass", "Target_Outline", false);
 	}
 }
 
@@ -218,12 +255,16 @@ void engine::editor::EditorCore::RenderGame(const ComPtr<ID3D11DeviceContext>& c
 		// TODO : 임시로 카메라 값 넣은거임 수정해야함.
 		auto mainCam = m_EditorComponentManager->GetMainCam();
 		_float4X4 viewMat, projMat;
+		_float3 camPos;
+		_float nearPlane;
+		_float farPlane;
 
 		if (mainCam)
 		{
 			mainCam->UpdateCamera(viewMat, projMat);
-
-
+			camPos = mainCam->GetTransform()->Position().Value;
+			nearPlane = mainCam->GetNearPlane();
+			farPlane = mainCam->GetFarPlane();
 			//XMStoreFloat4x4(&viewMat, XMMatrixTranspose(XMLoadFloat4x4(&viewMat)));
 			//XMStoreFloat4x4(&projMat, XMMatrixTranspose(XMLoadFloat4x4(&projMat)));
 		}
@@ -232,9 +273,19 @@ void engine::editor::EditorCore::RenderGame(const ComPtr<ID3D11DeviceContext>& c
 		{
 			XMStoreFloat4x4(&viewMat, m_EditorCamera.GetViewMatrix());
 			XMStoreFloat4x4(&projMat, m_EditorCamera.GetProjectMatrix());
+			camPos = _float3{ 0.f,0.f,0.f };
+			nearPlane = 0.5f;
+			farPlane = 100.f;
 		}
 
-		m_EditorComponentManager->Render(context, viewMat, projMat);
+
+		CamData data{};
+		data.Position = { camPos.x, camPos.y, camPos.z, 1.f };
+		data.ViewMat = viewMat;
+		data.ProjMat = projMat;
+		data.NearFarPlane = { nearPlane, farPlane, 0.f, 0.f };
+
+		m_EditorComponentManager->Render(context, &data, true);
 
 		D3D11Manager::GetInstance().PostProcessForceAlphaOnePass();
 	}
@@ -259,6 +310,7 @@ void engine::editor::EditorCore::ReadyGameView(int width, int height)
 	rtDesc.BindFlags = D3D11_BIND_RENDER_TARGET | D3D11_BIND_SHADER_RESOURCE;
 
 	auto device = D3D11Manager::GetInstance().GetDevice();
+	auto context = D3D11Manager::GetInstance().GetContext();
 
 	// Texture2D 생성
 	ComPtr<ID3D11Texture2D> renderTexture;
@@ -299,4 +351,220 @@ void engine::editor::EditorCore::ReadyGameView(int width, int height)
 	device->CreateTexture2D(&textureDesc, nullptr, depthStencilTexture.GetAddressOf());
 	device->CreateDepthStencilView(depthStencilTexture.Get(), nullptr, m_GameDepthStencilView.ReleaseAndGetAddressOf());
 
+	// Scene View RTVs
+	AddRenderTarget("Target_Position", device, context, width, height, DXGI_FORMAT_R32G32B32A32_FLOAT, _float4(0.f, 0.f, 0.f, 0.f), true);
+	AddRenderTarget("Target_Diffuse", device, context, width, height, DXGI_FORMAT_R8G8B8A8_UNORM, _float4(1.f, 1.f, 1.f, 0.f), true);
+	AddRenderTarget("Target_Normal", device, context, width, height, DXGI_FORMAT_R16G16B16A16_UNORM, _float4(1.f, 1.f, 1.f, 1.f), true);
+	AddRenderTarget("Target_Depth", device, context, width, height, DXGI_FORMAT_R32G32B32A32_FLOAT, _float4(0.f, 0.f, 0.f, 0.f), true);
+	AddRenderTarget("Target_Outline", device, context, width, height, DXGI_FORMAT_R8G8B8A8_UNORM, _float4(0.f, 0.f, 0.f, 0.f), true);
+
+	AddRenderTarget("Target_Shade", device, context, width, height, DXGI_FORMAT_R16G16B16A16_UNORM, _float4(0.f, 0.f, 0.f, 0.f), true);
+	AddRenderTarget("Target_Specular", device, context, width, height, DXGI_FORMAT_R16G16B16A16_UNORM, _float4(0.f, 0.f, 0.f, 0.f), true);
+
+	AddMRT("G-Buffer", "Target_Position", true);
+	AddMRT("G-Buffer", "Target_Diffuse", true);
+	AddMRT("G-Buffer", "Target_Normal", true);
+	AddMRT("G-Buffer", "Target_Depth", true);
+
+	AddMRT("Light-Pass", "Target_Shade", true);
+	AddMRT("Light-Pass", "Target_Specular", true);
+
+	AddMRT("Outline-Pass", "Target_Outline", true);
+}
+
+void engine::editor::EditorCore::AddRenderTarget(const _string& tag, const ComPtr<ID3D11Device>& device,
+	const ComPtr<ID3D11DeviceContext>& context, _uint sizeX, _uint sizeY, DXGI_FORMAT pixelFormat,
+	const _float4& clearColor, _bool isGame)
+{
+	const auto& rt = RenderTarget::Create(device, context, sizeX, sizeY, pixelFormat, clearColor);
+
+	if (nullptr == rt)
+	{
+		return;
+	}
+
+	if (!isGame)
+	{
+		m_SceneRenderTargets.emplace(tag, rt);
+	}
+
+	else
+	{
+		m_GameRenderTargets.emplace(tag, rt);
+	}
+}
+
+void engine::editor::EditorCore::AddMRT(const _string& mrtTag, const _string& targetTag, _bool isGame)
+{
+	const auto& renderTarget = FindRenderTarget(targetTag, isGame);
+	if (renderTarget == nullptr)
+	{
+		return;
+	}
+
+	std::list<SharedPtr<RenderTarget>>* mrt = FindMRT(mrtTag, isGame);
+
+	if (mrt == nullptr)
+	{
+		std::list<SharedPtr<RenderTarget>> mrtList;
+		mrtList.push_back(renderTarget);
+
+		if (!isGame)
+		{
+			m_SceneMRTs.emplace(mrtTag, mrtList);
+		}
+
+		else
+		{
+			m_GameMRTs.emplace(mrtTag, mrtList);
+		}
+	}
+
+	else
+	{
+		mrt->push_back(renderTarget);
+	}
+}
+
+engine::SharedPtr<engine::RenderTarget> engine::editor::EditorCore::FindRenderTarget(const _string& tag, _bool isGame)
+{
+	if (!isGame)
+	{
+		const auto iter = m_SceneRenderTargets.find(tag);
+
+		if (iter == m_SceneRenderTargets.end())
+		{
+			return nullptr;
+		}
+
+		return iter->second;
+	}
+
+	else
+	{
+		const auto iter = m_GameRenderTargets.find(tag);
+
+		if (iter == m_GameRenderTargets.end())
+		{
+			return nullptr;
+		}
+
+		return iter->second;
+	}
+}
+
+std::list<engine::SharedPtr<engine::RenderTarget>>* engine::editor::EditorCore::FindMRT(const _string& tag, _bool isGame)
+{
+	if (!isGame)
+	{
+		const auto iter = m_SceneMRTs.find(tag);
+
+		if (iter == m_SceneMRTs.end())
+		{
+			return nullptr;
+		}
+
+		return &iter->second;
+	}
+
+	else
+	{
+
+		const auto iter = m_GameMRTs.find(tag);
+
+		if (iter == m_GameMRTs.end())
+		{
+			return nullptr;
+		}
+
+		return &iter->second;
+	}
+}
+
+HRESULT engine::editor::EditorCore::BeginMRT(const _string& tag, _bool isGame)
+{
+	if (!isGame)
+	{
+		auto iter = m_SceneMRTs.find(tag);
+
+		if (iter == m_SceneMRTs.end())
+		{
+			return E_FAIL;
+		}
+
+		std::list<SharedPtr<RenderTarget>>* mtvs = &(iter->second);
+
+		ID3D11DeviceContext* context = D3D11Manager::GetInstance().GetContext().Get();
+
+		_uint numRenderTargets = 0;
+
+		ID3D11RenderTargetView* renderTargets[8] = {};
+
+		for (auto& renderTarget : *mtvs)
+		{
+			renderTarget->Clear(context);
+
+			renderTargets[numRenderTargets++] = renderTarget->GetRTV().Get();
+		}
+		// scene View 냐 GameView냐에 따라서 dsv설정 바꾸기
+		ID3D11DepthStencilView* dsv = m_SceneDepthStencilView.Get();
+
+		context->OMSetRenderTargets(numRenderTargets, renderTargets, dsv);
+
+		return S_OK;
+	}
+
+	else
+	{
+		auto iter = m_GameMRTs.find(tag);
+
+		if (iter == m_GameMRTs.end())
+		{
+			return E_FAIL;
+		}
+
+		std::list<SharedPtr<RenderTarget>>* mtvs = &(iter->second);
+
+		ID3D11DeviceContext* context = D3D11Manager::GetInstance().GetContext().Get();
+
+		_uint numRenderTargets = 0;
+
+		ID3D11RenderTargetView* renderTargets[8] = {};
+
+		for (auto& renderTarget : *mtvs)
+		{
+			renderTarget->Clear(context);
+
+			renderTargets[numRenderTargets++] = renderTarget->GetRTV().Get();
+		}
+		// scene View 냐 GameView냐에 따라서 dsv설정 바꾸기
+		ID3D11DepthStencilView* dsv = m_GameDepthStencilView.Get();
+
+		context->OMSetRenderTargets(numRenderTargets, renderTargets, dsv);
+
+		return S_OK;
+	}
+}
+
+HRESULT engine::editor::EditorCore::EndMRT(_bool isGame)
+{
+	if (!isGame)
+	{
+		ID3D11DeviceContext* context = D3D11Manager::GetInstance().GetContext().Get();
+		ID3D11RenderTargetView* mainRTV = m_SceneTargetView.Get();
+		ID3D11DepthStencilView* dsv = m_SceneDepthStencilView.Get();
+
+		context->OMSetRenderTargets(1, &mainRTV, dsv);
+	}
+
+	else
+	{
+		ID3D11DeviceContext* context = D3D11Manager::GetInstance().GetContext().Get();
+		ID3D11RenderTargetView* mainRTV = m_GameTargetView.Get();
+		ID3D11DepthStencilView* dsv = m_GameDepthStencilView.Get();
+
+		context->OMSetRenderTargets(1, &mainRTV, dsv);
+	}
+
+	return S_OK;
 }
