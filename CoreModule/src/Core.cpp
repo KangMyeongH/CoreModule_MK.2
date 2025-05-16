@@ -80,15 +80,20 @@ void engine::Core::lateUpdate()
 void engine::Core::renderScene()
 {
 	ComPtr<ID3D11DeviceContext> context = m_D3D11Manager->GetContext();
+
 	m_D3D11Manager->ClearBackBufferView(_float4(0.2f, 0.2f, 0.2f, 1.f));
+
 	m_D3D11Manager->ClearDepthStencilView();
 
 	m_RenderManager->UpdateMainCamera();
+
 	m_RenderManager->Render(context);
 
-	m_CollisionManager->RenderCollider(context, m_RenderManager->GetViewMat(), m_RenderManager->GetProjMat());
+	//m_CollisionManager->RenderCollider(context, m_RenderManager->GetViewMat(), m_RenderManager->GetProjMat());
 
 	m_UIManager->Render(context);
+
+	m_RenderManager->DebugRender(context);
 
 	m_D3D11Manager->Present();
 }
@@ -174,6 +179,13 @@ void engine::Core::GameLogic()
 	lateUpdate();
 }
 
+
+/*=============================================================
+ * Rendering 파이프라인 설계
+ * 1. PreRender ( SkyBox 등등 )
+ * 2. SkyPass
+ * 
+ *=============================================================*/
 void engine::Core::SceneRender()
 {
 	renderScene();

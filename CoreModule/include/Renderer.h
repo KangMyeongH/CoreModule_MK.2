@@ -31,8 +31,10 @@ namespace engine
         //				  method				//
         //======================================//
 
-        virtual void Bind(const ComPtr<ID3D11DeviceContext>& context) = 0;
-        virtual void Render(const ComPtr<ID3D11DeviceContext>& context) = 0;
+        virtual void InputAssembler(ID3D11DeviceContext* context) = 0;
+        virtual void Bind(ID3D11DeviceContext* context) = 0;
+        virtual void Render(ID3D11DeviceContext* context) = 0;
+        virtual void PreRender(ID3D11DeviceContext* context, const _float4X4& viewMat, const _float4X4& projMat) = 0;
 
         void Destroy() override = 0;
         SharedPtr<Component> Clone() const override = 0;

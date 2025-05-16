@@ -29,6 +29,13 @@ void engine::UIManager::Initialize()
 {
 	AddFont(L"HUGoth150", L"..\\Client\\Assets\\Resource\\Font\\HUGoth150.spritefont");
 	m_Batch = std::make_shared<DirectX::SpriteBatch>(D3D11Manager::GetInstance().GetContext().Get());
+
+	D3D11_DEPTH_STENCIL_DESC dsDesc = {};
+	dsDesc.DepthEnable = FALSE;
+	dsDesc.DepthWriteMask = D3D11_DEPTH_WRITE_MASK_ZERO;
+	dsDesc.DepthFunc = D3D11_COMPARISON_LESS_EQUAL;
+
+	D3D11Manager::GetInstance().GetDevice()->CreateDepthStencilState(&dsDesc, m_DSState.ReleaseAndGetAddressOf());
 }
 
 void engine::UIManager::UpdateUI()
