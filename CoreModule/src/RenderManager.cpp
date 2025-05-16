@@ -3,10 +3,12 @@
 #include "BasePass.h"
 #include "Camera.h"
 #include "D3D11Manager.h"
+#include "DeferredPass.h"
 #include "GameObject.h"
 #include "Light.h"
 #include "LightingPass.h"
 #include "Material.h"
+#include "OutLinePass.h"
 #include "PrePass.h"
 #include "Renderer.h"
 #include "RenderPass.h"
@@ -27,12 +29,31 @@ void engine::RenderManager::Initialize(const ComPtr<ID3D11Device>& device, const
 
 	context->RSGetViewports(&numViewports, &viewportDesc);
 
+	D3D11_DEPTH_STENCIL_DESC dsDesc = {};
+	dsDesc.DepthEnable = FALSE;
+	dsDesc.DepthWriteMask = D3D11_DEPTH_WRITE_MASK_ZERO;
+	dsDesc.DepthFunc = D3D11_COMPARISON_LESS;
+	device->CreateDepthStencilState(&dsDesc, m_RTDebugDSState.ReleaseAndGetAddressOf());
+
 	AddRenderTarget("Target_Position", device, context, viewportDesc.Width, viewportDesc.Height, DXGI_FORMAT_R32G32B32A32_FLOAT, _float4(0.f, 0.f, 0.f, 0.f));
+	FindRenderTarget("Target_Position")->ReadyDebug(150.f, 150.f, 300.f, 300.f);
 	AddRenderTarget("Target_Diffuse", device, context, viewportDesc.Width, viewportDesc.Height, DXGI_FORMAT_R8G8B8A8_UNORM, _float4(1.f, 1.f, 1.f, 0.f));
+	FindRenderTarget("Target_Diffuse")->ReadyDebug(450.f, 150.f, 300.f, 300.f);
 	AddRenderTarget("Target_Normal", device, context, viewportDesc.Width, viewportDesc.Height, DXGI_FORMAT_R16G16B16A16_UNORM, _float4(1.f, 1.f, 1.f, 1.f));
+	FindRenderTarget("Target_Normal")->ReadyDebug(750.f, 150.f, 300.f, 300.f);
 	AddRenderTarget("Target_Depth", device, context, viewportDesc.Width, viewportDesc.Height, DXGI_FORMAT_R32G32B32A32_FLOAT, _float4(0.f, 0.f, 0.f, 0.f));
+	FindRenderTarget("Target_Depth")->ReadyDebug(1050.f, 150.f, 300.f, 300.f);
+
+	AddRenderTarget("Target_Outline", device, context, viewportDesc.Width, viewportDesc.Height, DXGI_FORMAT_R8G8B8A8_UNORM, _float4(0.f, 0.f, 0.f, 0.f));
+	FindRenderTarget("Target_Outline")->ReadyDebug(150.f, 750.f, 300.f, 300.f);
+
 	AddRenderTarget("Target_Shade", device, context, viewportDesc.Width, viewportDesc.Height, DXGI_FORMAT_R16G16B16A16_UNORM, _float4(0.f, 0.f, 0.f, 0.f));
+	FindRenderTarget("Target_Shade")->ReadyDebug(150.f, 450.f, 300.f, 300.f);
+
 	AddRenderTarget("Target_Specular", device, context, viewportDesc.Width, viewportDesc.Height, DXGI_FORMAT_R16G16B16A16_UNORM, _float4(0.f, 0.f, 0.f, 0.f));
+	FindRenderTarget("Target_Specular")->ReadyDebug(450.f, 450.f, 300.f, 300.f);
+
+
 
 	AddMRT("G-Buffer", "Target_Position");
 	AddMRT("G-Buffer", "Target_Diffuse");
@@ -41,6 +62,10 @@ void engine::RenderManager::Initialize(const ComPtr<ID3D11Device>& device, const
 
 	AddMRT("Light-Pass", "Target_Shade");
 	AddMRT("Light-Pass", "Target_Specular");
+
+	AddMRT("Outline-Pass", "Target_Outline");
+
+
 
 	const auto pDevice = device.Get();
 	const auto pContext = context.Get();
@@ -61,6 +86,13 @@ void engine::RenderManager::Initialize(const ComPtr<ID3D11Device>& device, const
 	m_LightingPass = std::make_unique<engine::LightingPass>();
 	m_LightingPass->Initialize(pDevice, pContext);
 
+	// DeferredPass
+	m_DeferredPass = std::make_unique<engine::DeferredPass>();
+	m_DeferredPass->Initialize(pDevice, pContext);
+
+	// OutlinePass
+	m_OutlinePass = std::make_unique<engine::OutLinePass>();
+	m_OutlinePass->Initialize(pDevice, pContext);
 }
 
 engine::RenderManager::RenderManager() = default;
@@ -134,9 +166,11 @@ void engine::RenderManager::RenderSkySphere(const ComPtr<ID3D11DeviceContext>& c
 void engine::RenderManager::Render(const ComPtr<ID3D11DeviceContext>& context)
 {
 	PrePass(context);
-	SkyPass(context);
 	BasePass(context);
 	LightingPass(context);
+	OutlinePass(context);
+	DeferredPass(context);
+	SkyPass(context);
 }
 
 //BasePass(context);
@@ -461,9 +495,42 @@ HRESULT engine::RenderManager::LightingPass(const ComPtr<ID3D11DeviceContext>& c
 	return S_OK;
 }
 
+HRESULT engine::RenderManager::DeferredPass(const ComPtr<ID3D11DeviceContext>& context)
+{
+	m_DeferredPass->Render(context.Get(), nullptr);
+
+	return S_OK;
+}
+
+HRESULT engine::RenderManager::OutlinePass(const ComPtr<ID3D11DeviceContext>& context)
+{
+	m_OutlinePass->Render(context.Get(), nullptr);
+	return S_OK;
+}
+
 HRESULT engine::RenderManager::DebugRender(const ComPtr<ID3D11DeviceContext>& context)
 {
+	context->OMSetDepthStencilState(m_RTDebugDSState.Get(), 0);
 
+	auto mrt = FindMRT("G-Buffer");
+	for (const auto& rt : *mrt)
+	{
+		rt->Render(context.Get());
+	}
+
+	mrt = FindMRT("Light-Pass");
+	for (const auto& rt : *mrt)
+	{
+		rt->Render(context.Get());
+	}
+
+	mrt = FindMRT("Outline-Pass");
+	for (const auto& rt : *mrt)
+	{
+		rt->Render(context.Get());
+	}
+
+	return S_OK;
 }
 
 void engine::RenderManager::Release()

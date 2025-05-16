@@ -145,6 +145,27 @@
     <Filter Include="00. System\Graphic\RenderPass">
       <UniqueIdentifier>{b0e6dd67-b732-4559-a638-d584c19b6f7c}</UniqueIdentifier>
     </Filter>
+    <Filter Include="00. System\Graphic\RenderPass\Base">
+      <UniqueIdentifier>{25fccdc3-6bcf-4eac-8ce7-3ccf7bad14fd}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="00. System\Graphic\RenderPass\Deferred">
+      <UniqueIdentifier>{419fce22-7c96-4005-9dd3-c64cd92b1261}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="00. System\Graphic\RenderPass\Outline">
+      <UniqueIdentifier>{2e9e9caa-f2f7-4324-9719-f1fae7ef9099}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="00. System\Graphic\RenderPass\Pre">
+      <UniqueIdentifier>{04ef11c6-8623-482c-988a-5ada37345286}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="00. System\Graphic\RenderPass\Lighting">
+      <UniqueIdentifier>{2184e067-dcee-4136-b9ac-e224b5b07fea}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="00. System\Graphic\RenderPass\Sky">
+      <UniqueIdentifier>{9c2e0fc6-ac25-431d-a8ce-7356f4a14d9a}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="00. System\Graphic\RenderPass\Shadow">
+      <UniqueIdentifier>{5e76846e-0908-4d51-88ba-993b9994c5c9}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="include\core_defines.h">
@@ -320,20 +341,29 @@
     <ClInclude Include="include\RenderTarget.h">
       <Filter>00. System\Graphic\RenderTarget</Filter>
     </ClInclude>
-    <ClInclude Include="include\PrePass.h">
-      <Filter>00. System\Graphic\RenderPass</Filter>
-    </ClInclude>
     <ClInclude Include="include\RenderPass.h">
       <Filter>00. System\Graphic\RenderPass</Filter>
     </ClInclude>
-    <ClInclude Include="include\SkyPass.h">
-      <Filter>00. System\Graphic\RenderPass</Filter>
-    </ClInclude>
     <ClInclude Include="include\BasePass.h">
-      <Filter>00. System\Graphic\RenderPass</Filter>
+      <Filter>00. System\Graphic\RenderPass\Base</Filter>
+    </ClInclude>
+    <ClInclude Include="include\DeferredPass.h">
+      <Filter>00. System\Graphic\RenderPass\Deferred</Filter>
+    </ClInclude>
+    <ClInclude Include="include\OutLinePass.h">
+      <Filter>00. System\Graphic\RenderPass\Outline</Filter>
+    </ClInclude>
+    <ClInclude Include="include\PrePass.h">
+      <Filter>00. System\Graphic\RenderPass\Pre</Filter>
     </ClInclude>
     <ClInclude Include="include\LightingPass.h">
-      <Filter>00. System\Graphic\RenderPass</Filter>
+      <Filter>00. System\Graphic\RenderPass\Lighting</Filter>
+    </ClInclude>
+    <ClInclude Include="include\SkyPass.h">
+      <Filter>00. System\Graphic\RenderPass\Sky</Filter>
+    </ClInclude>
+    <ClInclude Include="include\ShadowPass.h">
+      <Filter>00. System\Graphic\RenderPass\Shadow</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -483,20 +513,29 @@
     <ClCompile Include="src\RenderTarget.cpp">
       <Filter>00. System\Graphic\RenderTarget</Filter>
     </ClCompile>
-    <ClCompile Include="src\PrePass.cpp">
-      <Filter>00. System\Graphic\RenderPass</Filter>
-    </ClCompile>
     <ClCompile Include="src\RenderPass.cpp">
       <Filter>00. System\Graphic\RenderPass</Filter>
     </ClCompile>
-    <ClCompile Include="src\SkyPass.cpp">
-      <Filter>00. System\Graphic\RenderPass</Filter>
-    </ClCompile>
     <ClCompile Include="src\BasePass.cpp">
-      <Filter>00. System\Graphic\RenderPass</Filter>
+      <Filter>00. System\Graphic\RenderPass\Base</Filter>
+    </ClCompile>
+    <ClCompile Include="src\DeferredPass.cpp">
+      <Filter>00. System\Graphic\RenderPass\Deferred</Filter>
+    </ClCompile>
+    <ClCompile Include="src\OutLinePass.cpp">
+      <Filter>00. System\Graphic\RenderPass\Outline</Filter>
+    </ClCompile>
+    <ClCompile Include="src\PrePass.cpp">
+      <Filter>00. System\Graphic\RenderPass\Pre</Filter>
     </ClCompile>
     <ClCompile Include="src\LightingPass.cpp">
-      <Filter>00. System\Graphic\RenderPass</Filter>
+      <Filter>00. System\Graphic\RenderPass\Lighting</Filter>
+    </ClCompile>
+    <ClCompile Include="src\SkyPass.cpp">
+      <Filter>00. System\Graphic\RenderPass\Sky</Filter>
+    </ClCompile>
+    <ClCompile Include="src\ShadowPass.cpp">
+      <Filter>00. System\Graphic\RenderPass\Shadow</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

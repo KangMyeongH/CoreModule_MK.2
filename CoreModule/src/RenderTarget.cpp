@@ -6,9 +6,9 @@
 engine::RenderTarget::RenderTarget() = default;
 
 engine::RenderTarget::RenderTarget(const RenderTarget& rhs)
-	: Object(rhs), m_Texture2D(rhs.m_Texture2D), m_RTV(rhs.m_RTV), m_SRV(rhs.m_SRV), m_ClearColor(rhs.m_ClearColor)
+	: Object(rhs), m_Texture2D(rhs.m_Texture2D), m_RTV(rhs.m_RTV), m_SRV(rhs.m_SRV), m_ClearColor(rhs.m_ClearColor),
+	  m_WorldMat()
 {
-
 }
 
 HRESULT engine::RenderTarget::Initialize(const ComPtr<ID3D11Device>& device, const ComPtr<ID3D11DeviceContext>& context,
@@ -135,6 +135,7 @@ HRESULT engine::RenderTarget::Render(ID3D11DeviceContext* context)
 	m_Shader->SetMatrix("g_ProjMatrix", projMat);
 	m_Shader->SetMatrix("g_WorldMatrix", m_WorldMat);
 	m_Shader->SetTexture("g_Texture", m_SRV);
+	m_Shader->SetFloat4("Color", _float4(1.f,1.f,1.f,1.f));
 	m_Shader->Bind(context);
 	context->DrawIndexed(m_VIBuffer->NumIndices, 0, 0);
 

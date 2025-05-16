@@ -36,6 +36,7 @@
     <ClCompile Include="src\core_utility.cpp" />
     <ClCompile Include="src\D3D11Manager.cpp" />
     <ClCompile Include="src\DebugRenderManager.cpp" />
+    <ClCompile Include="src\DeferredPass.cpp" />
     <ClCompile Include="src\EditorCamera.cpp" />
     <ClCompile Include="src\EditorComponentManager.cpp" />
     <ClCompile Include="src\EditorCore.cpp" />
@@ -53,6 +54,7 @@
     <ClCompile Include="src\MeshEffect.cpp" />
     <ClCompile Include="src\MeshRenderer.cpp" />
     <ClCompile Include="src\Object.cpp" />
+    <ClCompile Include="src\OutLinePass.cpp" />
     <ClCompile Include="src\PhysicsManager.cpp" />
     <ClCompile Include="src\Prefab.cpp" />
     <ClCompile Include="src\PrefabManager.cpp" />
@@ -65,6 +67,7 @@
     <ClCompile Include="src\Scene.cpp" />
     <ClCompile Include="src\ScriptBehaviour.cpp" />
     <ClCompile Include="src\ScriptBehaviourManager.cpp" />
+    <ClCompile Include="src\ShadowPass.cpp" />
     <ClCompile Include="src\SkinnedMeshRenderer.cpp" />
     <ClCompile Include="src\SkyPass.cpp" />
     <ClCompile Include="src\SkySphere.cpp" />
@@ -102,6 +105,7 @@
     <ClInclude Include="include\core_utility.h" />
     <ClInclude Include="include\D3D11Manager.h" />
     <ClInclude Include="include\DebugRenderManager.h" />
+    <ClInclude Include="include\DeferredPass.h" />
     <ClInclude Include="include\Editor.h" />
     <ClInclude Include="include\EditorCamera.h" />
     <ClInclude Include="include\EditorComponentManager.h" />
@@ -122,6 +126,7 @@
     <ClInclude Include="include\MeshEffect.h" />
     <ClInclude Include="include\MeshRenderer.h" />
     <ClInclude Include="include\Object.h" />
+    <ClInclude Include="include\OutLinePass.h" />
     <ClInclude Include="include\PhysicsManager.h" />
     <ClInclude Include="include\Prefab.h" />
     <ClInclude Include="include\PrefabManager.h" />
@@ -134,6 +139,7 @@
     <ClInclude Include="include\Scene.h" />
     <ClInclude Include="include\ScriptBehaviour.h" />
     <ClInclude Include="include\ScriptBehaviourManager.h" />
+    <ClInclude Include="include\ShadowPass.h" />
     <ClInclude Include="include\SkinnedMeshRenderer.h" />
     <ClInclude Include="include\SkyPass.h" />
     <ClInclude Include="include\SkySphere.h" />

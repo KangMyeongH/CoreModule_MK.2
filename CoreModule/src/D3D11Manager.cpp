@@ -1035,7 +1035,7 @@ HRESULT engine::D3D11Manager::createUIAlphaBlendState()
 	m_Device->CreateBlendState(&blendDesc, m_UIAlphaBlendState.GetAddressOf());
 
 	D3D11_DEPTH_STENCIL_DESC dsDesc = {};
-	dsDesc.DepthEnable = TRUE;
+	dsDesc.DepthEnable = FALSE;
 	dsDesc.DepthWriteMask = D3D11_DEPTH_WRITE_MASK_ZERO;
 	dsDesc.DepthFunc = D3D11_COMPARISON_LESS;
 	m_Device->CreateDepthStencilState(&dsDesc, m_UIAlphaDepthStencilState.GetAddressOf());

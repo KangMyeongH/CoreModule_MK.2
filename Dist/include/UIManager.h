@@ -69,6 +69,8 @@ namespace engine
         std::unordered_map<_wstring, SharedPtr<DirectX::SpriteFont>> m_Fonts;
         SharedPtr<DirectX::SpriteBatch> m_Batch;
 
+        ComPtr<ID3D11DepthStencilState> m_DSState;
+
         _int    m_MaxSort;
         _int    m_MinSort;
         _bool   m_bDirty;

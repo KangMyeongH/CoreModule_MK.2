@@ -91,7 +91,9 @@ void engine::Core::renderScene()
 
 	//m_CollisionManager->RenderCollider(context, m_RenderManager->GetViewMat(), m_RenderManager->GetProjMat());
 
-	//m_UIManager->Render(context);
+	m_UIManager->Render(context);
+
+	m_RenderManager->DebugRender(context);
 
 	m_D3D11Manager->Present();
 }
@@ -181,8 +183,8 @@ void engine::Core::GameLogic()
 /*=============================================================
  * Rendering 파이프라인 설계
  * 1. PreRender ( SkyBox 등등 )
- * 2. 
- *
+ * 2. SkyPass
+ * 
  *=============================================================*/
 void engine::Core::SceneRender()
 {

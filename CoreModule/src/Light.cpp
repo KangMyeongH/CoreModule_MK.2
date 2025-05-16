@@ -22,9 +22,8 @@ engine::Light::Light(const Light& rhs)
 engine::LightDesc engine::Light::GetLightDesc() const
 {
 	_float3 pos = GetTransform()->Position().Value;
-	_float3 vDir = GetTransform()->Forward().Value;
+	_float3 vDir = GetTransform()->Forward().Normalized().Value;
 	_float4 dir = _float4{ vDir.x, vDir.y, vDir.z, 0.f };
-
 
 	LightDesc desc{};
 	desc.Type = m_Type;
@@ -67,10 +66,11 @@ void engine::Light::Render(ID3D11DeviceContext* context, const SharedPtr<Shader>
 	{
 	case LightType_Directional:
 		{
-		shader->SetFloat4("DireLight_Dir", desc.Dir);
+		shader->SetFloat4("DirLight_Dir", desc.Dir);
 		shader->SetFloat4("DirLight_Diffuse", desc.Color);
 		shader->SetFloat4("DirLight_Ambient", _float4(1.f, 1.f, 1.f, 1.f));
 		shader->SetFloat4("DirLight_Specular", _float4(1.f, 1.f, 1.f, 1.f));
+		std::cerr << "Light_Dir X :" << desc.Dir.x << " , Y : " << desc.Dir.y << " , Z : " << desc.Dir.z << "\n";
 		}
 		break;
 	case LightType_Point:
@@ -81,6 +81,9 @@ void engine::Light::Render(ID3D11DeviceContext* context, const SharedPtr<Shader>
 	default:
 		break;
 	}
+
+	shader->SetFloat4("Ambient", _float4(.5f, .5f, .5f, .5f));
+	shader->SetFloat4("Specular", _float4(1.f, 1.f, 1.f, 1.f));
 
 	shader->Bind(context);
 	context->Draw(3, 0);

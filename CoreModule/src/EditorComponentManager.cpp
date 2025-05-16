@@ -29,6 +29,10 @@ void engine::editor::EditorComponentManager::Initialize()
 	m_Batch = UIManager::GetInstance().GetBatch();
 }
 
+// TODO : Render Pipeline 수정해야함.
+// 이거 안하면 컨텐츠도 없는거임.
+
+
 void engine::editor::EditorComponentManager::Render(const ComPtr<ID3D11DeviceContext>& context, const _float4X4& viewMat, const _float4X4& projMat)
 {
 	Vector3 camPos = EditorCore::GetInstance().GetEditorCamera().GetCameraPos();

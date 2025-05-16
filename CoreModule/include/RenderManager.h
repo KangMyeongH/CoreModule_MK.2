@@ -19,16 +19,12 @@
 
 namespace engine
 {
-	class RenderPass;
-}
-
-namespace engine
-{
 	class RenderTarget;
 	class Camera;
     class Renderer;
     class Light;
     class SkySphere;
+    class RenderPass;
 
     using Renderers = std::vector<SharedPtr<Renderer>>;
     using RendererList = std::list<SharedPtr<Renderer>>;
@@ -94,11 +90,12 @@ namespace engine
         HRESULT BeginMRT(const _string& tag);
         HRESULT EndMRT();
 
-
         HRESULT SkyPass(const ComPtr<ID3D11DeviceContext>& context);
         HRESULT PrePass(const ComPtr<ID3D11DeviceContext>& context);
         HRESULT BasePass(const ComPtr<ID3D11DeviceContext>& context);
         HRESULT LightingPass(const ComPtr<ID3D11DeviceContext>& context);
+        HRESULT DeferredPass(const ComPtr<ID3D11DeviceContext>& context);
+        HRESULT OutlinePass(const ComPtr<ID3D11DeviceContext>& context);
 
         HRESULT DebugRender(const ComPtr<ID3D11DeviceContext>& context);
 
@@ -128,6 +125,8 @@ namespace engine
         SharedPtr<Shader> 				m_PrePassShader;
         ComPtr<ID3D11DepthStencilState> m_PrePassDSState;
 
+        ComPtr<ID3D11DepthStencilState> m_RTDebugDSState;
+
         _float4X4           m_ViewMat;
         _float4X4           m_ProjMat;
 
@@ -135,5 +134,7 @@ namespace engine
         std::unique_ptr<RenderPass> m_PrePass;
         std::unique_ptr<RenderPass> m_BasePass;
         std::unique_ptr<RenderPass> m_LightingPass;
+        std::unique_ptr<RenderPass> m_DeferredPass;
+        std::unique_ptr<RenderPass> m_OutlinePass;
     };
 }

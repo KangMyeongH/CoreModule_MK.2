@@ -1225,4 +1225,14 @@ namespace engine
 		_float4 	CameraPosition;
 		_float4 	NearFarPlane;
 	};
+
+	struct ShadowPassData
+	{
+		_vector LightDir;
+		_float3 CamPos;
+		_float NearZ, FarZ;
+		_matrix View;
+		_matrix Proj;
+
+	};
 }

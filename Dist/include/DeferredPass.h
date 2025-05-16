@@ -3,13 +3,13 @@
 
 namespace engine
 {
-    class COREMODULE_API LightingPass : public RenderPass
+    class COREMODULE_API DeferredPass : public RenderPass
     {
-        //======================================//
+	    //======================================//
         //				constructor				//
         //======================================//
     public:
-        ~LightingPass() override = default;
+        ~DeferredPass() override = default;
 
         //======================================//
         //				  method				//
@@ -23,9 +23,7 @@ namespace engine
         //				  fields				//
         //======================================//
     private:
-        SharedPtr<Shader> m_DirLight;
-        SharedPtr<Shader> m_PointLight;
-        ComPtr<ID3D11DepthStencilState> m_LightDSState;
-        ComPtr<ID3D11BlendState> m_BlendState;
+        SharedPtr<Shader> m_DeferredShader;
+        ComPtr<ID3D11DepthStencilState> m_DeferredDSState;
     };
 }

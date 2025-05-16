@@ -25,5 +25,7 @@ namespace engine
     private:
         SharedPtr<Shader> m_DirLight;
         SharedPtr<Shader> m_PointLight;
+        ComPtr<ID3D11DepthStencilState> m_LightDSState;
+        ComPtr<ID3D11BlendState> m_BlendState;
     };
 }
