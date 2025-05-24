@@ -66,6 +66,8 @@ void engine::SkinnedMeshRenderer::Bind(ID3D11DeviceContext* context)
 
 		D3D11Manager::GetInstance().CreateSampler(samplerDesc, sampler);
 
+		UpdateAnimation(TimeManager::GetInstance().GetDeltaTime());
+
 		for (auto material : m_Material)
 		{
 			if (material.second->GetShader())
@@ -96,7 +98,7 @@ void engine::SkinnedMeshRenderer::Render(ID3D11DeviceContext* context)
 
 void engine::SkinnedMeshRenderer::PreRender(ID3D11DeviceContext* context, const _float4X4& viewMat, const _float4X4& projMat)
 {
-	UpdateAnimation(TimeManager::GetInstance().GetDeltaTime());
+	//UpdateAnimation(TimeManager::GetInstance().GetDeltaTime());
 	for (auto material : m_Material)
 	{
 		if (material.second->GetShader())

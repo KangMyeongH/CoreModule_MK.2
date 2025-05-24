@@ -2,6 +2,7 @@
 
 #include "D3D11Manager.h"
 #include "EditorCore.h"
+#include "RenderManager.h"
 
 HRESULT engine::SkyPass::Initialize(ID3D11Device* device, ID3D11DeviceContext* context)
 {
@@ -22,25 +23,33 @@ HRESULT engine::SkyPass::Render(ID3D11DeviceContext* context, void* data)
 {
 	auto passData = static_cast<SkyPassData*>(data);
 
+	RenderManager* renderManager = &RenderManager::GetInstance();
+	renderManager->BeginMRT("Final-Scene");
+
 	ComPtr<ID3D11DepthStencilState> prevState;
 	UINT ref;
 
-	ID3D11RenderTargetView* mainRTV = D3D11Manager::GetInstance().GetMainRTV().Get();
+	//ID3D11RenderTargetView* mainRTV = D3D11Manager::GetInstance().GetMainRTV().Get();
 
-	context->OMSetRenderTargets(1, &mainRTV, D3D11Manager::GetInstance().GetDepthStencilView().Get());
+	//context->OMSetRenderTargets(1, &mainRTV, D3D11Manager::GetInstance().GetDepthStencilView().Get());
 	context->OMSetBlendState(nullptr, nullptr, 0xffffffff);
 	context->OMGetDepthStencilState(prevState.ReleaseAndGetAddressOf(), &ref);
 	context->OMSetDepthStencilState(m_SkyPassDSState.Get(), 0);
 	
 	m_SkySphere->Render(context, passData->ViewMat, passData->ProjMat, passData->CameraPosition, passData->SunDir);
 
+	renderManager->EndMRT();
+
 	context->OMSetDepthStencilState(prevState.Get(), ref);
+
 
 	return S_OK;
 }
 
 HRESULT engine::SkyPass::RenderEditor(ID3D11DeviceContext* context, void* data, _bool isGame)
 {
+	editor::EditorCore* editorCore = &editor::EditorCore::GetInstance();
+
 	if (!isGame)
 	{
 		auto passData = static_cast<SkyPassData*>(data);
@@ -48,15 +57,18 @@ HRESULT engine::SkyPass::RenderEditor(ID3D11DeviceContext* context, void* data, 
 		ComPtr<ID3D11DepthStencilState> prevState;
 		UINT ref;
 
-		ID3D11RenderTargetView* mainRTV = editor::EditorCore::GetInstance().GetSceneRTV().Get();
-		ID3D11DepthStencilView* dsv = editor::EditorCore::GetInstance().GetSceneDSV().Get();
+		editorCore->BeginMRT("Final-Scene", isGame);
+		//ID3D11RenderTargetView* mainRTV = editor::EditorCore::GetInstance().GetSceneRTV().Get();
+		//ID3D11DepthStencilView* dsv = editor::EditorCore::GetInstance().GetSceneDSV().Get();
 
-		context->OMSetRenderTargets(1, &mainRTV, dsv);
+		//context->OMSetRenderTargets(1, &mainRTV, dsv);
 		context->OMSetBlendState(nullptr, nullptr, 0xffffffff);
 		context->OMGetDepthStencilState(prevState.ReleaseAndGetAddressOf(), &ref);
 		context->OMSetDepthStencilState(m_SkyPassDSState.Get(), 0);
 
 		m_SkySphere->Render(context, passData->ViewMat, passData->ProjMat, passData->CameraPosition, passData->SunDir);
+
+		editorCore->EndMRT(isGame);
 
 		context->OMSetDepthStencilState(prevState.Get(), ref);
 
@@ -70,15 +82,18 @@ HRESULT engine::SkyPass::RenderEditor(ID3D11DeviceContext* context, void* data, 
 		ComPtr<ID3D11DepthStencilState> prevState;
 		UINT ref;
 
-		ID3D11RenderTargetView* mainRTV = editor::EditorCore::GetInstance().GetGameRTV().Get();
-		ID3D11DepthStencilView* dsv = editor::EditorCore::GetInstance().GetGameDSV().Get();
+		editorCore->BeginMRT("Final-Scene", isGame);
+		//ID3D11RenderTargetView* mainRTV = editor::EditorCore::GetInstance().GetSceneRTV().Get();
+		//ID3D11DepthStencilView* dsv = editor::EditorCore::GetInstance().GetSceneDSV().Get();
 
-		context->OMSetRenderTargets(1, &mainRTV, dsv);
+		//context->OMSetRenderTargets(1, &mainRTV, dsv);
 		context->OMSetBlendState(nullptr, nullptr, 0xffffffff);
 		context->OMGetDepthStencilState(prevState.ReleaseAndGetAddressOf(), &ref);
 		context->OMSetDepthStencilState(m_SkyPassDSState.Get(), 0);
 
 		m_SkySphere->Render(context, passData->ViewMat, passData->ProjMat, passData->CameraPosition, passData->SunDir);
+
+		editorCore->EndMRT(isGame);
 
 		context->OMSetDepthStencilState(prevState.Get(), ref);
 

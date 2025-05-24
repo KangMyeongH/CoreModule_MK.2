@@ -40,8 +40,12 @@
     <ClCompile Include="src\EditorCamera.cpp" />
     <ClCompile Include="src\EditorComponentManager.cpp" />
     <ClCompile Include="src\EditorCore.cpp" />
+    <ClCompile Include="src\Effect.cpp" />
+    <ClCompile Include="src\EffectPass.cpp" />
     <ClCompile Include="src\EffectUI.cpp" />
+    <ClCompile Include="src\FinalPass.cpp" />
     <ClCompile Include="src\GameObject.cpp" />
+    <ClCompile Include="src\GlowPass.cpp" />
     <ClCompile Include="src\Grid.cpp" />
     <ClCompile Include="src\Hierarchy.cpp" />
     <ClCompile Include="src\InputManager.cpp" />
@@ -110,9 +114,13 @@
     <ClInclude Include="include\EditorCamera.h" />
     <ClInclude Include="include\EditorComponentManager.h" />
     <ClInclude Include="include\EditorCore.h" />
+    <ClInclude Include="include\Effect.h" />
+    <ClInclude Include="include\EffectPass.h" />
     <ClInclude Include="include\EffectUI.h" />
     <ClInclude Include="include\Engine.h" />
+    <ClInclude Include="include\FinalPass.h" />
     <ClInclude Include="include\GameObject.h" />
+    <ClInclude Include="include\GlowPass.h" />
     <ClInclude Include="include\Grid.h" />
     <ClInclude Include="include\Hierarchy.h" />
     <ClInclude Include="include\InputManager.h" />

@@ -23,7 +23,7 @@ namespace engine
 
         void InputAssembler(ID3D11DeviceContext* context) const;
         void Bind(const ComPtr<ID3D11DeviceContext>& context);
-        void Render(const ComPtr<ID3D11DeviceContext>& context);
+        void Render(ID3D11DeviceContext* context);
 
         _uint GetIndexCount() const { return m_VIBuffer->NumIndices; }
 

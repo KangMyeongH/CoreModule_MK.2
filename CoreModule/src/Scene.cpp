@@ -308,23 +308,24 @@ void engine::Scene::From_Json(const nlohmann::ordered_json& j)
 
 				else
 				{
-					auto meshRendererComponent = meshObj->GetComponent<MeshRenderer>();
-
-					std::vector<SubMesh> subMeshes;
-
-					for (auto& subMeshData : meshData.SubMeshes)
+					if (auto meshRendererComponent = meshObj->GetComponent<MeshRenderer>())
 					{
-						SubMesh subMesh;
-						subMesh.IndexOffset = subMeshData.IndexOffset;
-						subMesh.IndexCount = subMeshData.IndexCount;
-						subMesh.MaterialIndex = subMeshData.MaterialIndex;
+						std::vector<SubMesh> subMeshes;
 
-						subMeshes.push_back(subMesh);
+						for (auto& subMeshData : meshData.SubMeshes)
+						{
+							SubMesh subMesh;
+							subMesh.IndexOffset = subMeshData.IndexOffset;
+							subMesh.IndexCount = subMeshData.IndexCount;
+							subMesh.MaterialIndex = subMeshData.MaterialIndex;
+
+							subMeshes.push_back(subMesh);
+						}
+
+						mesh->SetSubMesh(subMeshes);
+
+						meshRendererComponent->SetMesh(mesh);
 					}
-
-					mesh->SetSubMesh(subMeshes);
-
-					meshRendererComponent->SetMesh(mesh);
 				}
 			}
 		}
@@ -379,7 +380,6 @@ void engine::Scene::loadSceneInBackGround(const std::wstring& nextScene)
 	UIManager::GetInstance().Release();
 
 	loadSceneData(nextScene);
-
 	{
 		std::lock_guard<std::mutex> lock(m_LoadingMutex);
 		m_bSceneLoaded = true;

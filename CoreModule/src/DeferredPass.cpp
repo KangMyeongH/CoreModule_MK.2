@@ -7,7 +7,6 @@
 
 HRESULT engine::DeferredPass::Initialize(ID3D11Device* device, ID3D11DeviceContext* context)
 {
-	
 	D3D11Manager::GetInstance().CreateShader(L"..\\GameEngine\\resource\\Shader\\Deferred.hlsl", m_DeferredShader);
 	
 	D3D11_DEPTH_STENCIL_DESC dsDesc = {};
@@ -23,6 +22,8 @@ HRESULT engine::DeferredPass::Initialize(ID3D11Device* device, ID3D11DeviceConte
 HRESULT engine::DeferredPass::Render(ID3D11DeviceContext* context, void* data)
 {
 	RenderManager* renderManager = &RenderManager::GetInstance();
+
+	renderManager->BeginMRT("Final-Scene");
 
 	ComPtr<ID3D11DepthStencilState> prevState;
 	UINT ref;
@@ -42,6 +43,8 @@ HRESULT engine::DeferredPass::Render(ID3D11DeviceContext* context, void* data)
 	m_DeferredShader->Bind(context);
 	context->Draw(3, 0);
 
+	renderManager->EndMRT();
+
 	context->OMSetDepthStencilState(prevState.Get(), ref);
 
 	return S_OK;
@@ -53,6 +56,8 @@ HRESULT engine::DeferredPass::RenderEditor(ID3D11DeviceContext* context, void* d
 	{
 		editor::EditorCore* editorCore = &editor::EditorCore::GetInstance();
 
+		editorCore->BeginMRT("Final-Scene", isGame);
+
 		ComPtr<ID3D11DepthStencilState> prevState;
 		UINT ref;
 		context->OMGetDepthStencilState(prevState.ReleaseAndGetAddressOf(), &ref);
@@ -70,6 +75,8 @@ HRESULT engine::DeferredPass::RenderEditor(ID3D11DeviceContext* context, void* d
 		m_DeferredShader->SetTexture("g_OutlineMap", outlineMap);
 		m_DeferredShader->Bind(context);
 		context->Draw(3, 0);
+
+		editorCore->EndMRT(isGame);
 
 		context->OMSetDepthStencilState(prevState.Get(), ref);
 
@@ -80,6 +87,8 @@ HRESULT engine::DeferredPass::RenderEditor(ID3D11DeviceContext* context, void* d
 	{
 		editor::EditorCore* editorCore = &editor::EditorCore::GetInstance();
 
+		editorCore->BeginMRT("Final-Scene", isGame);
+
 		ComPtr<ID3D11DepthStencilState> prevState;
 		UINT ref;
 		context->OMGetDepthStencilState(prevState.ReleaseAndGetAddressOf(), &ref);
@@ -97,6 +106,8 @@ HRESULT engine::DeferredPass::RenderEditor(ID3D11DeviceContext* context, void* d
 		m_DeferredShader->SetTexture("g_OutlineMap", outlineMap);
 		m_DeferredShader->Bind(context);
 		context->Draw(3, 0);
+
+		editorCore->EndMRT(isGame);
 
 		context->OMSetDepthStencilState(prevState.Get(), ref);
 

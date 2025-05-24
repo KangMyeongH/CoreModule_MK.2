@@ -80,7 +80,7 @@ void engine::Mesh::Bind(const ComPtr<ID3D11DeviceContext>& context)
 	}
 }
 
-void engine::Mesh::Render(const ComPtr<ID3D11DeviceContext>& context)
+void engine::Mesh::Render(ID3D11DeviceContext* context)
 {
 	for (auto i = 0; i < m_SubMeshes.size(); ++i)
 	{

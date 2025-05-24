@@ -13,6 +13,11 @@ engine::CapsuleCollider::CapsuleCollider(const CapsuleCollider& rhs)
 {
 }
 
+engine::Vector3 engine::CapsuleCollider::GetWorldCenter() const
+{
+	return m_Capsule.CenterW;
+}
+
 void engine::CapsuleCollider::UpdateCollider()
 {
 	calcWorldCapsule();

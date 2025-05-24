@@ -39,6 +39,7 @@ void engine::Core::registerObjects()
 	m_PhysicsManager->RegisterRigidbody();
 	m_UIManager->RegisterUI();
 	m_RenderManager->RegisterRenderer();
+	m_RenderManager->RegisterEffect();
 	m_RenderManager->RegisterLight();
 	m_CollisionManager->RegisterCollider();
 }
@@ -85,6 +86,8 @@ void engine::Core::renderScene()
 
 	m_D3D11Manager->ClearDepthStencilView();
 
+	m_RenderManager->ClearRenderTarget(context);
+
 	m_RenderManager->UpdateMainCamera();
 
 	m_RenderManager->Render(context);
@@ -104,6 +107,7 @@ void engine::Core::destroy()
 	m_Scene->FlushDestroyGameObjects();
 	m_RenderManager->FlushDestroyCamera();
 	m_RenderManager->FlushDestroyRenderer();
+	m_RenderManager->FlushDestroyEffect();
 	m_RenderManager->FlushDestroyLight();
 	m_PhysicsManager->FlushDestroyRigidbody();
 	m_CollisionManager->FlushDestroyCollider();

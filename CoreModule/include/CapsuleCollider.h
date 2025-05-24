@@ -23,6 +23,8 @@ namespace engine
         Vector3 GetCenter() const { return m_Center; }
         void SetCenter(const Vector3& center) { m_Center = center; }
 
+        Vector3 GetWorldCenter() const;
+
         _float GetRadius() const { return m_Radius; }
         void SetRadius(const _float radius) { m_Radius = radius; }
 

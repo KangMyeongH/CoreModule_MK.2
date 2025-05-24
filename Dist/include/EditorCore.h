@@ -83,6 +83,8 @@ namespace engine
             HRESULT BeginMRT(const _string& tag, _bool isGame);
             HRESULT EndMRT(_bool isGame);
 
+            void ClearRenderTarget(const ComPtr<ID3D11DeviceContext>& context);
+
         //======================================//
         //				  fields				//
         //======================================//

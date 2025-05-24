@@ -70,7 +70,6 @@ void engine::Light::Render(ID3D11DeviceContext* context, const SharedPtr<Shader>
 		shader->SetFloat4("DirLight_Diffuse", desc.Color);
 		shader->SetFloat4("DirLight_Ambient", _float4(1.f, 1.f, 1.f, 1.f));
 		shader->SetFloat4("DirLight_Specular", _float4(1.f, 1.f, 1.f, 1.f));
-		std::cerr << "Light_Dir X :" << desc.Dir.x << " , Y : " << desc.Dir.y << " , Z : " << desc.Dir.z << "\n";
 		}
 		break;
 	case LightType_Point:

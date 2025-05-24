@@ -42,6 +42,7 @@ void engine::editor::EditorCore::Initialization()
 
 void engine::editor::EditorCore::SceneRender(const ComPtr<ID3D11DeviceContext>& context)
 {
+	ClearRenderTarget(context);
 	RenderScene(context);
 	RenderGame(context);
 }
@@ -220,6 +221,20 @@ void engine::editor::EditorCore::ReadySceneView(int width, int height)
 		AddRenderTarget("Target_Shade", device, context, width, height, DXGI_FORMAT_R16G16B16A16_UNORM, _float4(0.f, 0.f, 0.f, 0.f), false);
 		AddRenderTarget("Target_Specular", device, context, width, height, DXGI_FORMAT_R16G16B16A16_UNORM, _float4(0.f, 0.f, 0.f, 0.f), false);
 
+		AddRenderTarget("Target_GlowMap", device, context, width, height, DXGI_FORMAT_R8G8B8A8_UNORM, _float4(0.f, 0.f, 0.f, 0.f), false);
+
+		AddRenderTarget("Target_FinalScene", device, context, width, height, DXGI_FORMAT_R8G8B8A8_UNORM, _float4(0.f, 0.f, 0.f, 0.f), false);
+
+		AddRenderTarget("Target_L1_4X4", device, context, width / 4.f, height / 4.f, DXGI_FORMAT_R8G8B8A8_UNORM, _float4(0.f, 0.f, 0.f, 0.f), false);
+		AddRenderTarget("Target_L2_6X6", device, context, width / 24.f, height / 24.f, DXGI_FORMAT_R8G8B8A8_UNORM, _float4(0.f, 0.f, 0.f, 0.f), false);
+		AddRenderTarget("Target_L3_6X6", device, context, width / 144.f, height / 144.f, DXGI_FORMAT_R8G8B8A8_UNORM, _float4(0.f, 0.f, 0.f, 0.f), false);
+		AddRenderTarget("Target_L3_Tmp", device, context, width / 144.f, height / 144.f, DXGI_FORMAT_R8G8B8A8_UNORM, _float4(0.f, 0.f, 0.f, 0.f), false);
+		AddRenderTarget("Target_L2_Tmp", device, context, width / 24.f, height / 24.f, DXGI_FORMAT_R8G8B8A8_UNORM, _float4(0.f, 0.f, 0.f, 0.f), false);
+		AddRenderTarget("Target_L1_Tmp", device, context, width / 4.f, height / 4.f, DXGI_FORMAT_R8G8B8A8_UNORM, _float4(0.f, 0.f, 0.f, 0.f), false);
+
+		AddRenderTarget("Target_Bloom", device, context, width, height, DXGI_FORMAT_R8G8B8A8_UNORM, _float4(0.f, 0.f, 0.f, 0.f), false);
+
+
 		AddMRT("G-Buffer", "Target_Position", false);
 		AddMRT("G-Buffer", "Target_Diffuse", false);
 		AddMRT("G-Buffer", "Target_Normal", false);
@@ -229,6 +244,11 @@ void engine::editor::EditorCore::ReadySceneView(int width, int height)
 		AddMRT("Light-Pass", "Target_Specular", false);
 
 		AddMRT("Outline-Pass", "Target_Outline", false);
+
+		AddMRT("Effect-Pass", "Target_FinalScene", false);
+		AddMRT("Effect-Pass", "Target_GlowMap", false);
+
+		AddMRT("Final-Scene", "Target_FinalScene", false);
 	}
 }
 
@@ -361,6 +381,20 @@ void engine::editor::EditorCore::ReadyGameView(int width, int height)
 	AddRenderTarget("Target_Shade", device, context, width, height, DXGI_FORMAT_R16G16B16A16_UNORM, _float4(0.f, 0.f, 0.f, 0.f), true);
 	AddRenderTarget("Target_Specular", device, context, width, height, DXGI_FORMAT_R16G16B16A16_UNORM, _float4(0.f, 0.f, 0.f, 0.f), true);
 
+	AddRenderTarget("Target_GlowMap", device, context, width, height, DXGI_FORMAT_R8G8B8A8_UNORM, _float4(0.f, 0.f, 0.f, 0.f), true);
+
+	AddRenderTarget("Target_FinalScene", device, context, width, height, DXGI_FORMAT_R8G8B8A8_UNORM, _float4(1.f, 0.f, 0.f, 0.f), true);
+
+	AddRenderTarget("Target_L1_4X4", device, context, width / 4.f, height / 4.f, DXGI_FORMAT_R8G8B8A8_UNORM, _float4(0.f, 0.f, 0.f, 0.f), true);
+	AddRenderTarget("Target_L2_6X6", device, context, width / 24.f, height / 24.f, DXGI_FORMAT_R8G8B8A8_UNORM, _float4(0.f, 0.f, 0.f, 0.f), true);
+	AddRenderTarget("Target_L3_6X6", device, context, width / 144.f, height / 144.f, DXGI_FORMAT_R8G8B8A8_UNORM, _float4(0.f, 0.f, 0.f, 0.f), true);
+	AddRenderTarget("Target_L3_Tmp", device, context, width / 144.f, height / 144.f, DXGI_FORMAT_R8G8B8A8_UNORM, _float4(0.f, 0.f, 0.f, 0.f), true);
+	AddRenderTarget("Target_L2_Tmp", device, context, width / 24.f, height / 24.f, DXGI_FORMAT_R8G8B8A8_UNORM, _float4(0.f, 0.f, 0.f, 0.f), true);
+	AddRenderTarget("Target_L1_Tmp", device, context, width / 4.f, height / 4.f, DXGI_FORMAT_R8G8B8A8_UNORM, _float4(0.f, 0.f, 0.f, 0.f), true);
+
+	AddRenderTarget("Target_Bloom", device, context, width, height, DXGI_FORMAT_R8G8B8A8_UNORM, _float4(0.f, 0.f, 0.f, 0.f), true);
+
+
 	AddMRT("G-Buffer", "Target_Position", true);
 	AddMRT("G-Buffer", "Target_Diffuse", true);
 	AddMRT("G-Buffer", "Target_Normal", true);
@@ -370,6 +404,11 @@ void engine::editor::EditorCore::ReadyGameView(int width, int height)
 	AddMRT("Light-Pass", "Target_Specular", true);
 
 	AddMRT("Outline-Pass", "Target_Outline", true);
+
+	AddMRT("Effect-Pass", "Target_FinalScene", true);
+	AddMRT("Effect-Pass", "Target_GlowMap", true);
+
+	AddMRT("Final-Scene", "Target_FinalScene", true);
 }
 
 void engine::editor::EditorCore::AddRenderTarget(const _string& tag, const ComPtr<ID3D11Device>& device,
@@ -502,7 +541,7 @@ HRESULT engine::editor::EditorCore::BeginMRT(const _string& tag, _bool isGame)
 
 		for (auto& renderTarget : *mtvs)
 		{
-			renderTarget->Clear(context);
+			//renderTarget->Clear(context);
 
 			renderTargets[numRenderTargets++] = renderTarget->GetRTV().Get();
 		}
@@ -533,7 +572,7 @@ HRESULT engine::editor::EditorCore::BeginMRT(const _string& tag, _bool isGame)
 
 		for (auto& renderTarget : *mtvs)
 		{
-			renderTarget->Clear(context);
+			//renderTarget->Clear(context);
 
 			renderTargets[numRenderTargets++] = renderTarget->GetRTV().Get();
 		}
@@ -567,4 +606,17 @@ HRESULT engine::editor::EditorCore::EndMRT(_bool isGame)
 	}
 
 	return S_OK;
+}
+
+void engine::editor::EditorCore::ClearRenderTarget(const ComPtr<ID3D11DeviceContext>& context)
+{
+	for (const auto& pair : m_GameRenderTargets)
+	{
+		pair.second->Clear(context.Get());
+	}
+
+	for (const auto& pair : m_SceneRenderTargets)
+	{
+		pair.second->Clear(context.Get());
+	}
 }

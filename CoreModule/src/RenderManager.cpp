@@ -4,7 +4,11 @@
 #include "Camera.h"
 #include "D3D11Manager.h"
 #include "DeferredPass.h"
+#include "Effect.h"
+#include "EffectPass.h"
+#include "FinalPass.h"
 #include "GameObject.h"
+#include "GlowPass.h"
 #include "Light.h"
 #include "LightingPass.h"
 #include "Material.h"
@@ -53,6 +57,19 @@ void engine::RenderManager::Initialize(const ComPtr<ID3D11Device>& device, const
 	AddRenderTarget("Target_Specular", device, context, viewportDesc.Width, viewportDesc.Height, DXGI_FORMAT_R16G16B16A16_UNORM, _float4(0.f, 0.f, 0.f, 0.f));
 	FindRenderTarget("Target_Specular")->ReadyDebug(450.f, 450.f, 300.f, 300.f);
 
+	AddRenderTarget("Target_GlowMap", device, context, viewportDesc.Width, viewportDesc.Height, DXGI_FORMAT_R8G8B8A8_UNORM, _float4(0.f, 0.f, 0.f, 0.f));
+	FindRenderTarget("Target_GlowMap")->ReadyDebug(150.f, 150.f, 300.f, 300.f);
+
+	AddRenderTarget("Target_FinalScene", device, context, viewportDesc.Width, viewportDesc.Height, DXGI_FORMAT_R8G8B8A8_UNORM, _float4(0.f, 0.f, 0.f, 0.f));
+
+	AddRenderTarget("Target_L1_4X4", device, context, viewportDesc.Width / 4.f, viewportDesc.Height / 4.f, DXGI_FORMAT_R8G8B8A8_UNORM, _float4(0.f, 0.f, 0.f,0.f));
+	AddRenderTarget("Target_L2_6X6", device, context, viewportDesc.Width / 24.f, viewportDesc.Height / 24.f, DXGI_FORMAT_R8G8B8A8_UNORM, _float4(0.f, 0.f, 0.f, 0.f));
+	AddRenderTarget("Target_L3_6X6", device, context, viewportDesc.Width / 144.f, viewportDesc.Height / 144.f, DXGI_FORMAT_R8G8B8A8_UNORM, _float4(0.f, 0.f, 0.f, 0.f));
+	AddRenderTarget("Target_L3_Tmp", device, context, viewportDesc.Width / 144.f, viewportDesc.Height / 144.f, DXGI_FORMAT_R8G8B8A8_UNORM, _float4(0.f, 0.f, 0.f, 0.f));
+	AddRenderTarget("Target_L2_Tmp", device, context, viewportDesc.Width / 24.f, viewportDesc.Height / 24.f, DXGI_FORMAT_R8G8B8A8_UNORM, _float4(0.f, 0.f, 0.f, 0.f));
+	AddRenderTarget("Target_L1_Tmp", device, context, viewportDesc.Width / 4.f, viewportDesc.Height / 4.f, DXGI_FORMAT_R8G8B8A8_UNORM, _float4(0.f, 0.f, 0.f, 0.f));
+
+	AddRenderTarget("Target_Bloom", device, context, viewportDesc.Width, viewportDesc.Height, DXGI_FORMAT_R8G8B8A8_UNORM, _float4(0.f, 0.f, 0.f, 0.f));
 
 
 	AddMRT("G-Buffer", "Target_Position");
@@ -65,7 +82,10 @@ void engine::RenderManager::Initialize(const ComPtr<ID3D11Device>& device, const
 
 	AddMRT("Outline-Pass", "Target_Outline");
 
+	AddMRT("Effect-Pass", "Target_FinalScene");
+	AddMRT("Effect-Pass", "Target_GlowMap");
 
+	AddMRT("Final-Scene", "Target_FinalScene");
 
 	const auto pDevice = device.Get();
 	const auto pContext = context.Get();
@@ -93,6 +113,18 @@ void engine::RenderManager::Initialize(const ComPtr<ID3D11Device>& device, const
 	// OutlinePass
 	m_OutlinePass = std::make_unique<engine::OutLinePass>();
 	m_OutlinePass->Initialize(pDevice, pContext);
+
+	// EffectPass
+	m_EffectPass = std::make_unique<engine::EffectPass>();
+	m_EffectPass->Initialize(pDevice, pContext);
+
+	// GlowPass(Bloom)
+	m_GlowPass = std::make_unique<engine::GlowPass>();
+	m_GlowPass->Initialize(pDevice, pContext);
+
+	// FinalPass
+	m_FinalPass = std::make_unique<engine::FinalPass>();
+	m_FinalPass->Initialize(pDevice, pContext);
 }
 
 engine::RenderManager::RenderManager() = default;
@@ -117,6 +149,11 @@ void engine::RenderManager::AddRenderer(const SharedPtr<Renderer>& renderer)
 void engine::RenderManager::AddLight(const SharedPtr<Light>& light)
 {
 	m_LightRegisterQueue.push_back(light);
+}
+
+void engine::RenderManager::AddEffect(const SharedPtr<Effect>& effect)
+{
+	m_EffectRegisterQueue.push_back(effect);
 }
 
 void engine::RenderManager::UpdateMainCamera()
@@ -171,6 +208,9 @@ void engine::RenderManager::Render(const ComPtr<ID3D11DeviceContext>& context)
 	OutlinePass(context);
 	DeferredPass(context);
 	SkyPass(context);
+	EffectPass(context);
+	GlowPass(context);
+	FinalPass(context);
 }
 
 //BasePass(context);
@@ -234,6 +274,41 @@ void engine::RenderManager::FlushDestroyRenderer()
 			}
 
 			it = m_Renderers.erase(it);
+		}
+
+		else
+		{
+			++it;
+		}
+	}
+}
+
+void engine::RenderManager::RegisterEffect()
+{
+	for (auto it = m_EffectRegisterQueue.begin(); it != m_EffectRegisterQueue.end();)
+	{
+		SharedPtr<Effect> effect = *it;
+		m_Effects.push_back(effect);
+
+		it = m_EffectRegisterQueue.erase(it);
+	}
+
+	m_EffectRegisterQueue.clear();
+}
+
+void engine::RenderManager::FlushDestroyEffect()
+{
+	for (auto it = m_Effects.begin(); it != m_Effects.end();)
+	{
+		SharedPtr<Effect> effect = *it;
+		if (effect->IsDestroyed())
+		{
+			if (const auto& owner = effect->GetGameObject().lock())
+			{
+				owner->RemoveComponent(effect);
+			}
+
+			it = m_Effects.erase(it);
 		}
 
 		else
@@ -362,6 +437,14 @@ std::list<engine::SharedPtr<engine::RenderTarget>>* engine::RenderManager::FindM
 	return &iter->second;
 }
 
+void engine::RenderManager::ClearRenderTarget(const ComPtr<ID3D11DeviceContext>& context)
+{
+	for (const auto& pair : m_RenderTargets)
+	{
+		pair.second->Clear(context.Get());
+	}
+}
+
 HRESULT engine::RenderManager::BeginMRT(const _string& tag)
 {
 	auto iter = m_MRTs.find(tag);
@@ -381,7 +464,7 @@ HRESULT engine::RenderManager::BeginMRT(const _string& tag)
 
 	for (auto& renderTarget : *mtvs)
 	{
-		renderTarget->Clear(context);
+		//renderTarget->Clear(context);
 
 		renderTargets[numRenderTargets++] = renderTarget->GetRTV().Get();
 	}
@@ -507,27 +590,65 @@ HRESULT engine::RenderManager::OutlinePass(const ComPtr<ID3D11DeviceContext>& co
 	return S_OK;
 }
 
+HRESULT engine::RenderManager::EffectPass(const ComPtr<ID3D11DeviceContext>& context)
+{
+	if (m_Effects.empty())
+		return S_OK;
+
+	using namespace DirectX;
+	_float3 camPos{};
+
+	if (const auto& mainCam = m_MainCamera.lock())
+	{
+		camPos = mainCam->GetTransform()->Position().Value;
+	}
+
+	EffectPassData data;
+	data.Effects = &m_Effects;
+	data.ViewMat = m_ViewMat;
+	data.ProjMat = m_ProjMat;
+	data.CamPos = camPos;
+
+	m_EffectPass->Render(context.Get(), &data);
+
+	return S_OK;
+}
+
+HRESULT engine::RenderManager::GlowPass(const ComPtr<ID3D11DeviceContext>& context)
+{
+	m_GlowPass->Render(context.Get(), nullptr);
+	return S_OK;
+}
+
+
+HRESULT engine::RenderManager::FinalPass(const ComPtr<ID3D11DeviceContext>& context)
+{
+	m_FinalPass->Render(context.Get(), nullptr);
+	return S_OK;
+}
+
+
 HRESULT engine::RenderManager::DebugRender(const ComPtr<ID3D11DeviceContext>& context)
 {
 	context->OMSetDepthStencilState(m_RTDebugDSState.Get(), 0);
 
-	auto mrt = FindMRT("G-Buffer");
-	for (const auto& rt : *mrt)
-	{
-		rt->Render(context.Get());
-	}
+	//auto mrt = FindMRT("G-Buffer");
+	//for (const auto& rt : *mrt)
+	//{
+	//	rt->Render(context.Get());
+	//}
 
-	mrt = FindMRT("Light-Pass");
-	for (const auto& rt : *mrt)
-	{
-		rt->Render(context.Get());
-	}
+	//mrt = FindMRT("Light-Pass");
+	//for (const auto& rt : *mrt)
+	//{
+	//	rt->Render(context.Get());
+	//}
 
-	mrt = FindMRT("Outline-Pass");
-	for (const auto& rt : *mrt)
-	{
-		rt->Render(context.Get());
-	}
+	//mrt = FindMRT("Outline-Pass");
+	//for (const auto& rt : *mrt)
+	//{
+	//	rt->Render(context.Get());
+	//}
 
 	return S_OK;
 }
@@ -536,6 +657,9 @@ void engine::RenderManager::Release()
 {
 	m_Renderers.clear();
 	m_RegisterQueue.clear();
+
+	m_Effects.clear();
+	m_EffectRegisterQueue.clear();
 
 	m_MainCamera.reset();
 	m_Cameras.clear();

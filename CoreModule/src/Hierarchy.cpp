@@ -88,7 +88,7 @@ void engine::editor::Hierarchy::AddModel(const ModelData& model, const _wstring&
 		SharedPtr<Mesh> mesh = Mesh::Create(meshData.VIBuffer);
 
 		auto meshObj = GameObject::Create(meshData.MeshName, EDITOR);
-
+		mesh->SetName(meshData.MeshName);
 		meshObj->GetTransform()->SetLocalPosition({ meshData.tx, meshData.ty, meshData.tz });
 		meshObj->GetTransform()->SetLocalRotation({ meshData.rx, meshData.ry, meshData.rz, meshData.rw });
 		meshObj->GetTransform()->SetLocalScale({ meshData.sx, meshData.sy, meshData.sz });
@@ -371,23 +371,24 @@ void engine::editor::Hierarchy::FromJson(const nlohmann::ordered_json& j)
 
 				else
 				{
-					auto meshRendererComponent = meshObj->GetComponent<MeshRenderer>();
-
-					std::vector<SubMesh> subMeshes;
-
-					for (auto& subMeshData : meshData.SubMeshes)
+					if (auto meshRendererComponent = meshObj->GetComponent<MeshRenderer>())
 					{
-						SubMesh subMesh;
-						subMesh.IndexOffset = subMeshData.IndexOffset;
-						subMesh.IndexCount = subMeshData.IndexCount;
-						subMesh.MaterialIndex = subMeshData.MaterialIndex;
+						std::vector<SubMesh> subMeshes;
 
-						subMeshes.push_back(subMesh);
+						for (auto& subMeshData : meshData.SubMeshes)
+						{
+							SubMesh subMesh;
+							subMesh.IndexOffset = subMeshData.IndexOffset;
+							subMesh.IndexCount = subMeshData.IndexCount;
+							subMesh.MaterialIndex = subMeshData.MaterialIndex;
+
+							subMeshes.push_back(subMesh);
+						}
+
+						mesh->SetSubMesh(subMeshes);
+
+						meshRendererComponent->SetMesh(mesh);
 					}
-
-					mesh->SetSubMesh(subMeshes);
-
-					meshRendererComponent->SetMesh(mesh);
 				}
 			}
 		}

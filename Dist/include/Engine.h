@@ -32,3 +32,5 @@
 #include "CapsuleCollider.h"
 #include "SphereCollider.h"
 #include "MeshCollider.h"
+#include "MeshEffect.h"
+#include "Effect.h"

@@ -12,11 +12,13 @@ namespace engine
 	class Component;
 	class UI;
 	class Renderer;
+    class Effect;
 
     namespace editor
     {
         using Components = std::vector<SharedPtr<Component>>;
         using Renderers = std::vector<SharedPtr<Renderer>>;
+        using Effects = std::vector<SharedPtr<Effect>>;
         using UIs = std::vector<SharedPtr<UI>>;
 
         using Colliders = std::vector<SharedPtr<Collider>>;
@@ -63,6 +65,9 @@ namespace engine
             HRESULT LightingPass(const ComPtr<ID3D11DeviceContext>& context, void* data, _bool isGame);
             HRESULT DeferredPass(const ComPtr<ID3D11DeviceContext>& context, void* data, _bool isGame);
             HRESULT OutlinePass(const ComPtr<ID3D11DeviceContext>& context, void* data, _bool isGame);
+            HRESULT EffectPass(const ComPtr<ID3D11DeviceContext>& context, void* data, _bool isGame);
+            HRESULT GlowPass(const ComPtr<ID3D11DeviceContext>& context, void* data, _bool isGame);
+        	HRESULT FinalPass(const ComPtr<ID3D11DeviceContext>& context, void* data, _bool isGame);
 
             //template <typename T>
             //SharedPtr<T> CreateComponent(const SharedPtr<GameObject>& owner)
@@ -91,6 +96,7 @@ namespace engine
         private:
             Components          m_Components;
             Renderers 			m_Renderers;
+            Effects             m_Effects;
 
             std::map<_int, std::vector<SharedPtr<UI>>> m_UIMap;
             std::map<_int, std::vector<SharedPtr<UI>>> m_TextUIMap;
@@ -120,8 +126,10 @@ namespace engine
             std::unique_ptr<RenderPass> m_LightingPass;
             std::unique_ptr<RenderPass> m_DeferredPass;
             std::unique_ptr<RenderPass> m_OutlinePass;
+            std::unique_ptr<RenderPass> m_EffectPass;
+            std::unique_ptr<RenderPass> m_GlowPass;
+            std::unique_ptr<RenderPass> m_FinalPass;
         };
-
     }
 
 }

@@ -7,7 +7,11 @@
 #include "DebugRenderManager.h"
 #include "DeferredPass.h"
 #include "EditorCore.h"
+#include "Effect.h"
+#include "EffectPass.h"
+#include "FinalPass.h"
 #include "GameObject.h"
+#include "GlowPass.h"
 #include "Light.h"
 #include "LightingPass.h"
 #include "Material.h"
@@ -61,6 +65,15 @@ void engine::editor::EditorComponentManager::Initialize()
 	// OutlinePass
 	m_OutlinePass = std::make_unique<engine::OutLinePass>();
 	m_OutlinePass->Initialize(pDevice, pContext);
+
+	m_EffectPass = std::make_unique<engine::EffectPass>();
+	m_EffectPass->Initialize(pDevice, pContext);
+
+	m_GlowPass = std::make_unique<engine::GlowPass>();
+	m_GlowPass->Initialize(pDevice, pContext);
+
+	m_FinalPass = std::make_unique<engine::FinalPass>();
+	m_FinalPass->Initialize(pDevice, pContext);
 }
 
 // TODO : Render Pipeline 수정해야함.
@@ -95,13 +108,20 @@ void engine::editor::EditorComponentManager::Render(const ComPtr<ID3D11DeviceCon
 	XMStoreFloat4x4(&lightData.InvViewMat, XMMatrixInverse(nullptr, XMLoadFloat4x4(&camData->ViewMat)));
 	lightData.NearFarPlane = camData->NearFarPlane;
 
+	EffectPassData effectData{};
+	effectData.ProjMat = camData->ProjMat;
+	effectData.ViewMat = camData->ViewMat;
+	effectData.CamPos = _float3(camData->Position.x, camData->Position.y, camData->Position.z);
+
 	PrePass(context, &preData, isGame);
 	BasePass(context, &baseData, isGame);
 	LightingPass(context, &lightData, isGame);
 	OutlinePass(context, nullptr, isGame);
 	DeferredPass(context, nullptr, isGame);
 	SkyPass(context, &skyData, isGame);
-
+	EffectPass(context, &effectData, isGame);
+	GlowPass(context, nullptr, isGame);
+	FinalPass(context, nullptr, isGame);
 
 	RenderCollider(context, camData->ViewMat, camData->ProjMat);
 
@@ -261,6 +281,11 @@ void engine::editor::EditorComponentManager::AddComponent(const SharedPtr<GameOb
 		m_Colliders.push_back(collider);
 	}
 
+	else if (auto effect = std::dynamic_pointer_cast<Effect>(component))
+	{
+		m_Effects.push_back(effect);
+	}
+
 	else
 	{
 		m_Components.push_back(component);
@@ -315,6 +340,11 @@ void engine::editor::EditorComponentManager::AddComponent(const SharedPtr<Compon
 	else if (auto light = std::dynamic_pointer_cast<Light>(component))
 	{
 		m_Lights.push_back(light);
+	}
+
+	else if (auto effect = std::dynamic_pointer_cast<Effect>(component))
+	{
+		m_Effects.push_back(effect);
 	}
 
 	else
@@ -452,6 +482,30 @@ HRESULT engine::editor::EditorComponentManager::OutlinePass(const ComPtr<ID3D11D
 	return S_OK;
 }
 
+HRESULT engine::editor::EditorComponentManager::EffectPass(const ComPtr<ID3D11DeviceContext>& context, void* data,
+	_bool isGame)
+{
+	auto passData = static_cast<EffectPassData*>(data);
+	passData->Effects = &m_Effects;
+	m_EffectPass->RenderEditor(context.Get(), passData, isGame);
+
+	return S_OK;
+}
+HRESULT engine::editor::EditorComponentManager::GlowPass(const ComPtr<ID3D11DeviceContext>& context, void* data, _bool isGame)
+{
+	m_GlowPass->RenderEditor(context.Get(), nullptr, isGame);
+
+	return S_OK;
+}
+
+
+HRESULT engine::editor::EditorComponentManager::FinalPass(const ComPtr<ID3D11DeviceContext>& context, void* data, _bool isGame)
+{
+	m_FinalPass->RenderEditor(context.Get(), nullptr, isGame);
+
+	return S_OK;
+}
+
 
 void engine::editor::EditorComponentManager::FlushDestroyComponent()
 {
@@ -564,6 +618,27 @@ void engine::editor::EditorComponentManager::FlushDestroyComponent()
 		}
 	}
 
+	for (auto it = m_Effects.begin(); it != m_Effects.end();)
+	{
+		const auto effect = *it;
+
+		if (effect->IsDestroyed())
+		{
+			if (const auto owner = (*it)->GetGameObject().lock())
+			{
+				owner->RemoveComponent(effect);
+			}
+
+			it = m_Effects.erase(it);
+		}
+
+		else
+		{
+			++it;
+		}
+	}
+
+
 	for (auto it = m_Components.begin(); it != m_Components.end();)
 	{
 		const auto component = *it;
@@ -593,4 +668,5 @@ void engine::editor::EditorComponentManager::Release()
 	m_Cameras.clear();
 	m_Components.clear();
 	m_Lights.clear();
+	m_Effects.clear();
 }

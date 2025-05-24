@@ -17,17 +17,22 @@
 13. Overlay/UI Pass
  */
 
+
+
 namespace engine
 {
 	class RenderTarget;
 	class Camera;
     class Renderer;
-    class Light;
+    class Effect;
+	class Light;
     class SkySphere;
     class RenderPass;
 
     using Renderers = std::vector<SharedPtr<Renderer>>;
     using RendererList = std::list<SharedPtr<Renderer>>;
+    using Effects = std::vector<SharedPtr<Effect>>;
+    using EffectList = std::list<SharedPtr<Effect>>;
     using Cameras = std::list<SharedPtr<Camera>>;
     using Models = std::unordered_map<_wstring, ModelData>;
     using Lights = std::vector<SharedPtr<Light>>;
@@ -64,6 +69,8 @@ namespace engine
 
         void                AddLight(const SharedPtr<Light>& light);
 
+        void                AddEffect(const SharedPtr<Effect>& effect);
+
         //======================================//
         //				  method				//
         //======================================//
@@ -76,6 +83,9 @@ namespace engine
         void RegisterRenderer();
         void FlushDestroyRenderer();
 
+        void RegisterEffect();
+        void FlushDestroyEffect();
+
         void RegisterLight();
         void FlushDestroyLight();
 
@@ -87,6 +97,8 @@ namespace engine
         SharedPtr<RenderTarget> FindRenderTarget(const _string& tag);
         std::list<SharedPtr<RenderTarget>>* FindMRT(const _string& tag);
 
+        void ClearRenderTarget(const ComPtr<ID3D11DeviceContext>& context);
+
         HRESULT BeginMRT(const _string& tag);
         HRESULT EndMRT();
 
@@ -96,6 +108,9 @@ namespace engine
         HRESULT LightingPass(const ComPtr<ID3D11DeviceContext>& context);
         HRESULT DeferredPass(const ComPtr<ID3D11DeviceContext>& context);
         HRESULT OutlinePass(const ComPtr<ID3D11DeviceContext>& context);
+        HRESULT EffectPass(const ComPtr<ID3D11DeviceContext>& context);
+        HRESULT GlowPass(const ComPtr<ID3D11DeviceContext>& context);
+        HRESULT FinalPass(const ComPtr<ID3D11DeviceContext>& context);
 
         HRESULT DebugRender(const ComPtr<ID3D11DeviceContext>& context);
 
@@ -108,6 +123,9 @@ namespace engine
 
         Renderers           m_Renderers;
         RendererList        m_RegisterQueue;
+
+        Effects             m_Effects;
+        EffectList          m_EffectRegisterQueue;
 
         Lights              m_Lights;
         LightList           m_LightRegisterQueue;
@@ -136,5 +154,9 @@ namespace engine
         std::unique_ptr<RenderPass> m_LightingPass;
         std::unique_ptr<RenderPass> m_DeferredPass;
         std::unique_ptr<RenderPass> m_OutlinePass;
+        std::unique_ptr<RenderPass> m_EffectPass;
+        std::unique_ptr<RenderPass> m_GlowPass;
+        std::unique_ptr<RenderPass> m_FinalPass;
     };
+
 }

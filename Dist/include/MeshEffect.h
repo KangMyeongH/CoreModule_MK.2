@@ -1,77 +1,102 @@
 #pragma once
-#include "Renderer.h"
+#include "Effect.h"
+#include "LoadManager.h"
 #include "Material.h"
 
 namespace engine
 {
-	class Mesh;
-
-	class COREMODULE_API MeshEffect : public Renderer
+    class COREMODULE_API MeshEffect : public Effect
     {
         //======================================//
         //				constructor				//
         //======================================//
     protected:
-        explicit MeshEffect(const SharedPtr<GameObject>& owner, const _string& name = "MeshEffect")
-	        : Renderer(owner, name), m_MeshIdx(0), m_bBillboard(false)
-        {
-        }
-
+        explicit MeshEffect(const SharedPtr<GameObject>& owner, const _string& name = "MeshEffect");
         ~MeshEffect() override = default;
-        MeshEffect(const MeshEffect& rhs)
-	        : Renderer(rhs), m_ModelPath(rhs.m_ModelPath), m_MeshIdx(rhs.m_MeshIdx), m_bBillboard(rhs.m_bBillboard)
-        {
-
-        }
+        MeshEffect(const MeshEffect& rhs);
 
         //======================================//
         //				 property				//
         //======================================//
-    public:
-        SharedPtr<Mesh> GetMesh() { return m_Mesh; }
-        void SetMesh(const SharedPtr<Mesh>& mesh) { m_Mesh = mesh; }
-        void SetMesh(const _wstring& modelPath, _int meshIdx);
 
         //======================================//
         //				  method				//
         //======================================//
-	public:
+    public:
         void InputAssembler(ID3D11DeviceContext* context) override;
         void Bind(ID3D11DeviceContext* context) override;
         void Render(ID3D11DeviceContext* context) override;
-        void PreRender(ID3D11DeviceContext* context, const _float4X4& viewMat, const _float4X4& projMat) override;
 
-
+        SharedPtr<Component> Clone() const override;
         void Destroy() override;
 
-        SharedPtr<Component> Clone() const override
+    protected:
+        void registerComponent(ApplicationMode mode = CLIENT) override;
+
+    private:
+        static SharedPtr<MeshEffect> create()
         {
-            SharedPtr<MeshEffect> clone(CLONE_SHARED_PTR(MeshEffect));
+            const auto& meshEffect = SharedPtr<MeshEffect>(new MeshEffect(nullptr), []
+            (const MeshEffect* ptr) { delete ptr; });
 
-            for (auto& pair : m_Material)
-            {
-                clone->m_Material.emplace(pair.first, pair.second->Clone(clone));
-            }
+            meshEffect->m_Material = Material::Create(meshEffect);
 
-            return clone;
+            return meshEffect;
         }
 
-	protected:
-        void registerComponent(ApplicationMode mode) override;
         //======================================//
         //				 serialize				//
         //======================================//
-	public:
-        void to_json(nlohmann::ordered_json& j) override;
-        void from_json(const nlohmann::ordered_json& j) override;
+    public:
+        void to_json(nlohmann::ordered_json& j) override
+        {
+            _string type = "MeshEffect";
+            j = nlohmann::ordered_json{
+				{"type", type},
+				{"enable", m_bEnabled},
+				{"modelPath", m_ModelPath},
+				{"material", m_Material->GetPath()},
+				{"wrap", m_bWrap},
+				{"clamp", m_bClamp}
+            };
+
+        }
+
+        void from_json(const nlohmann::ordered_json& j) override
+        {
+	        if (j.contains("enable"))
+	        {
+                j.at("enable").get_to(m_bEnabled);
+	        }
+
+            if (j.contains("modelPath"))
+            {
+                j.at("modelPath").get_to(m_ModelPath);
+                SetMesh(m_ModelPath);
+            }
+
+            if (j.contains("material"))
+            {
+                _wstring path = j.at("material").get<_wstring>();
+                m_Material = Material::Create(shared_from_this());
+                LoadManager::GetInstance().LoadMaterialData(m_Material, path);
+            }
+
+            if (j.contains("wrap"))
+            {
+                j.at("wrap").get_to(m_bWrap);
+            }
+
+            if (j.contains("clamp"))
+            {
+                j.at("clamp").get_to(m_bClamp);
+            }
+        }
 
         //======================================//
         //				  fields				//
         //======================================//
-	private:
-        SharedPtr<Mesh> m_Mesh;
-        _wstring        m_ModelPath;
-        _int            m_MeshIdx;
-        _bool           m_bBillboard;
+    private:
+        static ComponentRegistrar registrar_MeshEffect;
     };
 }

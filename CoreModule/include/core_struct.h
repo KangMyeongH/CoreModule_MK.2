@@ -5,6 +5,7 @@
 
 namespace engine
 {
+	class Effect;
 	class Light;
 	class Renderer;
 	class Collider;
@@ -1242,5 +1243,19 @@ namespace engine
 		_float4X4 ProjMat;
 		_float4 NearFarPlane;
 		_float4 Position;
+	};
+
+	struct EffectPassData
+	{
+		std::vector<SharedPtr<Effect>>* Effects;
+		_float4X4 	ViewMat;
+		_float4X4 	ProjMat;
+		_float3 	CamPos;
+	};
+
+	struct EffectPassItem
+	{
+		SharedPtr<Effect> 	Effect;
+		_float				Depth; // 카메라부터의 거리 (정렬용)
 	};
 }

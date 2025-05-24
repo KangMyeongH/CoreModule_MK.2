@@ -9,7 +9,7 @@ HRESULT engine::BasePass::Initialize(ID3D11Device* device, ID3D11DeviceContext* 
 {
 	D3D11_DEPTH_STENCIL_DESC dsDesc = {};
 	dsDesc.DepthEnable = TRUE;
-	dsDesc.DepthWriteMask = D3D11_DEPTH_WRITE_MASK_ZERO;
+	dsDesc.DepthWriteMask = D3D11_DEPTH_WRITE_MASK_ALL;
 	dsDesc.DepthFunc = D3D11_COMPARISON_LESS_EQUAL;
 
 	device->CreateDepthStencilState(&dsDesc, m_BasePassDSState.ReleaseAndGetAddressOf());

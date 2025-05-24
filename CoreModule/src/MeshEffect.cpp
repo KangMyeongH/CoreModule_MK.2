@@ -1,67 +1,64 @@
 #include "MeshEffect.h"
 
-#include "LoadManager.h"
+#include "Material.h"
 #include "Mesh.h"
 
-void engine::MeshEffect::SetMesh(const _wstring& modelPath, _int meshIdx)
+DEFINE_REGISTER_COMPONENT(MeshEffect)
+
+engine::MeshEffect::MeshEffect(const SharedPtr<GameObject>& owner, const _string& name)
+	: Effect(owner, name)
 {
-	const auto& modelData = LoadManager::GetInstance().ReadModelDataFromFile(modelPath);
-	const auto& meshData = modelData.Meshes[meshIdx];
 
-	SharedPtr<Mesh> mesh = Mesh::Create(meshData.VIBuffer);
-	std::vector<SubMesh> subMeshes;
+}
 
-	for (const auto& subMeshData : meshData.SubMeshes)
-	{
-		SubMesh subMesh;
-		subMesh.IndexOffset = subMeshData.IndexOffset;
-		subMesh.IndexCount = subMeshData.IndexCount;
-		subMesh.MaterialIndex = subMeshData.MaterialIndex;
-
-		subMeshes.push_back(subMesh);
-	}
-
-
-	mesh->SetSubMesh(subMeshes);
-
-	m_Mesh = mesh;
+engine::MeshEffect::MeshEffect(const MeshEffect& rhs)
+	: Effect(rhs)
+{
 }
 
 void engine::MeshEffect::InputAssembler(ID3D11DeviceContext* context)
 {
+	if (m_Mesh)
+	{
+		m_Mesh->InputAssembler(context);
+	}
 }
 
 void engine::MeshEffect::Bind(ID3D11DeviceContext* context)
 {
-	if (m_Mesh)
+	if (m_Material)
 	{
-		m_Mesh->Bind(context);
+		if (m_Material->GetShader())
+		{
+			m_Material->SetMatrix("g_WorldMatrix", GetTransform()->GetWorldMatrix());
+			m_Material->Bind(context);
+		}
 	}
 }
 
 void engine::MeshEffect::Render(ID3D11DeviceContext* context)
 {
-
-}
-
-void engine::MeshEffect::PreRender(ID3D11DeviceContext* context, const _float4X4& viewMat, const _float4X4& projMat)
-{
-	
+	if (m_Mesh)
+	{
+		m_Mesh->Render(context);
+	}
 }
 
 void engine::MeshEffect::Destroy()
 {
+	m_bDestroyed = true;
+}
+
+engine::SharedPtr<engine::Component> engine::MeshEffect::Clone() const
+{
+	SharedPtr<MeshEffect> clone(CLONE_SHARED_PTR(MeshEffect));
+
+	clone->m_Material = m_Material->Clone(clone);
+
+	return clone;
 }
 
 void engine::MeshEffect::registerComponent(ApplicationMode mode)
 {
-	Renderer::registerComponent(mode);
-}
-
-void engine::MeshEffect::to_json(nlohmann::ordered_json& j)
-{
-}
-
-void engine::MeshEffect::from_json(const nlohmann::ordered_json& j)
-{
+	Effect::registerComponent(mode);
 }
